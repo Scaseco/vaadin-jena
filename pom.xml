@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.aksw.scaseco.vaadin</groupId>
+	<artifactId>vaadin-jena-parent</artifactId>
+	<version>4.2.0-1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<!-- <name>Jena SPARQL API - Vaadin - Parent</name> -->
+
+	<!--
+	<parent>
+		<groupId>org.aksw.jena-sparql-api</groupId>
+		<artifactId>jena-sparql-api-parent</artifactId>
+		<version>4.2.0-1-SNAPSHOT</version>
+	</parent>
+	-->
+
+	<properties>
+		<vaadin.version>14.6.1</vaadin.version>
+		<jena-sparql-api.version>4.2.0-1-SNAPSHOT</jena-sparql-api.version>
+		<aksw-commons.version>0.9.1-SNAPSHOT</aksw-commons.version>
+
+
+		<maven.compiler.release>11</maven.compiler.release>
+                <file.encoding>UTF-8</file.encoding>
+                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+                <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+                <gpg.keyname>AKSW</gpg.keyname>
+
+	</properties>
+
+	<modules>
+		<!-- <module>jena-sparql-api-mapper-annotations</module> <module>jena-sparql-api-mapper-proxy</module> -->
+		<module>vaadin-jena-core</module>
+	</modules>
+
+<build>
+<pluginManagement>
+<plugins>
+                        <plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-compiler-plugin</artifactId>
+                                <version>3.8.1</version>
+                                <configuration>
+                                        <!-- <source>${maven.compiler.source}</source> <target>${maven.compiler.target}</target> -->
+                                        <release>11</release>
+                                        <encoding>${project.build.sourceEncoding}</encoding>
+                                </configuration>
+                        </plugin>
+
+
+</plugins>
+</pluginManagement>
+
+</build>
+
+	<dependencyManagement>
+		<dependencies>
+
+		<dependency>
+			<groupId>org.aksw.commons</groupId>
+			<artifactId>aksw-commons-rx-ex</artifactId>
+			<version>${aksw-commons.version}</version>
+		</dependency>
+
+                <dependency>
+                        <groupId>org.aksw.jena-sparql-api</groupId>
+                        <artifactId>jena-sparql-api-concepts</artifactId>
+			<version>${jena-sparql-api.version}</version>
+                </dependency>
+
+                <dependency>
+                        <groupId>org.aksw.jena-sparql-api</groupId>
+                        <artifactId>jena-sparql-api-rx</artifactId>
+                        <version>${jena-sparql-api.version}</version>
+                </dependency>
+
+                <dependency>
+                        <groupId>junit</groupId>
+                        <artifactId>junit</artifactId>
+<version>4.12</version>
+                        <scope>test</scope>
+                </dependency>
+
+                <dependency>
+                        <groupId>org.aksw.jena-sparql-api</groupId>
+                        <artifactId>jena-sparql-api-resources-test-config</artifactId>
+<version>${jena-sparql-api.version}</version>
+                        <scope>test</scope>
+                </dependency>
+
+
+<!--
+                <dependency>
+                        <groupId>org.aksw.jena-sparql-api</groupId>
+                        <artifactId>jena-sparql-api-sparql-ext</artifactId>
+                </dependency>
+-->
+			<!-- <dependency> -->
+			<!-- <groupId>org.springframework.boot</groupId> -->
+			<!-- <artifactId>spring-boot-starter-parent</artifactId> -->
+			<!-- <version>2.2.0.RELEASE</version> -->
+			<!-- </dependency> -->
+			<dependency>
+				<groupId>com.vaadin</groupId>
+				<artifactId>vaadin-bom</artifactId>
+				<version>${vaadin.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+<!--
+		<dependency>
+			<groupId>org.aksw.jena-sparql-api</groupId>
+			<artifactId>jena-sparql-api-sparql-ext</artifactId>
+		</dependency>
+-->
+	</dependencies>
+</project>
