@@ -371,12 +371,12 @@ public class ShaclTreeGrid {
                 }
 
                 // Show the filter / paginator controls
-//                Button showFilterPanelBtn = new Button(new Icon(VaadinIcon.FILTER));
-//                showFilterPanelBtn.addClassName("parent-hover-show");
-//                showFilterPanelBtn.getElement().setProperty("title", "Show filter options for the children of this item");
-//                showFilterPanelBtn.setThemeName("tertiary-inline");
-//
-//                row.add(showFilterPanelBtn);
+                Button showFilterPanelBtn = new Button(new Icon(VaadinIcon.FILTER));
+                showFilterPanelBtn.addClassName("parent-hover-show");
+                showFilterPanelBtn.getElement().setProperty("title", "Show filter options for the children of this item");
+                showFilterPanelBtn.setThemeName("tertiary-inline");
+
+                row.add(showFilterPanelBtn);
 
                 row.add(rdfTermEditor);
                 row.setFlexGrow(1, rdfTermEditor);
@@ -387,21 +387,43 @@ public class ShaclTreeGrid {
 
                 // Search controls over properties
 
-                addSearchControls(treeGrid, nodeState, path, r);
+                HorizontalLayout controlRow = new HorizontalLayout();
+                // controlRow.setWidthFull();
+                addSearchControls(treeGrid, nodeState, path, controlRow);
 
                 MultiselectComboBox<String> schemaComboBox = new MultiselectComboBox<>();
-                schemaComboBox.setLabel("Schemas");
-                schemaComboBox.setItems("Item 1", "Item 2", "Item 3", "Item 4");
-                r.add(schemaComboBox);
+//                schemaComboBox.setLabel("Schemas");
+                 schemaComboBox.setItems("Item 1", "Item 2", "Item 3", "Item 4");
+                controlRow.add(schemaComboBox);
 
                 MultiselectComboBox<String> adhocPropertyComboBox = new MultiselectComboBox<>();
-                adhocPropertyComboBox.setLabel("Adhoc properties");
+//                adhocPropertyComboBox.setLabel("Adhoc properties");
+                controlRow.add(adhocPropertyComboBox);
 
 
                 //nodeState.get;
                 adhocPropertyComboBox.setDataProvider(new DataProviderForPrefixBasedTypeAhead(PrefixMapping.Extended).forString());
                 VaadinBindUtils.bindSet(adhocPropertyComboBox, nodeState.getAdhocProperties(path));
-//                adhocPropertyComboBox.addValueChangeListener(ev -> {
+
+
+                controlRow.addClassName("display-none");
+                r.add(controlRow);
+
+                Runnable toggleDisplay = () -> {
+                    if (controlRow.hasClassName("display-none")) {
+                        controlRow.removeClassName("display-none");
+                    } else {
+                        controlRow.addClassName("display-none");
+                    }
+                };
+
+                showFilterPanelBtn.addClickListener(ev -> {
+                    toggleDisplay.run();
+                     dataProvider.refreshItem(path, true);
+//                    controlRow.setVisible(!controlRow.isVisible());
+                });
+
+                //                adhocPropertyComboBox.addValueChangeListener(ev -> {
 //
 //
 //                    dataProvider.refreshItem(path, false);
@@ -410,7 +432,6 @@ public class ShaclTreeGrid {
 
 
                 // adhocPropertyComboBox.setItems("Item 1", "Item 2", "Item 3", "Item 4");
-                r.add(adhocPropertyComboBox);
 
 //
 //                r.addDetachListener(ev -> {
@@ -502,10 +523,6 @@ public class ShaclTreeGrid {
         filterPanel.add(propertyFilter, itemsPerPage);
         filterPanel.setVisible(treeGrid.isExpanded(path) || isFilterSet);
         r.add(filterPanel);
-
-//                showFilterPanelBtn.addClickListener(ev -> {
-//                    filterPanel.setVisible(!filterPanel.isVisible());
-//                });
 
 
         Registration exp = treeGrid.addExpandListener(ev -> {

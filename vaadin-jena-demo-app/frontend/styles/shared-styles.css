@@ -56,6 +56,10 @@
 }
 
 
+.display-none {
+  display: none;
+}
+
 flow-component-renderer {
   width: 100%
 }

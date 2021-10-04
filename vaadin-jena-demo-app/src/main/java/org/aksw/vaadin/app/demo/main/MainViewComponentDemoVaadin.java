@@ -5,17 +5,30 @@ import java.util.List;
 
 import org.aksw.commons.path.core.Path;
 import org.aksw.jena_sparql_api.collection.observable.GraphChange;
+import org.aksw.jena_sparql_api.entity.graph.metamodel.ClassRelationModel;
+import org.aksw.jena_sparql_api.entity.graph.metamodel.DatasetMetamodel;
+import org.aksw.jena_sparql_api.entity.graph.metamodel.GraphPredicateStats;
+import org.aksw.jena_sparql_api.entity.graph.metamodel.PredicateStats;
+import org.aksw.jena_sparql_api.entity.graph.metamodel.RGDMetamodel;
+import org.aksw.jena_sparql_api.entity.graph.metamodel.ResourceGraphMetamodel;
+import org.aksw.jena_sparql_api.entity.graph.metamodel.ResourceGraphPropertyMetamodel;
+import org.aksw.jena_sparql_api.entity.graph.metamodel.ResourceMetamodel;
 import org.aksw.jena_sparql_api.lookup.LookupService;
 import org.aksw.jena_sparql_api.mapper.proxy.JenaPluginUtils;
 import org.aksw.jena_sparql_api.mapper.util.LabelUtils;
+import org.aksw.jena_sparql_api.path.datatype.RDFDatatypePPath;
+import org.aksw.jena_sparql_api.path.datatype.RDFDatatypePathNode;
 import org.aksw.jena_sparql_api.schema.NodeSchema;
 import org.aksw.jena_sparql_api.schema.NodeSchemaDataFetcher;
 import org.aksw.jena_sparql_api.schema.NodeSchemaFromNodeShape;
 import org.aksw.jena_sparql_api.schema.PropertySchemaFromPropertyShape;
 import org.aksw.jena_sparql_api.schema.ResourceCache;
+import org.aksw.jena_sparql_api.schema.ResourceExplorer;
+import org.aksw.jena_sparql_api.schema.SHAnnotatedClass;
 import org.aksw.jena_sparql_api.schema.ShapedNode;
 import org.aksw.vaadin.component.rdf_term_editor.RdfTermEditor;
 import org.aksw.vaadin.shacl.ShaclTreeGrid;
+import org.apache.jena.datatypes.TypeMapper;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.Dataset;
@@ -87,8 +100,24 @@ public class MainViewComponentDemoVaadin extends AppLayout {
             SHFactory.ensureInited();
             JenaPluginUtils.registerResourceClasses(
                     NodeSchemaFromNodeShape.class,
-                    PropertySchemaFromPropertyShape.class
+                    PropertySchemaFromPropertyShape.class,
+
+                    SHAnnotatedClass.class,
+
+                    ResourceMetamodel.class,
+                    ResourceGraphMetamodel.class,
+                    ResourceGraphPropertyMetamodel.class,
+                    PredicateStats.class,
+                    GraphPredicateStats.class,
+                    RGDMetamodel.class,
+
+                    ClassRelationModel.class,
+                    DatasetMetamodel.class
+
             );
+            TypeMapper.getInstance().registerDatatype(new RDFDatatypePPath());
+            TypeMapper.getInstance().registerDatatype(new RDFDatatypePathNode());
+
 
             Model shaclModel = RDFDataMgr.loadModel("dcat-ap_2.0.0_shacl_shapes.ttl");
             NodeSchema schema = shaclModel.createResource("http://data.europa.eu/r5r#Dataset_Shape").as(NodeSchemaFromNodeShape.class);
@@ -98,13 +127,13 @@ public class MainViewComponentDemoVaadin extends AppLayout {
             ResourceCache resourceCache = new ResourceCache();
             SparqlQueryConnection conn = RDFConnectionFactory.connect(ds);
             ShapedNode sn = ShapedNode.create(datasetNode, schema, resourceCache, conn);
-            // LookupService<Node, ResourceMetamodel> metaDataService = ResourceExplorer.createMetamodelLookup(conn);
+             LookupService<Node, ResourceMetamodel> metaDataService = ResourceExplorer.createMetamodelLookup(conn);
 
             Multimap<NodeSchema, Node> mm = HashMultimap.create();
             mm.put(schema, datasetNode);
 
             NodeSchemaDataFetcher dataFetcher = new NodeSchemaDataFetcher();
-            // dataFetcher.sync(mm, conn, metaDataService, resourceCache);
+             dataFetcher.sync(mm, conn, metaDataService, resourceCache);
 
             List<ShapedNode> rootNodes = Collections.singletonList(sn);
 
