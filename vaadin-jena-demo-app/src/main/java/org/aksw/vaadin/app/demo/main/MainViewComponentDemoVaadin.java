@@ -36,6 +36,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdfconnection.RDFConnectionFactory;
 import org.apache.jena.rdfconnection.SparqlQueryConnection;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.sys.JenaSystem;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,6 +80,8 @@ public class MainViewComponentDemoVaadin extends AppLayout {
 
         @Autowired
         public MainViewComponentDemoVaadin() {
+            JenaSystem.init();
+
             HorizontalLayout navbarLayout = new HorizontalLayout();
             navbarLayout.setWidthFull();
             navbarLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
@@ -91,10 +94,10 @@ public class MainViewComponentDemoVaadin extends AppLayout {
             VerticalLayout mainPanel = new VerticalLayout();
             mainPanel.setSizeFull();
 
-            RdfTermEditor editor = new RdfTermEditor();
-            editor.setValue(RDF.Nodes.type);
-
-            mainPanel.add(editor);
+//            RdfTermEditor editor = new RdfTermEditor();
+//            editor.setValue(RDF.Nodes.type);
+//
+//            mainPanel.add(editor);
 
 
             SHFactory.ensureInited();
