@@ -1,32 +1,34 @@
 package org.aksw.vaadin.app.demo.main;
 
+import org.aksw.vaadin.component.rdf_term_editor.RdfTermEditor;
+import org.apache.jena.vocabulary.RDF;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 
 @Route("")
-@PWA(name = "Facete3 Vaadin Application", shortName = "Facete3",
-        description = "This is an example Vaadin application.", enableInstallPrompt = true)
-@CssImport(value = "./styles/shared-styles.css", include = "lumo-badge")
-@CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
-@CssImport(value = "./styles/vaadin-grid-styles.css", themeFor = "vaadin-grid")
-@CssImport(value = "./styles/vaadin-tab-styles.css", themeFor = "vaadin-tab")
-@CssImport(value = "./styles/vaadin-select-text-field-styles.css", themeFor = "vaadin-select-text-field")
-@CssImport(value = "./styles/vaadin-select-styles.css", themeFor = "vaadin-select")
-@CssImport(value = "./styles/vaadin-text-area-styles.css", themeFor = "vaadin-text-area")
-@CssImport(value = "./styles/flow-component-renderer-styles.css", themeFor = "flow-component-renderer")
-@CssImport(value = "./styles/vaadin-grid-tree-toggle-styles.css", themeFor = "vaadin-grid-tree-toggle")
+@PWA(name = "Semantic Components Vaadin Demonstrator", shortName = "Scaseco Demo",
+        description = "This is a demonstrator of components for semantic data.", enableInstallPrompt = true)
+//@CssImport(value = "./styles/shared-styles.css", include = "lumo-badge")
+//@CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
+//@CssImport(value = "./styles/vaadin-grid-styles.css", themeFor = "vaadin-grid")
+//@CssImport(value = "./styles/vaadin-tab-styles.css", themeFor = "vaadin-tab")
+//@CssImport(value = "./styles/vaadin-select-text-field-styles.css", themeFor = "vaadin-select-text-field")
+//@CssImport(value = "./styles/vaadin-select-styles.css", themeFor = "vaadin-select")
+//@CssImport(value = "./styles/vaadin-text-area-styles.css", themeFor = "vaadin-text-area")
+//@CssImport(value = "./styles/flow-component-renderer-styles.css", themeFor = "flow-component-renderer")
+//@CssImport(value = "./styles/vaadin-grid-tree-toggle-styles.css", themeFor = "vaadin-grid-tree-toggle")
 @JsModule("@vaadin/vaadin-lumo-styles/presets/compact.js")
 @Theme(value = Lumo.class)
 @JsModule("@vaadin/vaadin-lumo-styles/badge.js")
@@ -44,5 +46,16 @@ public class MainViewComponentDemoVaadin extends AppLayout {
             navbarLayout.add(appSettingsBtn);
 
             addToNavbar(navbarLayout);
+
+            VerticalLayout mainPanel = new VerticalLayout();
+            mainPanel.setSizeFull();
+
+            RdfTermEditor editor = new RdfTermEditor();
+            editor.setValue(RDF.Nodes.type);
+
+            mainPanel.add(editor);
+
+            setContent(mainPanel);
+
         }
 }

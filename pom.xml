@@ -16,9 +16,14 @@
 
 	<properties>
 		<vaadin.version>14.6.1</vaadin.version>
+		<spring-boot.version>2.3.3.RELEASE</spring-boot.version>
+		<jackson.version>2.10.3</jackson.version>
+
 		<jena-sparql-api.version>4.2.0-1-SNAPSHOT</jena-sparql-api.version>
 		<aksw-commons.version>0.9.1-SNAPSHOT</aksw-commons.version>
 		<facete3.version>1.2.0-SNAPSHOT</facete3.version>
+
+		<slf4j.version>1.7.24</slf4j.version>
 
 		<maven.compiler.release>11</maven.compiler.release>
 		<file.encoding>UTF-8</file.encoding>
@@ -59,6 +64,37 @@
 
 	<dependencyManagement>
 		<dependencies>
+
+			<!-- jackson version fixes -->
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-core</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-annotations</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+
+			<!-- commons-lang3 version fixes -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-lang3</artifactId>
+				<version>3.12.0</version>
+			</dependency>
+
+
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-log4j12</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
 
 			<dependency>
 				<groupId>org.vaadin.gatanaso</groupId>
@@ -166,6 +202,18 @@
 
 
 	<repositories>
+		<!-- The order of definitions matters. Explicitly defining central here 
+			to make sure it has the highest priority. -->
+
+		<!-- Main Maven repository -->
+		<repository>
+			<id>central</id>
+			<url>https://repo.maven.apache.org/maven2</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<!-- Repository used by many Vaadin add-ons -->
 		<repository>
 			<id>Vaadin Directory</id>
 			<url>https://maven.vaadin.com/vaadin-addons</url>
@@ -174,4 +222,16 @@
 			</snapshots>
 		</repository>
 	</repositories>
+
+	<pluginRepositories>
+		<!-- Main Maven repository -->
+		<pluginRepository>
+			<id>central</id>
+			<url>https://repo.maven.apache.org/maven2</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+
 </project>

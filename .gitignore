@@ -33,3 +33,10 @@ results.tsv
 
 .vscode
 dependency-reduced-pom.xml
+
+node_modules
+webpack.config.js
+webpack.generated.js
+package-lock.json
+package.json
+
