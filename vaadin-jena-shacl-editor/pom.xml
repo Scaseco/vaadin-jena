@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>vaadin-jena-core</artifactId>
+	<artifactId>vaadin-jena-shacl-editor</artifactId>
 	<packaging>jar</packaging>
 
 
@@ -15,15 +15,26 @@
 	</parent>
 
 	<dependencies>
-
 		<dependency>
-			<groupId>org.hobbit</groupId>
-			<artifactId>facete3-impl</artifactId>
+			<groupId>org.aksw.scaseco.vaadin</groupId>
+			<artifactId>vaadin-jena-rdf-term-editor</artifactId>
 		</dependency>
 
 		<dependency>
+			<groupId>org.vaadin.gatanaso</groupId>
+			<artifactId>multiselect-combo-box-flow</artifactId>
+		</dependency>
+
+
+		<dependency>
 			<groupId>org.aksw.jena-sparql-api</groupId>
-			<artifactId>jena-sparql-api-concepts</artifactId>
+			<artifactId>jena-sparql-api-paths</artifactId>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.aksw.jena-sparql-api</groupId>
+			<artifactId>jena-sparql-api-resource-shape</artifactId>
 		</dependency>
 
 		<dependency>

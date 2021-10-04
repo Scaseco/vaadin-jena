@@ -4,9 +4,12 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>vaadin-jena-core</artifactId>
+	<artifactId>vaadin-jena-demo-app</artifactId>
 	<packaging>jar</packaging>
 
+	<properties>
+		<spring-boot.version>2.3.3.RELEASE</spring-boot.version>
+	</properties>
 
 	<parent>
 		<groupId>org.aksw.scaseco.vaadin</groupId>
@@ -16,9 +19,33 @@
 
 	<dependencies>
 
+
 		<dependency>
-			<groupId>org.hobbit</groupId>
-			<artifactId>facete3-impl</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+			<version>${spring-boot.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- <dependency> <groupId>org.springframework.boot</groupId> <artifactId>spring-boot-devtools</artifactId> 
+			<version>${spring-boot.version}</version> <optional>true</optional> <scope>runtime</scope> 
+			</dependency> -->
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<version>${spring-boot.version}</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<version>${spring-boot.version}</version>
 		</dependency>
 
 		<dependency>

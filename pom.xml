@@ -11,95 +11,144 @@
 
 	<!-- <name>Jena SPARQL API - Vaadin - Parent</name> -->
 
-	<!--
-	<parent>
-		<groupId>org.aksw.jena-sparql-api</groupId>
-		<artifactId>jena-sparql-api-parent</artifactId>
-		<version>4.2.0-1-SNAPSHOT</version>
-	</parent>
-	-->
+	<!-- <parent> <groupId>org.aksw.jena-sparql-api</groupId> <artifactId>jena-sparql-api-parent</artifactId> 
+		<version>4.2.0-1-SNAPSHOT</version> </parent> -->
 
 	<properties>
 		<vaadin.version>14.6.1</vaadin.version>
 		<jena-sparql-api.version>4.2.0-1-SNAPSHOT</jena-sparql-api.version>
 		<aksw-commons.version>0.9.1-SNAPSHOT</aksw-commons.version>
-
+		<facete3.version>1.2.0-SNAPSHOT</facete3.version>
 
 		<maven.compiler.release>11</maven.compiler.release>
-                <file.encoding>UTF-8</file.encoding>
-                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-                <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-                <gpg.keyname>AKSW</gpg.keyname>
+		<file.encoding>UTF-8</file.encoding>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<gpg.keyname>AKSW</gpg.keyname>
 
 	</properties>
 
 	<modules>
-		<!-- <module>jena-sparql-api-mapper-annotations</module> <module>jena-sparql-api-mapper-proxy</module> -->
+		<module>vaadin-commons</module>
 		<module>vaadin-jena-core</module>
+		<module>vaadin-jena-rdf-term-editor</module>
+		<module>vaadin-jena-shacl-editor</module>
+
+		<module>vaadin-jena-demo-app</module>
 	</modules>
 
-<build>
-<pluginManagement>
-<plugins>
-                        <plugin>
-                                <groupId>org.apache.maven.plugins</groupId>
-                                <artifactId>maven-compiler-plugin</artifactId>
-                                <version>3.8.1</version>
-                                <configuration>
-                                        <!-- <source>${maven.compiler.source}</source> <target>${maven.compiler.target}</target> -->
-                                        <release>11</release>
-                                        <encoding>${project.build.sourceEncoding}</encoding>
-                                </configuration>
-                        </plugin>
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.8.1</version>
+					<configuration>
+						<!-- <source>${maven.compiler.source}</source> <target>${maven.compiler.target}</target> -->
+						<release>${maven.compiler.release}</release>
+						<encoding>${project.build.sourceEncoding}</encoding>
+					</configuration>
+				</plugin>
 
 
-</plugins>
-</pluginManagement>
+			</plugins>
+		</pluginManagement>
 
-</build>
+	</build>
 
 	<dependencyManagement>
 		<dependencies>
 
-		<dependency>
-			<groupId>org.aksw.commons</groupId>
-			<artifactId>aksw-commons-rx-ex</artifactId>
-			<version>${aksw-commons.version}</version>
-		</dependency>
+			<dependency>
+				<groupId>org.vaadin.gatanaso</groupId>
+				<artifactId>multiselect-combo-box-flow</artifactId>
+				<version>3.0.2</version>
+			</dependency>
 
-                <dependency>
-                        <groupId>org.aksw.jena-sparql-api</groupId>
-                        <artifactId>jena-sparql-api-concepts</artifactId>
-			<version>${jena-sparql-api.version}</version>
-                </dependency>
+			<dependency>
+				<groupId>org.aksw.scaseco.vaadin</groupId>
+				<artifactId>vaadin-commons</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 
-                <dependency>
-                        <groupId>org.aksw.jena-sparql-api</groupId>
-                        <artifactId>jena-sparql-api-rx</artifactId>
-                        <version>${jena-sparql-api.version}</version>
-                </dependency>
+			<dependency>
+				<groupId>org.aksw.scaseco.vaadin</groupId>
+				<artifactId>vaadin-jena-rdf-term-editor</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 
-                <dependency>
-                        <groupId>junit</groupId>
-                        <artifactId>junit</artifactId>
-<version>4.12</version>
-                        <scope>test</scope>
-                </dependency>
+			<dependency>
+				<groupId>org.aksw.scaseco.vaadin</groupId>
+				<artifactId>vaadin-jena-shacl-editor</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 
-                <dependency>
-                        <groupId>org.aksw.jena-sparql-api</groupId>
-                        <artifactId>jena-sparql-api-resources-test-config</artifactId>
-<version>${jena-sparql-api.version}</version>
-                        <scope>test</scope>
-                </dependency>
+			<dependency>
+				<groupId>org.aksw.scaseco.vaadin</groupId>
+				<artifactId>vaadin-jena-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.aksw.commons</groupId>
+				<artifactId>aksw-commons-rx-ex</artifactId>
+				<version>${aksw-commons.version}</version>
+			</dependency>
+
+			<!-- <dependency> -->
+			<!-- <groupId>org.aksw.commons</groupId> -->
+			<!-- <artifactId>aksw-commons-paths</artifactId> -->
+			<!-- <version>${aksw-commons.version}</version> -->
+			<!-- </dependency> -->
+
+			<dependency>
+				<groupId>org.hobbit</groupId>
+				<artifactId>facete3-impl</artifactId>
+				<version>${facete3.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.aksw.jena-sparql-api</groupId>
+				<artifactId>jena-sparql-api-concepts</artifactId>
+				<version>${jena-sparql-api.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.aksw.jena-sparql-api</groupId>
+				<artifactId>jena-sparql-api-rx</artifactId>
+				<version>${jena-sparql-api.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.aksw.jena-sparql-api</groupId>
+				<artifactId>jena-sparql-api-paths</artifactId>
+				<version>${jena-sparql-api.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.aksw.jena-sparql-api</groupId>
+				<artifactId>jena-sparql-api-resource-shape</artifactId>
+				<version>${jena-sparql-api.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.12</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.aksw.jena-sparql-api</groupId>
+				<artifactId>jena-sparql-api-resources-test-config</artifactId>
+				<version>${jena-sparql-api.version}</version>
+				<scope>test</scope>
+			</dependency>
 
 
-<!--
-                <dependency>
-                        <groupId>org.aksw.jena-sparql-api</groupId>
-                        <artifactId>jena-sparql-api-sparql-ext</artifactId>
-                </dependency>
--->
+			<!-- <dependency> <groupId>org.aksw.jena-sparql-api</groupId> <artifactId>jena-sparql-api-sparql-ext</artifactId> 
+				</dependency> -->
 			<!-- <dependency> -->
 			<!-- <groupId>org.springframework.boot</groupId> -->
 			<!-- <artifactId>spring-boot-starter-parent</artifactId> -->
@@ -115,12 +164,14 @@
 		</dependencies>
 	</dependencyManagement>
 
-	<dependencies>
-<!--
-		<dependency>
-			<groupId>org.aksw.jena-sparql-api</groupId>
-			<artifactId>jena-sparql-api-sparql-ext</artifactId>
-		</dependency>
--->
-	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>Vaadin Directory</id>
+			<url>https://maven.vaadin.com/vaadin-addons</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 </project>
