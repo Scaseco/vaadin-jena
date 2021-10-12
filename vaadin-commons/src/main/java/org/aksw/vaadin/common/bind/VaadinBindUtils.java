@@ -26,11 +26,16 @@ public class VaadinBindUtils {
 
         // Extra variable because of https://stackoverflow.com/questions/55532055/java-casting-java-11-throws-lambdaconversionexception-while-1-8-does-not
         ValueChangeListener<ValueChangeEvent<Set<V>>> listener = ev -> {
-            Collection<V> newValue = ev.getValue();
+
+            // CollectionOps.sync();
+            Collection<V> newValue = new LinkedHashSet<>(ev.getValue());
+            store.replace(newValue);
+//            store.clear();
+//            store.addAll(newValue);
             // CollectionOps.smartDifference(store, newValue);
             // store.set(newValue);
-            newValue.clear();
-            newValue.addAll(newValue);
+            // newValue.clear();
+            // newValue.addAll(newValue);
         };
         Registration deregister2 = hasValue.addValueChangeListener(listener);
 

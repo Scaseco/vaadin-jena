@@ -32,7 +32,7 @@ import org.aksw.vaadin.common.bind.VaadinBindUtils;
 import org.aksw.vaadin.component.rdf_term_editor.RdfTermEditor;
 import org.aksw.vaadin.datashape.provider.DataProviderForPrefixBasedTypeAhead;
 import org.aksw.vaadin.datashape.provider.HierarchicalDataProviderForShacl;
-import org.aksw.vaadin.datashape.provider.HierarchicalDataProviderForShacl.NodeState;
+import org.aksw.vaadin.datashape.provider.NodeState;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shared.PrefixMapping;
@@ -41,6 +41,8 @@ import org.apache.jena.sparql.path.PathWriter;
 import org.vaadin.gatanaso.MultiselectComboBox;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.HasStyle;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.grid.Grid.Column;
@@ -371,7 +373,7 @@ public class ShaclTreeGrid {
                 }
 
                 // Show the filter / paginator controls
-                Button showFilterPanelBtn = new Button(new Icon(VaadinIcon.FILTER));
+                Button showFilterPanelBtn = new Button(new Icon(VaadinIcon.SLIDERS));
                 showFilterPanelBtn.addClassName("parent-hover-show");
                 showFilterPanelBtn.getElement().setProperty("title", "Show filter options for the children of this item");
                 showFilterPanelBtn.setThemeName("tertiary-inline");
@@ -396,47 +398,27 @@ public class ShaclTreeGrid {
                  schemaComboBox.setItems("Item 1", "Item 2", "Item 3", "Item 4");
                 controlRow.add(schemaComboBox);
 
-                MultiselectComboBox<String> adhocPropertyComboBox = new MultiselectComboBox<>();
+                MultiselectComboBox<String> pinnedPropertiesComboBox = new MultiselectComboBox<>();
+                pinnedPropertiesComboBox.setPlaceholder("Pin properties");;
 //                adhocPropertyComboBox.setLabel("Adhoc properties");
-                controlRow.add(adhocPropertyComboBox);
+                controlRow.add(pinnedPropertiesComboBox);
 
 
                 //nodeState.get;
-                adhocPropertyComboBox.setDataProvider(new DataProviderForPrefixBasedTypeAhead(PrefixMapping.Extended).forString());
-                VaadinBindUtils.bindSet(adhocPropertyComboBox, nodeState.getAdhocProperties(path));
+                pinnedPropertiesComboBox.setDataProvider(new DataProviderForPrefixBasedTypeAhead(PrefixMapping.Extended).forString());
+                VaadinBindUtils.bindSet(pinnedPropertiesComboBox, nodeState.getAdhocProperties(path));
 
 
-                controlRow.addClassName("display-none");
                 r.add(controlRow);
 
-                Runnable toggleDisplay = () -> {
-                    if (controlRow.hasClassName("display-none")) {
-                        controlRow.removeClassName("display-none");
-                    } else {
-                        controlRow.addClassName("display-none");
-                    }
-                };
+
+                Runnable toggleDisplay = createToggle(controlRow, "display-none", true);
 
                 showFilterPanelBtn.addClickListener(ev -> {
                     toggleDisplay.run();
-                     dataProvider.refreshItem(path, true);
-//                    controlRow.setVisible(!controlRow.isVisible());
+                    dataProvider.refreshItem(path, false);
                 });
 
-                //                adhocPropertyComboBox.addValueChangeListener(ev -> {
-//
-//
-//                    dataProvider.refreshItem(path, false);
-//                });
-                // adhocPropertyComboBox.getv;
-
-
-                // adhocPropertyComboBox.setItems("Item 1", "Item 2", "Item 3", "Item 4");
-
-//
-//                r.addDetachListener(ev -> {
-//
-//                });
             } else if (isPropertyPath && p0 != null) {
                 Node srcNode = segments.get(pathLength - 2);
 
@@ -447,7 +429,15 @@ public class ShaclTreeGrid {
 
 
                 HorizontalLayout hl = new HorizontalLayout();
-                hl.add(str);
+
+                // Show the filter / paginator controls
+                Button showFilterPanelBtn = new Button(new Icon(VaadinIcon.SLIDERS));
+                showFilterPanelBtn.addClassName("parent-hover-show");
+                showFilterPanelBtn.getElement().setProperty("title", "Show filter options for the children of this item");
+                showFilterPanelBtn.setThemeName("tertiary-inline");
+                hl.add(showFilterPanelBtn);
+
+                hl.add(new Text(str));
                 Button addValueButton = new Button(new Icon(VaadinIcon.PLUS_CIRCLE_O));
                 addValueButton.addClassName("parent-hover-show");
                 addValueButton.getElement().setProperty("title", "Add a new value to this property");
@@ -455,9 +445,11 @@ public class ShaclTreeGrid {
                 hl.add(addValueButton);
 
 
+                HorizontalLayout controlRow = new HorizontalLayout();
                 // Search controls over resources
-                addSearchControls(treeGrid, nodeState, path, hl);
+                addSearchControls(treeGrid, nodeState, path, controlRow);
 
+                hl.add(controlRow);
 
                 addValueButton.addClickListener(ev -> {
                     // Node newNode = NodeFactory.createBlankNode();
@@ -466,6 +458,14 @@ public class ShaclTreeGrid {
 
                     treeGrid.expand(Collections.singleton(path));
                 });
+
+                Runnable toggleDisplay = createToggle(controlRow, "display-none", true);
+
+                showFilterPanelBtn.addClickListener(ev -> {
+                    toggleDisplay.run();
+                    dataProvider.refreshItem(path, false);
+                });
+
 
                 r.add(hl);
 
@@ -573,4 +573,17 @@ public class ShaclTreeGrid {
         return hierarchyColumn;
     }
 
+    public static Runnable createToggle(HasStyle component, String className, boolean enableOnInit) {
+        if (enableOnInit) {
+            component.addClassName(className);
+        }
+
+        return () -> {
+            if (component.hasClassName(className)) {
+                component.removeClassName(className);
+            } else {
+                component.addClassName(className);
+            }
+        };
+    }
 }
