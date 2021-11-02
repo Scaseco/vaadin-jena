@@ -10,19 +10,19 @@ import java.util.stream.Stream;
 
 import org.aksw.commons.collection.observable.ObservableCollection;
 import org.aksw.commons.path.core.Path;
+import org.aksw.commons.rx.lookup.ListService;
+import org.aksw.commons.rx.lookup.ListServiceFromList;
+import org.aksw.commons.rx.lookup.MapService;
+import org.aksw.commons.rx.lookup.MapServiceFromListService;
 import org.aksw.jena_sparql_api.collection.observable.GraphChange;
 import org.aksw.jena_sparql_api.concepts.Concept;
 import org.aksw.jena_sparql_api.concepts.ConceptUtils;
-import org.aksw.jena_sparql_api.lookup.ListService;
-import org.aksw.jena_sparql_api.lookup.ListServiceFromList;
-import org.aksw.jena_sparql_api.lookup.MapService;
-import org.aksw.jena_sparql_api.lookup.MapServiceFromListService;
-import org.aksw.jena_sparql_api.path.core.PathNode;
-import org.aksw.jena_sparql_api.path.core.PathOpsNode;
-import org.aksw.jena_sparql_api.path.datatype.RDFDatatypePPath;
 import org.aksw.jena_sparql_api.rdf.collections.NodeMappers;
 import org.aksw.jena_sparql_api.schema.ShapedNode;
 import org.aksw.jena_sparql_api.schema.ShapedProperty;
+import org.aksw.jenax.path.core.PathNode;
+import org.aksw.jenax.path.core.PathOpsNode;
+import org.aksw.jenax.path.datatype.RDFDatatypePPath;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.sparql.path.P_Link;
@@ -49,7 +49,7 @@ public class HierarchicalDataProviderForShacl
     protected MapService<Concept, Node, ShapedNode> root;
     // protected Set<NodeSchema> rootSchemas;
     //protected SparqlQueryConnection conn;
-    protected boolean showEmptyProperties = false;
+    protected boolean showEmptyProperties = true;
 
 
     protected GraphChange graphEditorModel;

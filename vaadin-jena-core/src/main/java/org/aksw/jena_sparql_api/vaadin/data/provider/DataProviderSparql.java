@@ -1,15 +1,13 @@
 package org.aksw.jena_sparql_api.vaadin.data.provider;
 
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.aksw.commons.rx.util.RxUtils;
 import org.aksw.commons.util.range.CountInfo;
 import org.aksw.commons.util.range.RangeUtils;
-import org.aksw.jena_sparql_api.concepts.Relation;
-import org.aksw.jena_sparql_api.rx.SparqlRx;
-import org.aksw.jena_sparql_api.utils.QueryUtils;
+import org.aksw.jenax.arq.util.syntax.QueryUtils;
+import org.aksw.jenax.sparql.query.rx.SparqlRx;
+import org.aksw.jenax.sparql.relation.api.Relation;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.SortCondition;
 import org.apache.jena.sparql.core.Var;

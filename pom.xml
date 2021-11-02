@@ -19,9 +19,9 @@
 		<spring-boot.version>2.3.3.RELEASE</spring-boot.version>
 		<jackson.version>2.10.3</jackson.version>
 
-		<jena-sparql-api.version>4.2.0-1-SNAPSHOT</jena-sparql-api.version>
+		<jenax.version>4.3.0-1-SNAPSHOT</jenax.version>
 		<aksw-commons.version>0.9.1-SNAPSHOT</aksw-commons.version>
-		<facete3.version>1.2.0-SNAPSHOT</facete3.version>
+<!-- 		<facete3.version>1.2.0-SNAPSHOT</facete3.version> -->
 
 		<slf4j.version>1.7.24</slf4j.version>
 
@@ -139,33 +139,33 @@
 			<!-- </dependency> -->
 
 			<dependency>
-				<groupId>org.hobbit</groupId>
-				<artifactId>facete3-impl</artifactId>
-				<version>${facete3.version}</version>
+				<groupId>org.aksw.jenax</groupId>
+				<artifactId>jenax-arq-relations</artifactId>
+				<version>${jenax.version}</version>
 			</dependency>
 
 			<dependency>
-				<groupId>org.aksw.jena-sparql-api</groupId>
-				<artifactId>jena-sparql-api-concepts</artifactId>
-				<version>${jena-sparql-api.version}</version>
+				<groupId>org.aksw.jenax</groupId>
+				<artifactId>jenax-arq-rx</artifactId>
+				<version>${jenax.version}</version>
 			</dependency>
 
 			<dependency>
-				<groupId>org.aksw.jena-sparql-api</groupId>
-				<artifactId>jena-sparql-api-rx</artifactId>
-				<version>${jena-sparql-api.version}</version>
+				<groupId>org.aksw.jenax</groupId>
+				<artifactId>jenax-facete-impl</artifactId>
+				<version>${jenax.version}</version>
 			</dependency>
 
 			<dependency>
-				<groupId>org.aksw.jena-sparql-api</groupId>
-				<artifactId>jena-sparql-api-paths</artifactId>
-				<version>${jena-sparql-api.version}</version>
+				<groupId>org.aksw.jenax</groupId>
+				<artifactId>jenax-arq-datapaths</artifactId>
+				<version>${jenax.version}</version>
 			</dependency>
 
 			<dependency>
-				<groupId>org.aksw.jena-sparql-api</groupId>
-				<artifactId>jena-sparql-api-resource-shape</artifactId>
-				<version>${jena-sparql-api.version}</version>
+				<groupId>org.aksw.jenax</groupId>
+				<artifactId>jenax-arq-datashapes</artifactId>
+				<version>${jenax.version}</version>
 			</dependency>
 
 			<dependency>
@@ -176,9 +176,9 @@
 			</dependency>
 
 			<dependency>
-				<groupId>org.aksw.jena-sparql-api</groupId>
-				<artifactId>jena-sparql-api-resources-test-config</artifactId>
-				<version>${jena-sparql-api.version}</version>
+				<groupId>org.aksw.jenax</groupId>
+				<artifactId>jenax-resources-test-config</artifactId>
+				<version>${jenax.version}</version>
 				<scope>test</scope>
 			</dependency>
 

@@ -3,9 +3,9 @@ package org.aksw.jena_sparql_api.vaadin.util;
 import java.util.List;
 import java.util.function.Function;
 
-import org.aksw.jena_sparql_api.concepts.Relation;
 import org.aksw.jena_sparql_api.concepts.RelationUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparql;
+import org.aksw.jenax.sparql.relation.api.Relation;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
