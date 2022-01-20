@@ -6,7 +6,7 @@
 
 	<groupId>org.aksw.scaseco.vaadin</groupId>
 	<artifactId>vaadin-jena-parent</artifactId>
-	<version>4.2.0-1-SNAPSHOT</version>
+	<version>4.3.2-1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<!-- <name>Jena SPARQL API - Vaadin - Parent</name> -->
@@ -19,11 +19,13 @@
 		<spring-boot.version>2.3.3.RELEASE</spring-boot.version>
 		<jackson.version>2.10.3</jackson.version>
 
-		<jenax.version>4.3.0-1-SNAPSHOT</jenax.version>
+		<jenax.version>4.3.2-1-SNAPSHOT</jenax.version>
 		<aksw-commons.version>0.9.1-SNAPSHOT</aksw-commons.version>
 <!-- 		<facete3.version>1.2.0-SNAPSHOT</facete3.version> -->
 
-		<slf4j.version>1.7.24</slf4j.version>
+                <slf4j.version>1.8.0-beta4</slf4j.version>
+                <log4j.version>2.17.1</log4j.version>
+
 
 		<maven.compiler.release>11</maven.compiler.release>
 		<file.encoding>UTF-8</file.encoding>
@@ -89,12 +91,18 @@
 				<version>3.12.0</version>
 			</dependency>
 
+                        <dependency>
+                                <groupId>org.apache.logging.log4j</groupId>
+                                <artifactId>log4j-slf4j18-impl</artifactId>
+                                <version>${log4j.version}</version>
+                        </dependency>
 
-			<dependency>
-				<groupId>org.slf4j</groupId>
-				<artifactId>slf4j-log4j12</artifactId>
-				<version>${slf4j.version}</version>
-			</dependency>
+                        <dependency>
+                                <groupId>org.slf4j</groupId>
+                                <artifactId>slf4j-api</artifactId>
+                                <version>${slf4j.version}</version>
+                        </dependency>
+
 
 			<dependency>
 				<groupId>org.vaadin.gatanaso</groupId>
@@ -200,6 +208,18 @@
 		</dependencies>
 	</dependencyManagement>
 
+	<distributionManagement>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+		<snapshotRepository>
+			<id>maven.aksw.snapshots</id>
+			<name>AKSW Snapshot Repository</name>
+			<url>https://maven.aksw.org/archiva/repository/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+
 
 	<repositories>
 		<!-- The order of definitions matters. Explicitly defining central here 
@@ -219,6 +239,17 @@
 			<url>https://maven.vaadin.com/vaadin-addons</url>
 			<snapshots>
 				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>maven.aksw.snapshots</id>
+			<name>AKSW Snapshot Repository</name>
+			<url>https://maven.aksw.org/archiva/repository/snapshots</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
 			</snapshots>
 		</repository>
 	</repositories>
