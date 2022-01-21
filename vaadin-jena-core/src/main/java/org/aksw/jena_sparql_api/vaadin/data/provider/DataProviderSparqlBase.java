@@ -1,17 +1,15 @@
 package org.aksw.jena_sparql_api.vaadin.data.provider;
 
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.aksw.commons.util.range.CountInfo;
 import org.aksw.commons.util.range.RangeUtils;
 import org.aksw.jenax.arq.util.syntax.QueryUtils;
+import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.sparql.query.rx.SparqlRx;
 import org.aksw.jenax.sparql.relation.api.Relation;
-import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.SortCondition;
 import org.apache.jena.sparql.core.Var;
-import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.expr.Expr;
 
 import com.github.jsonldjava.shaded.com.google.common.primitives.Ints;
@@ -22,24 +20,26 @@ import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.data.provider.QuerySortOrder;
 import com.vaadin.flow.data.provider.SortDirection;
 
-public class DataProviderSparql
-        extends AbstractBackEndDataProvider<Binding, Expr> {
+import io.reactivex.rxjava3.core.Flowable;
+
+public abstract class DataProviderSparqlBase<T>
+        extends AbstractBackEndDataProvider<T, Expr> {
     private static final long serialVersionUID = 1L;
 
     protected Relation relation;
-    protected Function<? super org.apache.jena.query.Query, ? extends QueryExecution> qef;
+    protected QueryExecutionFactoryQuery qef;
 
     public int predefinedSize = -1;
 
-    public DataProviderSparql(Relation relation,
-                              Function<? super org.apache.jena.query.Query, ? extends QueryExecution> qef) {
+    public DataProviderSparqlBase(Relation relation,
+    		QueryExecutionFactoryQuery qef) {
         super();
         this.relation = relation;
         this.qef = qef;
     }
 
     @Override
-    protected Stream<Binding> fetchFromBackEnd(Query<Binding, Expr> query) {
+    protected Stream<T> fetchFromBackEnd(Query<T, Expr> query) {
         org.apache.jena.query.Query baseQuery = createEffectiveQuery(relation, query);
         org.apache.jena.query.Query q = QueryUtils.applySlice(
                 baseQuery,
@@ -61,7 +61,8 @@ public class DataProviderSparql
 
         System.out.println(q);
 
-        Stream<Binding> result = SparqlRx.execSelectRaw(() -> qef.apply(q)).toList().blockingGet().stream();
+        Flowable<T> solutionFlow = createSolutionFlow(q);
+        Stream<T> result = solutionFlow.toList().blockingGet().stream();
 
 
 //        Stream<Binding> debug = toStream(SparqlRx.execSelectRaw(() -> qef.apply(q)));
@@ -72,8 +73,11 @@ public class DataProviderSparql
         return result;
     }
 
+    protected abstract Flowable<T> createSolutionFlow(org.apache.jena.query.Query query);
+    
+    
     @Override
-    protected int sizeInBackEnd(Query<Binding, Expr> query) {
+    protected int sizeInBackEnd(Query<T, Expr> query) {
         if (predefinedSize != -1) {
             return predefinedSize;
         }
@@ -82,7 +86,7 @@ public class DataProviderSparql
 
         System.out.println("Computing resultset size for\n" + baseQuery);
 
-        Range<Long> range = SparqlRx.fetchCountQuery(qef, baseQuery, null, null).blockingGet();
+        Range<Long> range = SparqlRx.fetchCountQuery(qef::createQueryExecution, baseQuery, null, null).blockingGet();
         CountInfo countInfo = RangeUtils.toCountInfo(range);
         long count = countInfo.getCount();
 
@@ -92,7 +96,7 @@ public class DataProviderSparql
     }
 
 
-    public static org.apache.jena.query.Query createEffectiveQuery(Relation relation, Query<Binding, Expr> query) {
+    public static org.apache.jena.query.Query createEffectiveQuery(Relation relation, Query<?, Expr> query) {
         Expr expr = query.getFilter().orElse(null);
 
         org.apache.jena.query.Query result = relation.toQuery();

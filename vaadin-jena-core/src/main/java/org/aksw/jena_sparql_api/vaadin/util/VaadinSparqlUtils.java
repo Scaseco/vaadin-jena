@@ -1,14 +1,13 @@
 package org.aksw.jena_sparql_api.vaadin.util;
 
 import java.util.List;
-import java.util.function.Function;
 
 import org.aksw.jena_sparql_api.concepts.RelationUtils;
-import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparql;
+import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
+import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.sparql.relation.api.Relation;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryExecution;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.expr.Expr;
@@ -28,10 +27,10 @@ public class VaadinSparqlUtils {
      */
     public static void setQueryForGrid(
             Grid<Binding> grid,
-            Function<? super Query, ? extends QueryExecution> qef,
+            QueryExecutionFactoryQuery qef,
             Query query) {
         Relation relation = RelationUtils.fromQuery(query);
-        DataProvider<Binding, Expr> dataProvider = new DataProviderSparql(relation, qef);
+        DataProvider<Binding, Expr> dataProvider = new DataProviderSparqlBinding(relation, qef);
 
         grid.setDataProvider(dataProvider);
         List<Var> vars = query.getProjectVars();
