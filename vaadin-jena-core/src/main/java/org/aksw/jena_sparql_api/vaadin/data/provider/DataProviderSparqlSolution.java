@@ -20,5 +20,5 @@ public class DataProviderSparqlSolution
 	@Override
 	protected Flowable<QuerySolution> createSolutionFlow(Query query) {
 		return SparqlRx.execSelect(() -> qef.createQueryExecution(query));
-	}	
+	}
 }
