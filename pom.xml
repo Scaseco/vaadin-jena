@@ -21,10 +21,10 @@
 
 		<jenax.version>4.3.2-1-SNAPSHOT</jenax.version>
 		<aksw-commons.version>0.9.1-SNAPSHOT</aksw-commons.version>
-<!-- 		<facete3.version>1.2.0-SNAPSHOT</facete3.version> -->
+		<!-- <facete3.version>1.2.0-SNAPSHOT</facete3.version> -->
 
-                <slf4j.version>1.8.0-beta4</slf4j.version>
-                <log4j.version>2.17.1</log4j.version>
+		<slf4j.version>1.8.0-beta4</slf4j.version>
+		<log4j.version>2.17.1</log4j.version>
 
 
 		<maven.compiler.release>11</maven.compiler.release>
@@ -40,6 +40,7 @@
 		<module>vaadin-jena-core</module>
 		<module>vaadin-jena-rdf-term-editor</module>
 		<module>vaadin-jena-shacl-editor</module>
+		<module>vaadin-jena-geo</module>
 
 		<module>vaadin-jena-demo-app</module>
 	</modules>
@@ -91,17 +92,17 @@
 				<version>3.12.0</version>
 			</dependency>
 
-                        <dependency>
-                                <groupId>org.apache.logging.log4j</groupId>
-                                <artifactId>log4j-slf4j18-impl</artifactId>
-                                <version>${log4j.version}</version>
-                        </dependency>
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-slf4j18-impl</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
 
-                        <dependency>
-                                <groupId>org.slf4j</groupId>
-                                <artifactId>slf4j-api</artifactId>
-                                <version>${slf4j.version}</version>
-                        </dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
 
 
 			<dependency>
