@@ -21,6 +21,11 @@
 			<artifactId>jenax-arq-rx</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>org.aksw.jenax</groupId>
+			<artifactId>jenax-arq-plugins-bundle</artifactId>
+		</dependency>
+
 		<!-- https://vaadin.com/directory/component/leaflet4vaadin -->
 		<dependency>
 			<groupId>com.vaadin</groupId>

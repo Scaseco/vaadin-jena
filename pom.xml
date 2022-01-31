@@ -159,6 +159,14 @@
 				<version>${jenax.version}</version>
 			</dependency>
 
+			<!-- Needed for GeometryWrapperUtils; there should be a more fine grained 
+				module for geo stuff -->
+			<dependency>
+				<groupId>org.aksw.jenax</groupId>
+				<artifactId>jenax-arq-plugins-bundle</artifactId>
+				<version>${jenax.version}</version>
+			</dependency>
+
 			<dependency>
 				<groupId>org.aksw.jenax</groupId>
 				<artifactId>jenax-facete-impl</artifactId>

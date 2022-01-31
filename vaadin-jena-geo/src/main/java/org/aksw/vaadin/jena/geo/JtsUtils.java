@@ -1,21 +1,15 @@
 package org.aksw.vaadin.jena.geo;
 
+import java.util.List;
+
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryCollection;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+
 import com.google.common.collect.Streams;
-import org.geojson.GeoJsonObject;
-import org.locationtech.jts.algorithm.ConvexHull;
-import org.locationtech.jts.geom.*;
-import org.locationtech.jts.io.geojson.GeoJsonWriter;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vaadin.addon.leaflet4vaadin.types.LatLng;
-import com.vaadin.addon.leaflet4vaadin.types.LatLngBounds;
-
-import java.util.*;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public class JtsUtils {
 	
@@ -37,43 +31,6 @@ public class JtsUtils {
 		}
 		return result;
 	}
-
-	public static LatLngBounds convert(Envelope e) {
-		return new LatLngBounds(
-				new LatLng(e.getMinY(), e.getMinX()),
-				new LatLng(e.getMaxY(), e.getMaxX()));
-	}
-	
-	public static GeoJsonObject convert(Geometry geometry) {
-		GeoJsonWriter geoJsonWriter = new GeoJsonWriter();
-		String jsonStr = geoJsonWriter.write(geometry); 
-		
-
-	    ObjectMapper mapper = new ObjectMapper();
-	    GeoJsonObject result;
-		try {
-			result = mapper.readValue(jsonStr, GeoJsonObject.class);
-		} catch (JsonProcessingException e) {
-			throw new RuntimeException(e);
-		}
-		return result;
-	}
-
-	public static GeoJsonObject convert(List<Geometry> geometries) {
-		GeometryCollection collection = new GeometryFactory().createGeometryCollection(geometries.toArray(new Geometry[0]));
-		GeoJsonWriter geoJsonWriter = new GeoJsonWriter();
-		String jsonStr = geoJsonWriter.write(collection);
-
-		ObjectMapper mapper = new ObjectMapper();
-		GeoJsonObject result;
-		try {
-			result = mapper.readValue(jsonStr, GeoJsonObject.class);
-		} catch (JsonProcessingException e) {
-			throw new RuntimeException(e);
-		}
-		return result;
-	}
-
 
 	public static Point computeCentroid(List<Point> points, List<Double> weights) {
 		if (points.size() != weights.size()) {

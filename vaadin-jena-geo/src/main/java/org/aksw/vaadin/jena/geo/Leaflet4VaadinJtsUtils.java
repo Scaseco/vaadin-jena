@@ -1,13 +1,13 @@
 package org.aksw.vaadin.jena.geo;
 
-import org.apache.jena.geosparql.implementation.GeometryWrapper;
-import org.apache.jena.graph.Node;
+import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 
 import com.vaadin.addon.leaflet4vaadin.types.LatLng;
+import com.vaadin.addon.leaflet4vaadin.types.LatLngBounds;
 
-public class Leaflet4VaadinUtils {
+public class Leaflet4VaadinJtsUtils {
 	
 	public static LatLng extractLatLng(Geometry g) {
 		LatLng result = null;
@@ -18,9 +18,9 @@ public class Leaflet4VaadinUtils {
 		return result;
 	}
 	
-	public static LatLng extractLatLng(Node node) {
-		GeometryWrapper w = GeometryWrapper.extract(node);
-		Geometry geom = w.getParsingGeometry();
-		return extractLatLng(geom);
+	public static LatLngBounds convert(Envelope e) {
+		return new LatLngBounds(
+				new LatLng(e.getMinY(), e.getMinX()),
+				new LatLng(e.getMaxY(), e.getMaxX()));
 	}
 }
