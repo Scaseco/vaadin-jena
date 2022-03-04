@@ -6,7 +6,7 @@
 
 	<groupId>org.aksw.scaseco.vaadin</groupId>
 	<artifactId>vaadin-jena-parent</artifactId>
-	<version>4.3.2-1-SNAPSHOT</version>
+	<version>4.4.0-1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<!-- <name>Jena SPARQL API - Vaadin - Parent</name> -->
@@ -19,12 +19,12 @@
 		<spring-boot.version>2.3.3.RELEASE</spring-boot.version>
 		<jackson.version>2.10.3</jackson.version>
 
-		<jenax.version>4.3.2-1-SNAPSHOT</jenax.version>
+		<jenax.version>4.4.0-1</jenax.version>
 		<aksw-commons.version>0.9.1-SNAPSHOT</aksw-commons.version>
 		<!-- <facete3.version>1.2.0-SNAPSHOT</facete3.version> -->
 
 		<slf4j.version>1.8.0-beta4</slf4j.version>
-		<log4j.version>2.17.1</log4j.version>
+		<log4j.version>2.17.2</log4j.version>
 
 
 		<maven.compiler.release>11</maven.compiler.release>

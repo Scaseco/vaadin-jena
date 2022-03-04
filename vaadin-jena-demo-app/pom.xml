@@ -15,7 +15,7 @@
 	<parent>
 		<groupId>org.aksw.scaseco.vaadin</groupId>
 		<artifactId>vaadin-jena-parent</artifactId>
-		<version>4.3.2-1-SNAPSHOT</version>
+		<version>4.4.0-1-SNAPSHOT</version>
 	</parent>
 
 
