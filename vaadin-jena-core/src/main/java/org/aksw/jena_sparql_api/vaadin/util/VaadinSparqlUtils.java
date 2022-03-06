@@ -50,27 +50,27 @@ public class VaadinSparqlUtils {
             Class<T> rdfNodeClass,
             String varName,
             Function<Binding, QuerySolution> customBindingMapper) {
-    	    	
-        Relation relation = RelationUtils.fromQuery(query);        
-    	varName = varName == null ? relation.toUnaryRelation().getVar().getName() : varName;
 
-        
+        Relation relation = RelationUtils.fromQuery(query);
+        varName = varName == null ? relation.toUnaryRelation().getVar().getName() : varName;
+
+
         DataProvider<T, Expr> dataProvider = new DataProviderSparqlResource<>(relation, qef, rdfNodeClass, varName, customBindingMapper);
 
         grid.setDataProvider(dataProvider);
         grid.removeAllColumns();
-	      Column<T> column = grid.addColumn(rdfNode -> {
-		      // RDFNode rdfNode = qs.get(varName);
-		      Node node = rdfNode.asNode();
-		      Object r;
-		      if (node == null) {
-		          r = null;
-		      } else if (node.isLiteral()) {
-		          r = node.getLiteralValue();
-		      } else {
-		          r = node.toString();
-		      }
-		      return r;
+          Column<T> column = grid.addColumn(rdfNode -> {
+              // RDFNode rdfNode = qs.get(varName);
+              Node node = rdfNode.asNode();
+              Object r;
+              if (node == null) {
+                  r = null;
+              } else if (node.isLiteral()) {
+                  r = node.getLiteralValue();
+              } else {
+                  r = node.toString();
+              }
+              return r;
             }); //.setHeader(varName);
 
             column.setKey(varName);
@@ -87,23 +87,26 @@ public class VaadinSparqlUtils {
             Function<Binding, QuerySolution> customBindingMapper) {
 
         Relation relation = RelationUtils.fromQuery(query);
-    	varName = varName == null ? relation.toUnaryRelation().getVar().getName() : varName;
+        varName = varName == null ? relation.toUnaryRelation().getVar().getName() : varName;
         DataProvider<T, Expr> dataProvider = new DataProviderSparqlRdfNode<>(relation, qef, rdfNodeClass, varName, customBindingMapper);
 
         grid.setDataProvider(dataProvider);
         grid.removeAllColumns();
-	      Column<T> column = grid.addColumn(rdfNode -> {
-		      // RDFNode rdfNode = qs.get(varName);
-		      Node node = rdfNode.asNode();
-		      Object r;
-		      if (node == null) {
-		          r = null;
-		      } else if (node.isLiteral()) {
-		          r = node.getLiteralValue();
-		      } else {
-		          r = node.toString();
-		      }
-		      return r;
+          Column<T> column = grid.addColumn(rdfNode -> {
+              // RDFNode rdfNode = qs.get(varName);
+              Node node = rdfNode.asNode();
+              Object r;
+              if (node == null) {
+                  r = null;
+              } else {
+                  r = node.toString(false);
+              }
+//              } else if (node.isLiteral()) {
+//                  r = node.getLiteralLexicalForm();
+//              } else {
+//                  r = node.toString(false);
+//              }
+              return r;
             }); //.setHeader(varName);
 
             column.setKey(varName);
@@ -130,11 +133,14 @@ public class VaadinSparqlUtils {
                 Object r;
                 if (node == null) {
                     r = null;
-                } else if (node.isLiteral()) {
-                    r = node.getLiteralValue();
                 } else {
-                    r = node.toString();
+                    r = node.toString(false);
                 }
+//                } else if (node.isLiteral()) {
+//                    r = node.getLiteralValue();
+//                } else {
+//                    r = node.toString();
+//                }
                 return r;
             }).setHeader(varName);
 
@@ -148,9 +154,9 @@ public class VaadinSparqlUtils {
             Grid<Binding> grid,
             QueryExecutionFactoryQuery qef,
             Query query) {
-    	setQueryForGridBinding(grid, qef, query, null);
+        setQueryForGridBinding(grid, qef, query, null);
     }
-	
+
     /**
      * Configure a grid's data provider based on a SPARQL SELECT query such that
      * pagination, sorting (TODO: and filtering) works out of the box.
@@ -166,9 +172,9 @@ public class VaadinSparqlUtils {
             List<Var> visibleColumns) {
         Relation relation = RelationUtils.fromQuery(query);
         DataProvider<Binding, Expr> dataProvider = new DataProviderSparqlBinding(relation, qef)
-        		.withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
-        				Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
-        		)));
+                .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
+                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
+                )));
 
         grid.setDataProvider(dataProvider);
         List<Var> vars = visibleColumns == null ? query.getProjectVars() : visibleColumns;
@@ -180,11 +186,14 @@ public class VaadinSparqlUtils {
                 Object r;
                 if (node == null) {
                     r = null;
-                } else if (node.isLiteral()) {
-                    r = node.getLiteralValue();
                 } else {
-                    r = node.toString();
+                    r = node.toString(false);
                 }
+//                } else if (node.isLiteral()) {
+//                    r = node.getLiteralValue();
+//                } else {
+//                    r = node.toString();
+//                }
                 return r;
             }).setHeader(var.getName());
 
@@ -193,8 +202,8 @@ public class VaadinSparqlUtils {
             column.setSortable(true);
         }
     }
-    
-    
+
+
     public static Map<Var, TextField> configureGridFilter(Grid<Binding> grid, Collection<Var> vars) {
         HeaderRow filterRow = grid.appendHeaderRow();
 
@@ -216,25 +225,25 @@ public class VaadinSparqlUtils {
             tf.setPlaceholder("Filter");
             tf.getElement().setAttribute("focus-target", "");
         }
-        
+
         return result;
     }
 
     public static void registerGridFilters(Grid<Binding> grid, Map<Var, ? extends HasValue<?, String>> filterFields) {
         DataProvider<Binding, ?> rawDataProvider = grid.getDataProvider();
         if (rawDataProvider instanceof ConfigurableFilterDataProvider) {
-        	ConfigurableFilterDataProvider<Binding, Expr, Expr> dataProvider = (ConfigurableFilterDataProvider<Binding, Expr, Expr>)rawDataProvider;            
+            ConfigurableFilterDataProvider<Binding, Expr, Expr> dataProvider = (ConfigurableFilterDataProvider<Binding, Expr, Expr>)rawDataProvider;
             List<Expr> exprs = filterFields.entrySet().stream()
-	            .flatMap(e -> {
-	            	String str = e.getValue().getValue();
-	            	Stream<Expr> r = str == null
-	            			? Stream.empty()
-	            			: Stream.of(new E_StrContains(new E_StrLowerCase(new E_Str(new ExprVar(e.getKey()))), NodeValue.makeString(str.toLowerCase())));
+                .flatMap(e -> {
+                    String str = e.getValue().getValue();
+                    Stream<Expr> r = str == null
+                            ? Stream.empty()
+                            : Stream.of(new E_StrContains(new E_StrLowerCase(new E_Str(new ExprVar(e.getKey()))), NodeValue.makeString(str.toLowerCase())));
 
-	            	return r;
-	            })
-	            .collect(Collectors.toList());
-            
+                    return r;
+                })
+                .collect(Collectors.toList());
+
             Expr expr = ExprUtils.andifyBalanced(exprs);
             dataProvider.setFilter(expr);
         }

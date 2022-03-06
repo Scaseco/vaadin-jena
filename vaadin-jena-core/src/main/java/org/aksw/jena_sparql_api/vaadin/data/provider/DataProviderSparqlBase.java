@@ -11,6 +11,8 @@ import org.aksw.jenax.sparql.relation.api.Relation;
 import org.apache.jena.query.SortCondition;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.Expr;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.jsonldjava.shaded.com.google.common.primitives.Ints;
 import com.google.common.collect.Lists;
@@ -24,6 +26,8 @@ import io.reactivex.rxjava3.core.Flowable;
 
 public abstract class DataProviderSparqlBase<T>
         extends AbstractBackEndDataProvider<T, Expr> {
+    private static final Logger logger = LoggerFactory.getLogger(DataProviderSparqlBase.class);
+
     private static final long serialVersionUID = 1L;
 
     protected Relation relation;
@@ -32,7 +36,7 @@ public abstract class DataProviderSparqlBase<T>
     public int predefinedSize = -1;
 
     public DataProviderSparqlBase(Relation relation,
-    		QueryExecutionFactoryQuery qef) {
+            QueryExecutionFactoryQuery qef) {
         super();
         this.relation = relation;
         this.qef = qef;
@@ -74,8 +78,8 @@ public abstract class DataProviderSparqlBase<T>
     }
 
     protected abstract Flowable<T> createSolutionFlow(org.apache.jena.query.Query query);
-    
-    
+
+
     @Override
     protected int sizeInBackEnd(Query<T, Expr> query) {
         if (predefinedSize != -1) {
@@ -84,14 +88,14 @@ public abstract class DataProviderSparqlBase<T>
 
         org.apache.jena.query.Query baseQuery = createEffectiveQuery(relation, query);
 
-        System.out.println("Computing resultset size for\n" + baseQuery);
+        logger.debug("Computing resultset size for\n" + baseQuery);
 
         Range<Long> range = SparqlRx.fetchCountQuery(qef::createQueryExecution, baseQuery, null, null).blockingGet();
         CountInfo countInfo = RangeUtils.toCountInfo(range);
         long count = countInfo.getCount();
 
         int result = Ints.saturatedCast(count);
-        System.out.println("Counted items: " + result);
+        logger.debug("Counted items: " + result);
         return result;
     }
 
