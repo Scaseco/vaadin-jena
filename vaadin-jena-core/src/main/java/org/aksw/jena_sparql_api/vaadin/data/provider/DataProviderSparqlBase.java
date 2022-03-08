@@ -63,7 +63,9 @@ public abstract class DataProviderSparqlBase<T>
             }
         }
 
-        System.out.println(q);
+        // System.out.println(q);
+
+        logger.trace("Effective query: " + q);
 
         Flowable<T> solutionFlow = createSolutionFlow(q);
         Stream<T> result = solutionFlow.toList().blockingGet().stream();

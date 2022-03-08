@@ -36,6 +36,7 @@ import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.grid.HeaderRow.HeaderCell;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ConfigurableFilterDataProvider;
 import com.vaadin.flow.data.provider.DataProvider;
@@ -152,9 +153,10 @@ public class VaadinSparqlUtils {
 
     public static void setQueryForGridBinding(
             Grid<Binding> grid,
+            HeaderRow headerRow,
             QueryExecutionFactoryQuery qef,
             Query query) {
-        setQueryForGridBinding(grid, qef, query, null);
+        setQueryForGridBinding(grid, headerRow, qef, query, null);
     }
 
     /**
@@ -167,6 +169,7 @@ public class VaadinSparqlUtils {
      */
     public static void setQueryForGridBinding(
             Grid<Binding> grid,
+            HeaderRow headerRow,
             QueryExecutionFactoryQuery qef,
             Query query,
             List<Var> visibleColumns) {
@@ -195,7 +198,9 @@ public class VaadinSparqlUtils {
 //                    r = node.toString();
 //                }
                 return r;
-            }).setHeader(var.getName());
+            }); //.setHeader(var.getName());
+
+            headerRow.getCell(column).setText(var.getName());
 
             column.setKey(var.getName());
             column.setResizable(true);
@@ -204,8 +209,8 @@ public class VaadinSparqlUtils {
     }
 
 
-    public static Map<Var, TextField> configureGridFilter(Grid<Binding> grid, Collection<Var> vars) {
-        HeaderRow filterRow = grid.appendHeaderRow();
+    public static Map<Var, TextField> configureGridFilter(Grid<Binding> grid, HeaderRow filterRow, Collection<Var> vars) {
+        // HeaderRow filterRow = grid.appendHeaderRow();
 
         Map<Var, TextField> result = new LinkedHashMap<>();
         for (Var var : vars) {
@@ -220,7 +225,8 @@ public class VaadinSparqlUtils {
 
             tf.setValueChangeMode(ValueChangeMode.LAZY);
 
-            filterRow.getCell(grid.getColumnByKey(var.getName())).setComponent(tf);
+            HeaderCell cell = filterRow.getCell(grid.getColumnByKey(var.getName()));
+            cell.setComponent(tf);
             tf.setSizeFull();
             tf.setPlaceholder("Filter");
             tf.getElement().setAttribute("focus-target", "");
@@ -236,7 +242,7 @@ public class VaadinSparqlUtils {
             List<Expr> exprs = filterFields.entrySet().stream()
                 .flatMap(e -> {
                     String str = e.getValue().getValue();
-                    Stream<Expr> r = str == null
+                    Stream<Expr> r = str == null || str.isBlank()
                             ? Stream.empty()
                             : Stream.of(new E_StrContains(new E_StrLowerCase(new E_Str(new ExprVar(e.getKey()))), NodeValue.makeString(str.toLowerCase())));
 
