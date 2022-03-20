@@ -1,4 +1,4 @@
-package org.aksw.vaadin.app.demo.main;
+package org.aksw.vaadin.app.demo;
 
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryFactory;
