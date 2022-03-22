@@ -41,7 +41,7 @@ import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.arq.util.triple.TripleUtils;
 import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
-import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
+import org.aksw.jenax.connection.query.QueryExecutionDecoratorBase;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.stmt.core.SparqlStmtMgr;
 import org.apache.jena.graph.Node;
@@ -52,6 +52,7 @@ import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.rdfconnection.SparqlQueryConnection;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.algebra.Table;
@@ -81,92 +82,16 @@ import com.google.common.collect.Sets;
 public class DataRetriever {
 
     protected RdfDataSource rdfDataSource;
-    protected UnaryRelation sourceConcept;
-    // protected ;
+    // protected UnaryRelation sourceConcept;
+    protected Query metaModelQuery = SparqlStmtMgr.loadQuery("resource-metamodel.rq");
 
+    // protected PolaritySet<Path> paths;
 
     // protected Table<Node, Node, Slice<Node[]>>
     // protected Path<Node> basePath;
     protected ClaimingCache<org.aksw.commons.path.core.Path<Node>, AdvancedRangeCacheImpl<Node[]>> cache;
 
     // Accumulator for paths - simple predicates are placed into fwd/bwd containers
-
-    static class ResourceInfo {
-        protected Node src;
-        protected QueryExecutionFactoryQuery qef;
-        protected Map<Path, Long> pathToCount = new LinkedHashMap<>();
-
-        protected Map<Path, DataStreamSource<Node[]>> pathToValues = new HashMap<>();
-
-        public void set(Node p, boolean isFwd, long valueCount) {
-            Path path = isFwd
-                    ? new P_Link(p)
-                    : new P_ReverseLink(p);
-
-            pathToCount.put(path, valueCount);
-        }
-
-        public void putData(Path path, Node[] nodes) {
-            DataStreamSource<Node[]> cache = pathToValues.computeIfAbsent(path, p -> {
-
-                TriplePath t = new TriplePath(src, p, Vars.o);
-                Element elt = ElementUtils.createElement(t);
-                Query query = new Query();
-                query.setQuerySelectType();
-                query.addResultVar(Vars.o);
-                query.setQueryPattern(elt);
-                query.addOrderBy(Vars.o, Query.ORDER_DESCENDING);
-
-                ListPaginator<Node> paginator = new ListPaginatorSparql(query, qef::createQueryExecution)
-                    .map(binding -> binding.get(Vars.o));
-
-                DataStreamSourceRx<Node> source = new DataStreamSourceRx<>(ArrayOps.createFor(Node.class), paginator);
-
-                AdvancedRangeCacheConfig arcc = AdvancedRangeCacheConfigImpl.newDefaultsForObjects(10000);
-                Slice<Node[]> slice = SliceInMemoryCache.create(ArrayOps.createFor(Node.class), 50000, 20);
-                DataStreamSource<Node[]> dss = DataStreamSources.cache(source, slice, arcc);
-                return dss;
-            });
-
-            AdvancedRangeCacheImpl<Node[]> arc = (AdvancedRangeCacheImpl<Node[]>)cache;
-            Slice<Node[]> slice = arc.getSlice();
-            try (SliceAccessor<Node[]> accessor = slice.newSliceAccessor()) {
-                accessor.claimByOffsetRange(0, nodes.length);
-                try {
-                    accessor.write(0, nodes, 0, nodes.length);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
-        // If there is sufficient initial data available then pre-fetching a property can be skippeds
-        public long getInitialDataLength(Path path) {
-            AdvancedRangeCacheImpl<Node[]> item = (AdvancedRangeCacheImpl<Node[]>)pathToValues.get(path);
-            Slice<Node[]> slice = item.getSlice();
-
-            // Return the length of the range starting from 0
-            long count = slice.computeFromMetaData(false, md -> {
-                Long r = 0l;
-                Range<Long> firstRange = Iterables.getFirst(md.getLoadedRanges().asRanges(), Range.closedOpen(0l, 0l));
-                firstRange = firstRange.canonical(DiscreteDomain.longs());
-                if (firstRange.lowerEndpoint() == 0) {
-                    r = firstRange.upperEndpoint();
-                }
-                return r;
-            });
-
-            return count;
-        }
-
-        public Map<Path, Long> getPathToCount() {
-            return pathToCount;
-        }
-
-        public Set<Path> getKnownPaths() {
-            return pathToCount.keySet();
-        }
-    }
 
 
 
@@ -177,21 +102,34 @@ public class DataRetriever {
         Dataset dataset = RDFDataMgr.loadDataset("linkedgeodata-2018-04-04.dcat.ttl");
         RdfDataSource rdfDataSource = RdfDataSourceFromDataset.create(dataset, false);
 
+        DataRetriever retriever = new DataRetriever(rdfDataSource);
+
+        Map<Node, ResourceInfo> map = retriever.fetch(nodes);
+
+        // map.values().iterator().next().
+    }
+
+
+    public DataRetriever(RdfDataSource rdfDataSource) {
+        this.rdfDataSource = rdfDataSource;
+    }
+
+    public Map<Node, ResourceInfo> fetch(Set<Node> nodes) {
+
         Map<Node, ResourceInfo> nodeToState = new HashMap<>();
 
         try (SparqlQueryConnection conn = rdfDataSource.getConnection()) {
             // SparqlQueryConnection conn = null;
 
-            Query query = SparqlStmtMgr.loadQuery("resource-metamodel.rq");
 
             LookupService<Node, Table> ls = new LookupServiceSparqlQuery(
-                    conn, query, Var.alloc("src"));
+                    conn, metaModelQuery, Var.alloc("src"));
             Map<Node, Table> map = ls.fetchMap(nodes);
 
             for (Entry<Node, Table> e : map.entrySet()) {
                 Node s = e.getKey();
 
-                ResourceInfo state = nodeToState.computeIfAbsent(s, key -> new ResourceInfo());
+                ResourceInfo state = nodeToState.computeIfAbsent(s, key -> new ResourceInfo(s, rdfDataSource));
 
                 ResultSet rs = ResultSet.adapt(e.getValue().toRowSet());
                 while (rs.hasNext()) {
@@ -294,50 +232,107 @@ public class DataRetriever {
             }
         }
 
-        // DataStreamSourceRx.cr
 
-//
-//        System.out.println(pathAcc.getFwdPaths());
-//
-//        Set<Path> complement = Sets.difference(allKnownPaths, blacklist.asMap().keySet());
-//        System.out.println("Complement set: " + complement);
-//
-//
-//        // Any path that is not in the blacklist
-//        System.out.println(allKnownPaths);
-//
-//
-//
-//
-//
-//        // Negative vs positive sets: Which representation is cheaper?
-//
-//
-//
-//        // If a path is blacklisted on all resources then it can be globably excluded
-//        // If it is blacklisted on some resources, then it can be added
-//
-//
-//
-//        System.out.println(blacklist);
-//        System.out.println("here");
-//
-
-//
-//        AdvancedRangeCacheConfig arcc = AdvancedRangeCacheConfigImpl.newDefaultsForObjects(10000);
-//
-//        Slice<Binding[]> slice = SliceInMemoryCache.create(ArrayOps.createFor(Binding.class), 50000, 20);
-//        try (SliceAccessor<Binding[]> accessor = slice.newSliceAccessor()) {
-//            Binding[] preloadedData = new Binding[0];
-//            accessor.claimByOffsetRange(0, 100);
-//            accessor.write(0, preloadedData, 0, preloadedData.length);
-//        }
-//
-//
-//        DataStreamSources.cache(source, slice, arcc);
-//        //AdvancedRangeCacheImpl.create(null, null, 0, 0, null)
-
+        return nodeToState;
     }
+
+
+    public static class ResourceInfo {
+        protected Node src;
+        protected RdfDataSource rdfDataSource;
+        protected Map<Path, Long> pathToCount = new LinkedHashMap<>();
+
+        protected Map<Path, DataStreamSource<Node[]>> pathToValues = new HashMap<>();
+
+
+        public ResourceInfo(Node src, RdfDataSource rdfDataSource) {
+            this.src = src;
+            this.rdfDataSource = rdfDataSource;
+        }
+
+        public void set(Node p, boolean isFwd, long valueCount) {
+            Path path = isFwd
+                    ? new P_Link(p)
+                    : new P_ReverseLink(p);
+
+            pathToCount.put(path, valueCount);
+        }
+
+        public void putData(Path path, Node[] nodes) {
+            DataStreamSource<Node[]> cache = pathToValues.computeIfAbsent(path, p -> {
+
+                TriplePath t = new TriplePath(src, p, Vars.o);
+                Element elt = ElementUtils.createElement(t);
+                Query query = new Query();
+                query.setQuerySelectType();
+                query.addResultVar(Vars.o);
+                query.setQueryPattern(elt);
+                query.addOrderBy(Vars.o, Query.ORDER_DESCENDING);
+
+                ListPaginator<Node> paginator = new ListPaginatorSparql(query, q -> {
+                    RDFConnection conn = rdfDataSource.getConnection();
+                    return new QueryExecutionDecoratorBase<QueryExecution>(conn.query(q)) {
+                        @Override
+                        public void close() {
+                            try {
+                                super.close();
+                            } finally {
+                                conn.close();
+                            }
+                        }
+                    };
+                })
+                    .map(binding -> binding.get(Vars.o));
+
+                DataStreamSourceRx<Node> source = new DataStreamSourceRx<>(ArrayOps.createFor(Node.class), paginator);
+
+                AdvancedRangeCacheConfig arcc = AdvancedRangeCacheConfigImpl.newDefaultsForObjects(10000);
+                Slice<Node[]> slice = SliceInMemoryCache.create(ArrayOps.createFor(Node.class), 50000, 20);
+                DataStreamSource<Node[]> dss = DataStreamSources.cache(source, slice, arcc);
+                return dss;
+            });
+
+            AdvancedRangeCacheImpl<Node[]> arc = (AdvancedRangeCacheImpl<Node[]>)cache;
+            Slice<Node[]> slice = arc.getSlice();
+            try (SliceAccessor<Node[]> accessor = slice.newSliceAccessor()) {
+                accessor.claimByOffsetRange(0, nodes.length);
+                try {
+                    accessor.write(0, nodes, 0, nodes.length);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        // If there is sufficient initial data available then pre-fetching a property can be skippeds
+        public long getInitialDataLength(Path path) {
+            AdvancedRangeCacheImpl<Node[]> item = (AdvancedRangeCacheImpl<Node[]>)pathToValues.get(path);
+            Slice<Node[]> slice = item.getSlice();
+
+            // Return the length of the range starting from 0
+            long count = slice.computeFromMetaData(false, md -> {
+                Long r = 0l;
+                Range<Long> firstRange = Iterables.getFirst(md.getLoadedRanges().asRanges(), Range.closedOpen(0l, 0l));
+                firstRange = firstRange.canonical(DiscreteDomain.longs());
+                if (firstRange.lowerEndpoint() == 0) {
+                    r = firstRange.upperEndpoint();
+                }
+                return r;
+            });
+
+            return count;
+        }
+
+        public Map<Path, Long> getPathToCount() {
+            return pathToCount;
+        }
+
+        public Set<Path> getKnownPaths() {
+            return pathToCount.keySet();
+        }
+    }
+
+
 
 
     public static P_Path0 asSimplePath(Path path) {
