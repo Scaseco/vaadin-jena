@@ -24,8 +24,10 @@ import org.aksw.commons.io.buffer.array.ArrayOps;
 import org.aksw.commons.io.cache.AdvancedRangeCacheConfig;
 import org.aksw.commons.io.cache.AdvancedRangeCacheConfigImpl;
 import org.aksw.commons.io.cache.AdvancedRangeCacheImpl;
+import org.aksw.commons.io.input.DataStream;
 import org.aksw.commons.io.input.DataStreamSource;
 import org.aksw.commons.io.input.DataStreamSources;
+import org.aksw.commons.io.input.DataStreams;
 import org.aksw.commons.io.slice.Slice;
 import org.aksw.commons.io.slice.SliceAccessor;
 import org.aksw.commons.io.slice.SliceInMemoryCache;
@@ -42,7 +44,6 @@ import org.aksw.jenax.arq.util.triple.TripleUtils;
 import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.connection.query.QueryExecutionDecoratorBase;
-import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.stmt.core.SparqlStmtMgr;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
@@ -104,7 +105,8 @@ public class DataRetriever {
 
         DataRetriever retriever = new DataRetriever(rdfDataSource);
 
-        Map<Node, ResourceInfo> map = retriever.fetch(nodes);
+        PolaritySet<Path> baseFilter = PolaritySet.create(false);
+        Map<Node, ResourceInfo> map = retriever.fetch(nodes, baseFilter);
 
         // map.values().iterator().next().
     }
@@ -114,7 +116,7 @@ public class DataRetriever {
         this.rdfDataSource = rdfDataSource;
     }
 
-    public Map<Node, ResourceInfo> fetch(Set<Node> nodes) {
+    public Map<Node, ResourceInfo> fetch(Set<Node> nodes, PolaritySet<Path> basePathFilter) {
 
         Map<Node, ResourceInfo> nodeToState = new HashMap<>();
 
@@ -134,7 +136,7 @@ public class DataRetriever {
                 ResultSet rs = ResultSet.adapt(e.getValue().toRowSet());
                 while (rs.hasNext()) {
                     QuerySolution qs = rs.next();
-                    System.out.println(qs);;
+                    System.out.println(qs);
                     // Node src = qs.get("src").asNode();
                     Node p = qs.get("p").asNode();
                     boolean isFwd = qs.get("isFwd").asLiteral().getBoolean();
@@ -145,7 +147,6 @@ public class DataRetriever {
             }
         }
 
-        PolaritySet<Path> baseFilter = PolaritySet.create(false);
 
 
         // do not batch-fetch properties having more than threshold values
@@ -167,17 +168,17 @@ public class DataRetriever {
             PolaritySet<Path> knownPaths = new PolaritySet<>(true, state.getKnownPaths());
             // allKnownPaths.addAll(knownPaths.getValue());
 
-            PolaritySet<Path> matchingPaths = knownPaths.intersect(baseFilter);
+            PolaritySet<Path> matchingPaths = knownPaths.intersect(basePathFilter);
 
             Set<Path> blacklistPaths = matchingPaths.getValue().stream()
-                    .filter(item ->  state.getPathToCount().get(item) > threshold)
+                    .filter(item ->  state.getCountForPath(item) > threshold)
                     .collect(Collectors.toSet());
 
             if (blacklistPaths.isEmpty()) {
-                srcToPaths.put(node, baseFilter);
+                srcToPaths.put(node, basePathFilter);
             } else {
                 PolaritySet<Path> exceptions = new PolaritySet<>(false, blacklistPaths);
-                srcToPaths.put(node, baseFilter.intersect(exceptions));
+                srcToPaths.put(node, basePathFilter.intersect(exceptions));
             }
         }
 
@@ -240,9 +241,9 @@ public class DataRetriever {
     public static class ResourceInfo {
         protected Node src;
         protected RdfDataSource rdfDataSource;
-        protected Map<Path, Long> pathToCount = new LinkedHashMap<>();
+        // protected Map<Path, Long> pathToCount = new LinkedHashMap<>();
 
-        protected Map<Path, DataStreamSource<Node[]>> pathToValues = new HashMap<>();
+        protected Map<Path, DataStreamSource<Node[]>> pathToValues = new LinkedHashMap<>();
 
 
         public ResourceInfo(Node src, RdfDataSource rdfDataSource) {
@@ -250,15 +251,24 @@ public class DataRetriever {
             this.rdfDataSource = rdfDataSource;
         }
 
-        public void set(Node p, boolean isFwd, long valueCount) {
-            Path path = isFwd
-                    ? new P_Link(p)
-                    : new P_ReverseLink(p);
-
-            pathToCount.put(path, valueCount);
+        public Node getNode() {
+            return src;
         }
 
-        public void putData(Path path, Node[] nodes) {
+        public List<Node> getData(Path path, Range<Long> range) {
+            DataStreamSource<Node[]> cache = pathToValues.get(path);
+            List<Node> result = null;
+            if (cache != null) {
+                try (DataStream<Node[]> dataStream = cache.newDataStream(range)) {
+                    result = DataStreams.newStream(dataStream).collect(Collectors.toList());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            return result;
+        }
+
+        public DataStreamSource<Node[]> setup(Path path) {
             DataStreamSource<Node[]> cache = pathToValues.computeIfAbsent(path, p -> {
 
                 TriplePath t = new TriplePath(src, p, Vars.o);
@@ -282,7 +292,7 @@ public class DataRetriever {
                         }
                     };
                 })
-                    .map(binding -> binding.get(Vars.o));
+                .map(binding -> binding.get(Vars.o));
 
                 DataStreamSourceRx<Node> source = new DataStreamSourceRx<>(ArrayOps.createFor(Node.class), paginator);
 
@@ -291,6 +301,30 @@ public class DataRetriever {
                 DataStreamSource<Node[]> dss = DataStreamSources.cache(source, slice, arcc);
                 return dss;
             });
+
+            return cache;
+        }
+
+        public void set(Node p, boolean isFwd, long valueCount) {
+            Path path = isFwd
+                    ? new P_Link(p)
+                    : new P_ReverseLink(p);
+
+//            pathToCount.put(path, valueCount);
+             setKnownSize(path, valueCount);
+        }
+
+        public void setKnownSize(Path path, Long knownSize) {
+            DataStreamSource<Node[]> cache = setup(path);
+
+            System.out.println("Set known size for " + path + " to " + knownSize);
+            AdvancedRangeCacheImpl<Node[]> arc = (AdvancedRangeCacheImpl<Node[]>)cache;
+            Slice<Node[]> slice = arc.getSlice();
+            slice.mutateMetaData(md -> md.setKnownSize(knownSize));
+        }
+
+        public void putData(Path path, Node[] nodes) {
+            DataStreamSource<Node[]> cache = setup(path);
 
             AdvancedRangeCacheImpl<Node[]> arc = (AdvancedRangeCacheImpl<Node[]>)cache;
             Slice<Node[]> slice = arc.getSlice();
@@ -323,28 +357,31 @@ public class DataRetriever {
             return count;
         }
 
-        public Map<Path, Long> getPathToCount() {
-            return pathToCount;
+        public Long getCountForPath(Path path) {
+            Long result = null;
+            DataStreamSource<Node[]> cache = pathToValues.get(path);
+            if (cache != null) {
+                AdvancedRangeCacheImpl<Node[]> arc = (AdvancedRangeCacheImpl<Node[]>)cache;
+                Slice<Node[]> slice = arc.getSlice();
+                result = slice.computeFromMetaData(false, md -> md.getKnownSize());
+            }
+            return result;
         }
+//        public Map<Path, Long> getPathToCount() {
+//            return pathToCount;
+//        }
 
         public Set<Path> getKnownPaths() {
-            return pathToCount.keySet();
+            // return pathToCount.keySet();
+            return pathToValues.keySet();
         }
     }
-
-
-
-
-    public static P_Path0 asSimplePath(Path path) {
-        return path instanceof P_Path0 ? (P_Path0)path : null;
-    }
-
 
     public static Multimap<PolaritySet<Node>, Node> index(Multimap<PolaritySet<Path>, Node> map, boolean isFwd) {
         Multimap<PolaritySet<Node>, Node> result = HashMultimap.create();
         for (Entry<PolaritySet<Path>, Collection<Node>> en : map.asMap().entrySet()) {
             Set<Node> predicates = en.getKey().getValue().stream()
-                    .map(DataRetriever::asSimplePath)
+                    .map(PathUtils::asStep)
                     .filter(Objects::nonNull)
                     .filter(p -> p.isForward() == isFwd)
                     .map(P_Path0::getNode)

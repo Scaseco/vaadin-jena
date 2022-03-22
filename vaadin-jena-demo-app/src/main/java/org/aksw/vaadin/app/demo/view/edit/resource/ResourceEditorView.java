@@ -13,6 +13,7 @@ public class ResourceEditorView
     extends VerticalLayout
 {
     public ResourceEditorView() {
+        setSizeFull();
         Component editor = new ResourceEditor();
         add(editor);
     }
