@@ -1,11 +1,19 @@
 package org.aksw.vaadin.app.demo.view.edit.resource;
 
 import org.aksw.commons.collection.observable.ObservableValue;
+import org.aksw.commons.io.buffer.array.ArrayOps;
+import org.aksw.commons.io.cache.AdvancedRangeCacheConfig;
+import org.aksw.commons.io.cache.AdvancedRangeCacheConfigImpl;
+import org.aksw.commons.io.input.DataStreamSources;
+import org.aksw.commons.io.slice.Slice;
+import org.aksw.commons.io.slice.SliceAccessor;
+import org.aksw.commons.io.slice.SliceInMemoryCache;
 import org.aksw.commons.path.core.Path;
-import org.aksw.jena_sparql_api.concepts.Concept;
+import org.aksw.jena_sparql_api.concepts.RelationUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
 import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
+import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.Dataset;
@@ -46,14 +54,11 @@ public class ResourceEditor
     public ResourceEditor() {
 
 
-
-
         SplitLayout splitLayout = new SplitLayout();
         splitLayout.setSizeFull();
         splitLayout.setOrientation(Orientation.HORIZONTAL);
 
         propertyGrid = new Grid<>();
-        propertyGrid.setSelectionMode(SelectionMode.MULTI);
         propertyGridHeaderRow = propertyGrid.appendHeaderRow();
         propertyGridFilterRow = propertyGrid.appendHeaderRow();
 
@@ -76,16 +81,20 @@ public class ResourceEditor
         VaadinSparqlUtils.setQueryForGridBinding(propertyGrid, propertyGridHeaderRow, qef, propertyQuery);
         VaadinSparqlUtils.configureGridFilter(propertyGrid, propertyGridFilterRow, propertyQuery.getProjectVars());
 
+        propertyGrid.setSelectionMode(SelectionMode.SINGLE);
+        propertyGrid.setSelectionMode(SelectionMode.MULTI);
 
-        Query resourceQuery = QueryFactory.create("SELECT ?s { ?s ?p ?o }");
+        Query resourceQuery = QueryFactory.create("SELECT ?s { SELECT DISTINCT ?s { ?s ?p ?o } }");
+        Relation resourceRelation = RelationUtils.fromQuery(resourceQuery);
 
-        DataProvider<Binding, Expr> resourceDataProvider = new DataProviderSparqlBinding(Concept.createFromQuery(resourceQuery), qef);
+        DataProvider<Binding, Expr> resourceDataProvider = new DataProviderSparqlBinding(resourceRelation, qef);
 
         resourceGrid.addComponentColumn(binding -> {
             System.out.println("Binding: " + binding);
             return new ResourceItem(qef, binding.get("s"));
         });
         resourceGrid.setDataProvider(resourceDataProvider);
+        // resourceGrid.setDataProvider(new ListDataProvider<>(Arrays.asList(BindingFactory.binding(Vars.s, RDF.Nodes.type), BindingFactory.binding(Vars.s, RDF.Nodes.language))));// resourceDataProvider);
 
 
         // VaadinSparqlUtils.setQueryForGridBinding(resourceGrid, resourceGridHeaderRow, qef, resourceQuery);

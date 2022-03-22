@@ -11,15 +11,16 @@ import io.reactivex.rxjava3.core.Flowable;
 public class DataProviderSparqlBinding
         extends DataProviderSparqlBase<Binding> {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public DataProviderSparqlBinding(Relation relation, QueryExecutionFactoryQuery qef) {
-		super(relation, qef);
-	}
-    
+    public DataProviderSparqlBinding(Relation relation, QueryExecutionFactoryQuery qef) {
+        super(relation, qef);
+    }
+
     @Override
     protected Flowable<Binding> createSolutionFlow(Query query) {
+        System.out.println(query);
         return SparqlRx.execSelectRaw(() -> qef.createQueryExecution(query));
     }
-    
+
 }

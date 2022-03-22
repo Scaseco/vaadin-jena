@@ -173,6 +173,7 @@ public class VaadinSparqlUtils {
             QueryExecutionFactoryQuery qef,
             Query query,
             List<Var> visibleColumns) {
+
         Relation relation = RelationUtils.fromQuery(query);
         DataProvider<Binding, Expr> dataProvider = new DataProviderSparqlBinding(relation, qef)
                 .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
@@ -214,22 +215,27 @@ public class VaadinSparqlUtils {
 
         Map<Var, TextField> result = new LinkedHashMap<>();
         for (Var var : vars) {
-            TextField tf = new TextField();
-            result.put(var, tf);
-            tf.addValueChangeListener(event -> {
-                // if (grid.getDataProvider() instanceof InMemoryDataProvider) {
-                    registerGridFilters(grid, result);
-                    grid.getDataProvider().refreshAll();
-                // }
-            });
+            Column<Binding> column = grid.getColumnByKey(var.getName());
+            if (column != null) {
+                HeaderCell cell = filterRow.getCell(column);
+                if (cell != null) {
+                    TextField tf = new TextField();
+                    result.put(var, tf);
+                    tf.addValueChangeListener(event -> {
+                        // if (grid.getDataProvider() instanceof InMemoryDataProvider) {
+                            registerGridFilters(grid, result);
+                            grid.getDataProvider().refreshAll();
+                        // }
+                    });
 
-            tf.setValueChangeMode(ValueChangeMode.LAZY);
+                    tf.setValueChangeMode(ValueChangeMode.LAZY);
 
-            HeaderCell cell = filterRow.getCell(grid.getColumnByKey(var.getName()));
-            cell.setComponent(tf);
-            tf.setSizeFull();
-            tf.setPlaceholder("Filter");
-            tf.getElement().setAttribute("focus-target", "");
+                    tf.setSizeFull();
+                    tf.setPlaceholder("Filter");
+                    tf.getElement().setAttribute("focus-target", "");
+                    cell.setComponent(tf);
+                }
+            }
         }
 
         return result;

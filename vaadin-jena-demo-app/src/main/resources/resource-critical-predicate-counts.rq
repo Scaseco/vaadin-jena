@@ -1,0 +1,6 @@
+# For given resources count the number of incoming / outgoing predicates
+
+
+SELECT ?src COUNT(*) AS (?fwdCount) COUNT?bwdCount {
+
+}

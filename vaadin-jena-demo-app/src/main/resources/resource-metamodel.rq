@@ -1,0 +1,30 @@
+# Query for computing a resource's critical metamodel.
+# The is the set of ingoing / outgoing predicates with a value count
+# that exceeds a threshold
+#
+# For each outgoing predicate this query also counts the number of list nodes
+# (values with the rdf:list vocab)
+#
+
+PREFIX : <http://www.example.org/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?src ?isFwd ?p ?vc ?lic {
+    {
+      { SELECT ?src ?p (COUNT(DISTINCT ?outTgt) AS ?vc) (COUNT(?ln) AS ?lic) {
+          ?src ?p ?outTgt
+          OPTIONAL {
+            ?outTgt rdf:rest* ?ln .
+            ?ln rdf:first ?f ; rdf:rest ?r .
+          }
+      } GROUP BY ?src ?p }
+      BIND(true AS ?isFwd) # Because of Virtuoso this is last
+    }
+  UNION
+    {
+      { SELECT ?src ?p (COUNT(DISTINCT ?inTgt) AS ?vc) {
+          ?inTgt ?p ?src
+      } GROUP BY ?src ?p }
+      BIND(false AS ?isFwd)
+    }
+}
