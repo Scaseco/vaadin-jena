@@ -159,6 +159,46 @@ public class VaadinSparqlUtils {
         setQueryForGridBinding(grid, headerRow, qef, query, null);
     }
 
+
+    public static void setQueryForGridBinding(
+            Grid<Binding> grid,
+            HeaderRow headerRow,
+            DataProviderSparqlBinding dataProviderCore) {
+
+        DataProvider<Binding, Expr> dataProvider = dataProviderCore
+                .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
+                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
+                )));
+
+
+        grid.setDataProvider(dataProvider);
+        List<Var> vars = dataProviderCore.getRelation().getVars();
+        grid.removeAllColumns();
+
+        for (Var var : vars) {
+            Column<Binding> column = grid.addColumn(binding -> {
+                Node node = binding.get(var);
+                Object r;
+                if (node == null) {
+                    r = null;
+                } else {
+                    r = node.toString(false);
+                }
+//                } else if (node.isLiteral()) {
+//                    r = node.getLiteralValue();
+//                } else {
+//                    r = node.toString();
+//                }
+                return r;
+            }); //.setHeader(var.getName());
+
+            headerRow.getCell(column).setText(var.getName());
+
+            column.setKey(var.getName());
+            column.setResizable(true);
+            column.setSortable(true);
+        }
+    }
     /**
      * Configure a grid's data provider based on a SPARQL SELECT query such that
      * pagination, sorting (TODO: and filtering) works out of the box.

@@ -1,10 +1,17 @@
 package org.aksw.jena_sparql_api.vaadin.data.provider;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.aksw.jena_sparql_api.concepts.RelationImpl;
+import org.aksw.jenax.connection.query.QueryExecutionFactoryDataset;
 import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.sparql.query.rx.SparqlRx;
 import org.aksw.jenax.sparql.relation.api.Relation;
 import org.apache.jena.query.Query;
+import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.syntax.ElementData;
 
 import io.reactivex.rxjava3.core.Flowable;
 
@@ -17,10 +24,20 @@ public class DataProviderSparqlBinding
         super(relation, qef);
     }
 
+    public static DataProviderSparqlBinding create(List<Var> vars) {
+        QueryExecutionFactoryQuery qef = new QueryExecutionFactoryDataset();
+        ElementData elt = new ElementData(vars, new ArrayList<>());
+        Relation relation = new RelationImpl(elt, vars);
+        return new DataProviderSparqlBinding(relation, qef);
+    }
+
+
     @Override
     protected Flowable<Binding> createSolutionFlow(Query query) {
-        System.out.println(query);
+        // System.out.println(query);
         return SparqlRx.execSelectRaw(() -> qef.createQueryExecution(query));
     }
+
+
 
 }

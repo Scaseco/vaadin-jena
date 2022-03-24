@@ -1,16 +1,20 @@
 package org.aksw.jena_sparql_api.vaadin.data.provider;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.aksw.commons.util.range.CountInfo;
 import org.aksw.commons.util.range.RangeUtils;
+import org.aksw.jena_sparql_api.concepts.RelationImpl;
 import org.aksw.jenax.arq.util.syntax.QueryUtils;
 import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.sparql.query.rx.SparqlRx;
 import org.aksw.jenax.sparql.relation.api.Relation;
 import org.apache.jena.query.SortCondition;
 import org.apache.jena.sparql.core.Var;
+import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.expr.Expr;
+import org.apache.jena.sparql.syntax.ElementData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +44,21 @@ public abstract class DataProviderSparqlBase<T>
         super();
         this.relation = relation;
         this.qef = qef;
+    }
+
+    public void setRelation(Relation relation) {
+        this.relation = relation;
+        this.refreshAll();
+    }
+
+    public void setRelation(List<Var> vars, List<Binding> bindings) {
+        ElementData elt = new ElementData(vars, bindings);
+        Relation rel = new RelationImpl(elt, vars);
+        setRelation(rel);
+    }
+
+    public Relation getRelation() {
+        return relation;
     }
 
     @Override

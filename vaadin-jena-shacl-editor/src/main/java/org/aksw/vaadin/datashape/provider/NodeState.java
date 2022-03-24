@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.aksw.commons.collection.observable.CollectionChangedEvent;
 import org.aksw.commons.collection.observable.ObservableCollection;
 import org.aksw.commons.collection.observable.ObservableValue;
+import org.aksw.commons.collection.observable.Registration;
 import org.aksw.commons.path.core.Path;
 import org.aksw.jena_sparql_api.collection.observable.ObservableGraph;
 import org.aksw.jena_sparql_api.collection.observable.ObservableGraphImpl;
@@ -83,7 +84,7 @@ public class NodeState {
     }
 
     /** Connect a listener for affected paths to the events of an observable graph */
-    public static Runnable adept(ObservableGraph observableGraph, Consumer<Set<PathNode>> listener) {
+    public static Registration adept(ObservableGraph observableGraph, Consumer<Set<PathNode>> listener) {
         return observableGraph.addPropertyChangeListener(ev -> {
             CollectionChangedEvent<Triple> e = (CollectionChangedEvent<Triple>)ev;
             Set<Node> modified = new LinkedHashSet<>();
@@ -98,7 +99,7 @@ public class NodeState {
         });
     }
 
-    public Runnable addPathListener(Consumer<Set<PathNode>> listener) {
+    public Registration addPathListener(Consumer<Set<PathNode>> listener) {
         return state.addPropertyChangeListener(ev -> {
             CollectionChangedEvent<Triple> e = (CollectionChangedEvent<Triple>)ev;
             Set<Node> modified = new LinkedHashSet<>();

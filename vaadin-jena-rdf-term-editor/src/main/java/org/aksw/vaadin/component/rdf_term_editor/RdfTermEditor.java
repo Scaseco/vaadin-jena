@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.aksw.facete.v3.impl.FacetedQueryBuilder;
+import org.aksw.jena_sparql_api.common.DefaultPrefixes;
 import org.aksw.jena_sparql_api.concepts.BinaryRelationImpl;
 import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jena_sparql_api.data_query.api.DataQuery;
@@ -144,14 +145,16 @@ public class RdfTermEditor
 //    protected RdfTermType rdfTermType = RdfTermType.IRI;
     protected LiteralMode literalMode = LiteralMode.LANG;
 
-    protected Model typeModel = createTypeModel();
+    protected static final Model defaultTypeModel = createTypeModel();
+
+    protected Model typeModel; // = createTypeModel();
     protected Model langModel = ModelFactory.createDefaultModel();
 
     public static Model createTypeModel() {
 
         Model result = ModelFactory.createDefaultModel();
 
-        PrefixMapping prefixMapping = RDFDataMgr.loadModel("rdf-prefixes/prefix.cc.2019-12-17.ttl");
+        PrefixMapping prefixMapping = DefaultPrefixes.get(); //RDFDataMgr.loadModel("rdf-prefixes/prefix.cc.2019-12-17.ttl");
         result.setNsPrefixes(prefixMapping);
 
         TypeMapper typeMapper = TypeMapper.getInstance();
@@ -167,6 +170,10 @@ public class RdfTermEditor
     }
 
     public void init() {
+
+        // TODO Make configurable
+        typeModel = defaultTypeModel;
+
         langComboBox.setItemLabelGenerator(s -> ResourceUtils.tryGetLiteralPropertyValue(s, RDFS.label, String.class).orElse("(null)"));
         langComboBox.setAllowCustomValue(true);
         // langComboBox.

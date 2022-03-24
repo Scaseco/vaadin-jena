@@ -18,7 +18,7 @@ public class VaadinBindUtils {
         // Collection<V> value = store.get();
         hasValue.setValue(new LinkedHashSet<>(store));
 
-        Runnable deregister1 = store.addPropertyChangeListener(ev -> {
+        org.aksw.commons.collection.observable.Registration deregister1 = store.addPropertyChangeListener(ev -> {
             Set<V> newValue = new LinkedHashSet<>((Collection<V>)ev.getNewValue());
             hasValue.setValue(newValue);
         });
@@ -40,7 +40,7 @@ public class VaadinBindUtils {
         Registration deregister2 = hasValue.addValueChangeListener(listener);
 
         return () -> {
-            deregister1.run();
+            deregister1.remove();
             deregister2.remove();
         };
     }
@@ -51,7 +51,7 @@ public class VaadinBindUtils {
         V value = store.get();
         hasValue.setValue(value);
 
-        Runnable deregister1 = store.addPropertyChangeListener(ev -> {
+         org.aksw.commons.collection.observable.Registration deregister1 = store.addPropertyChangeListener(ev -> {
             V newValue = (V)ev.getNewValue();
             hasValue.setValue(newValue);
         });
@@ -65,7 +65,7 @@ public class VaadinBindUtils {
         Registration deregister2 = hasValue.addValueChangeListener(listener);
 
         return () -> {
-            deregister1.run();
+            deregister1.remove();
             deregister2.remove();
         };
     }

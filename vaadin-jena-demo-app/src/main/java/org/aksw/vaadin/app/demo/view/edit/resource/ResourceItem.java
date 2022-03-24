@@ -1,7 +1,12 @@
 package org.aksw.vaadin.app.demo.view.edit.resource;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
@@ -21,6 +26,7 @@ import org.apache.jena.sparql.path.P_Path0;
 import org.apache.jena.sparql.path.Path;
 
 import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -40,15 +46,28 @@ public class ResourceItem
 
     protected ObservableValue<Set<Path>> visibleProperties;
 
+    // protected Map<Path, Component> attachedComponents = new LinedHashMap<>();
+
+    // Path for which components have been attached
+    protected Set<Path> activePaths = new LinkedHashSet<>();
+
+    // Components that have been created and which may or may not be attached to this component
+    protected Map<Path, Component> pathToComponentCache = new LinkedHashMap<>();
 
     public ResourceItem(ResourceInfo state, GraphChange graphEditorModel, ObservableValue<Set<Path>> visibleProperties) {
+        addClassName("card");
 
         this.graphEditorModel = graphEditorModel;
 
         this.state = state;
         this.visibleProperties = visibleProperties;
 
+
         this.add(new H3("Resource: " + state.getNode()));
+        // Set<Path> paths = visibleProperties.get();
+        // Set<Path> paths = state.getKnownPaths();
+
+        // System.out.println("Known paths: " + paths);
 
         visibleProperties.addValueChangeListener(values -> {
             refreshProperties();
@@ -58,16 +77,53 @@ public class ResourceItem
     }
 
     public void refreshProperties() {
-        // Set<Path> paths = visibleProperties.get();
-        Set<Path> paths = state.getKnownPaths();
+        Set<Path> requestedPaths = visibleProperties.get();
 
-        System.out.println("Known paths: " + paths);
+        Iterator<Path> itAttached = activePaths.iterator();
 
-        for (Path path : paths) {
-            VerticalLayout contentRow = new VerticalLayout();
-            updateProperties(contentRow, path, 0, 5);
-            add(contentRow);
+        outer: for (Path path : requestedPaths) {
+            // Path nextAttachedPath = itAttached.hasNext() ? itAttached.next() : null;
+
+            // Hide all components until there is one that equals path
+            while (itAttached.hasNext()) {
+                Path x = itAttached.next();
+
+                if (path.equals(x)) {
+                    continue outer;
+                } else {
+                    Component c = pathToComponentCache.get(x);
+                    if (c != null) {
+                        c.setVisible(false);
+                    }
+
+                }
+            }
+
+            // Add the new one
+            Component c = pathToComponentCache.get(path);
+            if (c != null) {
+                c.setVisible(true);
+            } else {
+                VerticalLayout contentRow = new VerticalLayout();
+                updateProperties(contentRow, path, 0, 5);
+                c = contentRow;
+                pathToComponentCache.put(path, c);
+            }
+            this.add(c);
         }
+
+
+        // Clear any remaining attached paths
+        while (itAttached.hasNext()) {
+            Path x = itAttached.next();
+            Component c = pathToComponentCache.get(x);
+            if (c != null) {
+                c.setVisible(false);
+                // this.remove(c);
+            }
+        }
+
+        this.activePaths = new LinkedHashSet<>(requestedPaths);
     }
 
 
@@ -75,45 +131,54 @@ public class ResourceItem
         Node p = PathUtils.asStep(path).getNode();
         Long itemCount = state.getCountForPath(path);
 
+        if (itemCount == null) {
+            System.out.println("null item count for " + path);
+            itemCount = 0l;
+        }
+
         contentRow.removeAll();
 
 
         HorizontalLayout headerRow = new HorizontalLayout();
         headerRow.add(new H4("" + p));
 
-        Span countSpan = new Span("" + itemCount);
-        countSpan.getElement().getThemeList().add("badge contrast");
-        headerRow.add(countSpan);
+        if (itemCount != null && itemCount > 1) {
 
-        Paginator<Page> paginator = new PaginatorImpl(limit);
-        List<Page> pages = paginator.createPages(itemCount, offset);
+            Span countSpan = new Span("" + itemCount);
+            countSpan.getElement().getThemeList().add("badge contrast");
+            headerRow.add(countSpan);
 
-        for (Page page : pages) {
-            // System.out.println("Page " + page.isActive() + " " + page.getPageOffset());
-            Component pageCpt;
 
-            if (!page.isActive()) {
+            Paginator<Page> paginator = new PaginatorImpl(limit);
+            List<Page> pages = paginator.createPages(itemCount, offset);
+
+
+            for (Page page : pages) {
+                // System.out.println("Page " + page.isActive() + " " + page.getPageOffset());
                 Button pageBtn = new Button("" + page.getPageNumber());
-                pageBtn.addClickListener(ev -> {
-                    updateProperties(contentRow, path, page.getPageOffset(), limit);
-                });
-                pageCpt = pageBtn;
-            } else {
-                pageCpt = new Span("" + page.getPageNumber());
-            }
+                if (!page.isActive()) {
+                    pageBtn.addClickListener(ev -> {
+                        updateProperties(contentRow, path, page.getPageOffset(), limit);
+                    });
+                } else {
+                    pageBtn.setEnabled(false);
+                }
 
-            headerRow.add(pageCpt);
+                headerRow.add(pageBtn);
+            }
         }
 
         contentRow.add(headerRow);
 
         List<Node> values = state.getData(path, Range.closedOpen(offset, offset + limit));
-        for (Node o : values) {
-//            RdfTermEditor termEditor = new RdfTermEditor();
-//            termEditor.setValue(o);
-//            contentRow.add(termEditor);
-            Component editor = createEditor(state.getNode(), path, o);
-            contentRow.add(editor);
+        if (values != null) {
+            for (Node o : values) {
+    //            RdfTermEditor termEditor = new RdfTermEditor();
+    //            termEditor.setValue(o);
+    //            contentRow.add(termEditor);
+                Component editor = createEditor(state.getNode(), path, o);
+                contentRow.add(editor);
+            }
         }
     }
 
@@ -129,7 +194,6 @@ public class ResourceItem
 
         RdfTermEditor rdfTermEditor = new RdfTermEditor();
 
-
         Triple t = TripleUtils.create(srcNode, p0.getNode(), o, p0.isForward());
         int component = p0.isForward() ? 2 : 0;
         ObservableValue<Node> value = graphEditorModel.createFieldForExistingTriple(t, component);
@@ -140,7 +204,7 @@ public class ResourceItem
 
         suffixComponents.add(resetValueBtn);
 
-        Checkbox markAsDeleted = new Checkbox(false);
+        Checkbox markAsDeleted = new Checkbox();
         markAsDeleted.getElement().setProperty("title", "Mark the original value as deleted");
         //target.addFormItem(markAsDeleted, "Delete");
 
@@ -151,19 +215,22 @@ public class ResourceItem
                 .mapToValue(c -> !c.isEmpty(), b -> b ? null : t);
 
 
+        markAsDeleted.setValue(isDeleted.get());
         //newC.add(bind(markAsDeleted, isDeleted));
 
 
         // Red background for resources marked as deleted
         isDeleted.addValueChangeListener(ev -> {
-            if (Boolean.TRUE.equals(ev.getNewValue())) {
+            boolean deleted = Boolean.TRUE.equals(ev.getNewValue());
+            if (deleted) {
                 rdfTermEditor.setEnabled(false);
                 r.getStyle().set("background-color", "var(--lumo-error-color-50pct)");
             } else {
                 rdfTermEditor.setEnabled(true);
                 r.getStyle().set("background-color", null);
             }
-        });
+        }).fire();
+
 
         markAsDeleted.addValueChangeListener(event -> {
             Boolean state = event.getValue();
@@ -177,7 +244,7 @@ public class ResourceItem
         // graphEditorModel.getDeletionGraph().tr
 
 
-        Node originalValue = value.get();
+        Node originalValue = o; // value.get();
         resetValueBtn.setVisible(false);
         value.addValueChangeListener(ev -> {
             boolean newValueDiffersFromOriginal = !Objects.equals(originalValue, ev.getNewValue());

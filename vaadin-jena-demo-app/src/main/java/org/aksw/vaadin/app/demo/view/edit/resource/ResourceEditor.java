@@ -1,5 +1,6 @@
 package org.aksw.vaadin.app.demo.view.edit.resource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -32,8 +33,12 @@ import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.engine.binding.BindingFactory;
 import org.apache.jena.sparql.expr.Expr;
+import org.apache.jena.sparql.expr.NodeValue;
+import org.apache.jena.sparql.path.P_Path0;
 import org.apache.jena.sparql.path.Path;
 import org.apache.jena.vocabulary.DCAT;
 import org.apache.jena.vocabulary.RDF;
@@ -42,6 +47,8 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.SelectionMode;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.grid.dnd.GridDropLocation;
+import com.vaadin.flow.component.grid.dnd.GridDropMode;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout.Orientation;
@@ -60,16 +67,19 @@ public class ResourceEditor
     protected Grid<Binding> propertyGrid;
     protected HeaderRow propertyGridHeaderRow;
     protected HeaderRow propertyGridFilterRow;
+    protected Binding draggedProperty = null;
+    protected List<Binding> availableProperties = new ArrayList<>();
 
 
     protected Grid<Binding> resourceGrid;
     protected HeaderRow resourceGridHeaderRow;
     protected HeaderRow resourceGridFilterRow;
 
+    protected GraphChange graphEditorModel = new GraphChange();
+
     public ResourceEditor() {
         setSizeFull();
 
-        GraphChange graphEditorModel = new GraphChange();
 
         Set<Path> paths = visibleProperties.get();
         paths.add(PathUtils.createStep(RDF.type.asNode(), true));
@@ -93,8 +103,51 @@ public class ResourceEditor
         propertyGrid = new Grid<>();
         propertyGridHeaderRow = propertyGrid.appendHeaderRow();
         propertyGridFilterRow = propertyGrid.appendHeaderRow();
+        propertyGrid.setRowsDraggable(true);
+
+
+
+        propertyGrid.addDragStartListener(
+            event -> {
+                // store current dragged item so we know what to drop
+                draggedProperty = event.getDraggedItems().get(0);
+                propertyGrid.setDropMode(GridDropMode.BETWEEN);
+            }
+        );
+
+        propertyGrid.addDragEndListener(
+            event -> {
+                draggedProperty = null;
+                // Once dragging has ended, disable drop mode so that
+                // it won't look like other dragged items can be dropped
+                propertyGrid.setDropMode(null);
+            }
+        );
+
+        propertyGrid.addDropListener(
+            event -> {
+                Binding dropOverItem = event.getDropTargetItem().get();
+                if (!dropOverItem.equals(draggedProperty)) {
+                    // reorder dragged item the backing gridItems container
+                    availableProperties.remove(draggedProperty);
+                    // calculate drop index based on the dropOverItem
+                    int dropIndex =
+                            availableProperties.indexOf(dropOverItem) + (event.getDropLocation() == GridDropLocation.BELOW ? 1 : 0);
+                    availableProperties.add(dropIndex, draggedProperty);
+                    propertyGrid.getDataProvider().refreshAll();
+
+                    Set<Path> orderedPaths = new LinkedHashSet<>(availableProperties.stream()
+                            .map(b -> PathUtils.createStep(b.get(Vars.p), !NodeValue.FALSE.asNode().equals(b.get(Vars.d))))
+                            .collect(Collectors.toList()));
+
+
+                    visibleProperties.set(orderedPaths);
+                }
+            }
+        );
 
         resourceGrid = new Grid<>();
+        resourceGrid.setPageSize(10);
         resourceGridHeaderRow = resourceGrid.appendHeaderRow();
         resourceGridFilterRow = resourceGrid.appendHeaderRow();
 
@@ -108,21 +161,32 @@ public class ResourceEditor
 
         resourceGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
+        // propertyGrid.setSelectionMode(SelectionMode.SINGLE);
         add(splitLayout);
 
+        List<Var> propertyTableVars = Arrays.asList(Vars.p, Vars.d);
 
-        Query propertyQuery = QueryFactory.create("SELECT ?p ?type ?c { { SElECT ?p (COUNT(DISTINCT ?o) AS ?c) { ?this ?p ?o } GROUP BY ?p } BIND(<urn:fwd> AS ?type) }");
+        // Query propertyQuery = QueryFactory.create("SELECT ?p ?type ?c { { SElECT ?p (COUNT(DISTINCT ?o) AS ?c) { ?this ?p ?o } GROUP BY ?p } BIND(<urn:fwd> AS ?type) }");
+        // Query propertyQuery = QueryFactory.create("Select ?p ?d { }");
+        DataProviderSparqlBinding propertyDataProvider = DataProviderSparqlBinding.create(propertyTableVars);
+
 
         QueryExecutionFactoryQuery qef = q -> QueryExecutionFactory.create(q, dataset);
 
-        VaadinSparqlUtils.setQueryForGridBinding(propertyGrid, propertyGridHeaderRow, qef, propertyQuery);
-        VaadinSparqlUtils.configureGridFilter(propertyGrid, propertyGridFilterRow, propertyQuery.getProjectVars());
+//        Dataset emptyDataset = DatasetFactory.empty();
+//        QueryExecutionFactoryQuery propertyQef = q -> QueryExecutionFactory.create(q, emptyDataset);
 
-        propertyGrid.setSelectionMode(SelectionMode.SINGLE);
+        VaadinSparqlUtils.setQueryForGridBinding(propertyGrid, propertyGridHeaderRow, propertyDataProvider);
+        VaadinSparqlUtils.configureGridFilter(propertyGrid, propertyGridFilterRow, propertyTableVars);
+
+        // propertyGrid.setDataProvider(propertyDataProvider);
+
         propertyGrid.setSelectionMode(SelectionMode.MULTI);
 
-        Query resourceQuery = QueryFactory.create("SELECT ?s { { SELECT DISTINCT ?s { ?s ?p ?o } LIMIT 10 } }");
-        // Query resourceQuery = QueryFactory.create("SELECT ?s { BIND(<http://dcat.linkedgeodata.org/dataset/osm-bremen-2018-04-04> AS ?s) }");
+
+
+        // Query resourceQuery = QueryFactory.create("SELECT ?s { { SELECT DISTINCT ?s { ?s ?p ?o } LIMIT 5 } }");
+        Query resourceQuery = QueryFactory.create("SELECT ?s { BIND(<http://dcat.linkedgeodata.org/dataset/osm-bremen-2018-04-04> AS ?s) }");
         Relation resourceRelation = RelationUtils.fromQuery(resourceQuery);
 
 
@@ -145,6 +209,28 @@ public class ResourceEditor
                 globalResourceState.putAll(map);
                 System.out.println("Mapit: " + map);
 
+                Set<Path> paths = map.values().stream().flatMap(ri -> ri.getKnownPaths().stream())
+                        .collect(Collectors.toSet());
+
+                // visibleProperties.set(paths);
+
+                List<Binding> ps = new ArrayList<>();
+                for (Path path : paths) {
+                    P_Path0 p0 = PathUtils.asStep(path);
+                    if (p0 != null) {
+                        Binding b = BindingFactory.binding(Vars.p, p0.getNode(), Vars.d, NodeValue.makeBoolean(p0.isForward()).asNode());
+                        ps.add(b);
+                    }
+                }
+
+                availableProperties = ps;
+
+                System.out.println("Derived properties: " + availableProperties);
+//                ElementData elt = new ElementData(propertyTableVars, ps);
+//                Relation rel = new RelationImpl(elt, propertyTableVars);
+//                propertyDataProvider.setRelation(rel);
+                propertyDataProvider.setRelation(propertyTableVars, availableProperties);
+
                 return bindings.stream();
             };
 
@@ -164,6 +250,22 @@ public class ResourceEditor
         // VaadinSparqlUtils.setQueryForGridBinding(resourceGrid, resourceGridHeaderRow, qef, resourceQuery);
         // VaadinSparqlUtils.configureGridFilter(resourceGrid, resourceGridFilterRow, resourceQuery.getProjectVars());
 
+
+
+        propertyGrid.getSelectionModel().addSelectionListener(sel -> {
+            Set<Path> selPaths = sel.getAllSelectedItems().stream()
+                    .map(b -> PathUtils.createStep(b.get(Vars.p), !NodeValue.FALSE.asNode().equals(b.get(Vars.d))))
+                .collect(Collectors.toSet());
+
+            // System.out.println("Selected paths: " + selPaths);
+            Set<Path> orderedPaths = new LinkedHashSet<>(availableProperties.stream()
+                    .map(b -> PathUtils.createStep(b.get(Vars.p), !NodeValue.FALSE.asNode().equals(b.get(Vars.d))))
+                    .filter(selPaths::contains).collect(Collectors.toList()));
+            visibleProperties.set(orderedPaths);
+            resourceGrid.getElement().executeJs("this.notifyResize()");
+
+            // resourceGrid.r
+        });
 
 
     }

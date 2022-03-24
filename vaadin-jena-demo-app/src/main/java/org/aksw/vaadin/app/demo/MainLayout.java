@@ -1,6 +1,7 @@
 package org.aksw.vaadin.app.demo;
 
 import org.aksw.vaadin.app.demo.view.edit.resource.ResourceEditorView;
+import org.aksw.vaadin.app.demo.view.label.LabelView;
 import org.aksw.vaadin.app.demo.view.welcome.LandingPageView;
 
 import com.vaadin.flow.component.Component;
@@ -63,7 +64,8 @@ public class MainLayout
         RouteTabs tabs = new RouteTabs();
         tabs.add(
                 createTab(VaadinIcon.HOME, "Home", LandingPageView.class),
-                createTab(VaadinIcon.FOLDER_ADD, "New Data Project", ResourceEditorView.class)
+                createTab(VaadinIcon.FOLDER_ADD, "New Data Project", ResourceEditorView.class),
+                createTab(VaadinIcon.EYE, "Labels", LabelView.class)
 //                createTab(VaadinIcon.EYE, "Browse", BrowseRepoView.class),
 //                createTab(VaadinIcon.CONNECT, "Connections", ConnectionMgmtView.class),
 //                createTab(VaadinIcon.DATABASE, "Catalogs", CatalogMgmtView.class)

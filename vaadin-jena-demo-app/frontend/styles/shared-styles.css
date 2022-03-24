@@ -56,6 +56,13 @@
 }
 
 
+.card {
+  background-color: var(--lumo-base-color);
+  border-radius: var(--lumo-border-radius);
+  box-shadow: var(--lumo-box-shadow-xs);
+  padding: calc(var(--lumo-space-s) * 1.5) var(--lumo-space-m);
+}
+
 .display-none {
   display: none;
 }
