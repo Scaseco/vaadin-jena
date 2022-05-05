@@ -22,6 +22,8 @@ import org.aksw.jena_sparql_api.schema.PropertySchemaFromPropertyShape;
 import org.aksw.jena_sparql_api.schema.ResourceCache;
 import org.aksw.jena_sparql_api.schema.SHAnnotatedClass;
 import org.aksw.jena_sparql_api.schema.ShapedNode;
+import org.aksw.jenax.arq.connection.core.QueryExecutionFactory;
+import org.aksw.jenax.connection.query.QueryExecutionFactoryDataset;
 import org.aksw.jenax.dataaccess.LabelUtils;
 import org.aksw.jenax.path.datatype.RDFDatatypePPath;
 import org.aksw.jenax.path.datatype.RDFDatatypePathNode;
@@ -107,6 +109,8 @@ public class ResourceTreeGrid
         Dataset ds = RDFDataMgr.loadDataset("linkedgeodata-2018-04-04.dcat.ttl");
         ResourceCache resourceCache = new ResourceCache();
         SparqlQueryConnection conn = RDFConnectionFactory.connect(ds);
+        QueryExecutionFactory qef = new QueryExecutionFactoryDataset(ds);
+
         ShapedNode sn = ShapedNode.create(datasetNode, schema, resourceCache, conn);
     //    LookupService<Node, ResourceMetamodel> metaDataService = ResourceExplorer.createMetamodelLookup(conn);
 
@@ -120,7 +124,7 @@ public class ResourceTreeGrid
 
         Model prefixes = RDFDataMgr.loadModel("rdf-prefixes/prefix.cc.2019-12-17.ttl");
         LookupService<Node, String> labelService =
-                LabelUtils.createLookupServiceForLabels(LabelUtils.getLabelLookupService(conn, RDFS.label, prefixes), prefixes, prefixes).cache();
+                LabelUtils.createLookupServiceForLabels(LabelUtils.getLabelLookupService(qef, RDFS.label, prefixes), prefixes, prefixes).cache();
 
 
         TreeGrid<Path<Node>> treeGrid = ShaclTreeGrid.createShaclEditor(

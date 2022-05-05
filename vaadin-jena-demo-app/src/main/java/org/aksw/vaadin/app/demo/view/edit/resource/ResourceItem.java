@@ -17,6 +17,7 @@ import org.aksw.commons.util.page.PaginatorImpl;
 import org.aksw.jena_sparql_api.collection.observable.GraphChange;
 import org.aksw.jenax.arq.util.node.PathUtils;
 import org.aksw.jenax.arq.util.triple.TripleUtils;
+import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
 import org.aksw.vaadin.app.demo.view.edit.resource.DataRetriever.ResourceInfo;
 import org.aksw.vaadin.common.bind.VaadinBindUtils;
 import org.aksw.vaadin.component.rdf_term_editor.RdfTermEditor;
@@ -44,7 +45,9 @@ public class ResourceItem
     protected ResourceInfo state;
     protected GraphChange graphEditorModel;
 
-    protected ObservableValue<Set<Path>> visibleProperties;
+    protected VaadinLabelMgr<Node, String> labelService;
+
+    protected ObservableValue<List<Path>> visibleProperties;
 
     // protected Map<Path, Component> attachedComponents = new LinedHashMap<>();
 
@@ -54,9 +57,11 @@ public class ResourceItem
     // Components that have been created and which may or may not be attached to this component
     protected Map<Path, Component> pathToComponentCache = new LinkedHashMap<>();
 
-    public ResourceItem(ResourceInfo state, GraphChange graphEditorModel, ObservableValue<Set<Path>> visibleProperties) {
+    public ResourceItem(ResourceInfo state, GraphChange graphEditorModel, ObservableValue<List<Path>> visibleProperties,
+            VaadinLabelMgr<Node, String> labelService) {
         addClassName("card");
 
+        this.labelService = labelService;
         this.graphEditorModel = graphEditorModel;
 
         this.state = state;
@@ -77,7 +82,7 @@ public class ResourceItem
     }
 
     public void refreshProperties() {
-        Set<Path> requestedPaths = visibleProperties.get();
+        List<Path> requestedPaths = visibleProperties.get();
 
         Iterator<Path> itAttached = activePaths.iterator();
 
@@ -140,7 +145,7 @@ public class ResourceItem
 
 
         HorizontalLayout headerRow = new HorizontalLayout();
-        headerRow.add(new H4("" + p));
+        headerRow.add(labelService.forHasText(new H4("" + p), p));
 
         if (itemCount != null && itemCount > 1) {
 

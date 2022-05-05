@@ -36,7 +36,8 @@ import org.aksw.commons.rx.lookup.ListPaginator;
 import org.aksw.commons.rx.lookup.LookupService;
 import org.aksw.jena_sparql_api.lookup.ListPaginatorSparql;
 import org.aksw.jena_sparql_api.lookup.LookupServiceSparqlQuery;
-import org.aksw.jenax.arq.datasource.RdfDataSourceFromDataset;
+import org.aksw.jenax.arq.connection.core.QueryExecutionFactorySparqlQueryConnection;
+import org.aksw.jenax.arq.datasource.RdfDataEngineFromDataset;
 import org.aksw.jenax.arq.util.expr.ExprUtils;
 import org.aksw.jenax.arq.util.node.PathUtils;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
@@ -101,7 +102,7 @@ public class DataRetriever {
         Set<Node> nodes = new LinkedHashSet<>(Arrays.asList(NodeFactory.createURI("http://dcat.linkedgeodata.org/dataset/osm-bremen-2018-04-04")));
 
         Dataset dataset = RDFDataMgr.loadDataset("linkedgeodata-2018-04-04.dcat.ttl");
-        RdfDataSource rdfDataSource = RdfDataSourceFromDataset.create(dataset, false);
+        RdfDataSource rdfDataSource = RdfDataEngineFromDataset.create(dataset, false);
 
         DataRetriever retriever = new DataRetriever(rdfDataSource);
 
@@ -123,9 +124,8 @@ public class DataRetriever {
         try (SparqlQueryConnection conn = rdfDataSource.getConnection()) {
             // SparqlQueryConnection conn = null;
 
-
             LookupService<Node, Table> ls = new LookupServiceSparqlQuery(
-                    conn, metaModelQuery, Var.alloc("src"));
+                    new QueryExecutionFactorySparqlQueryConnection(conn), metaModelQuery, Var.alloc("src"));
             Map<Node, Table> map = ls.fetchMap(nodes);
 
             for (Entry<Node, Table> e : map.entrySet()) {

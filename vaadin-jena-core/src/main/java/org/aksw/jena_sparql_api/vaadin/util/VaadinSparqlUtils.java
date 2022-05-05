@@ -199,6 +199,7 @@ public class VaadinSparqlUtils {
             column.setSortable(true);
         }
     }
+
     /**
      * Configure a grid's data provider based on a SPARQL SELECT query such that
      * pagination, sorting (TODO: and filtering) works out of the box.
