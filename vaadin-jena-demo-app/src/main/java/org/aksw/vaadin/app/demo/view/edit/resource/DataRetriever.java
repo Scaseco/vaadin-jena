@@ -36,7 +36,8 @@ import org.aksw.commons.rx.lookup.ListPaginator;
 import org.aksw.commons.rx.lookup.LookupService;
 import org.aksw.jena_sparql_api.lookup.ListPaginatorSparql;
 import org.aksw.jena_sparql_api.lookup.LookupServiceSparqlQuery;
-import org.aksw.jenax.arq.connection.core.QueryExecutionFactorySparqlQueryConnection;
+import org.aksw.jenax.arq.connection.core.QueryExecutionFactoryOverSparqlQueryConnection;
+import org.aksw.jenax.arq.connection.link.QueryExecFactories;
 import org.aksw.jenax.arq.datasource.RdfDataEngineFromDataset;
 import org.aksw.jenax.arq.util.expr.ExprUtils;
 import org.aksw.jenax.arq.util.node.PathUtils;
@@ -45,6 +46,7 @@ import org.aksw.jenax.arq.util.triple.TripleUtils;
 import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.connection.query.QueryExecutionDecoratorBase;
+import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.stmt.core.SparqlStmtMgr;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
@@ -125,7 +127,7 @@ public class DataRetriever {
             // SparqlQueryConnection conn = null;
 
             LookupService<Node, Table> ls = new LookupServiceSparqlQuery(
-                    new QueryExecutionFactorySparqlQueryConnection(conn), metaModelQuery, Var.alloc("src"));
+                    new QueryExecutionFactoryOverSparqlQueryConnection(conn), metaModelQuery, Var.alloc("src"));
             Map<Node, Table> map = ls.fetchMap(nodes);
 
             for (Entry<Node, Table> e : map.entrySet()) {
@@ -279,7 +281,7 @@ public class DataRetriever {
                 query.setQueryPattern(elt);
                 query.addOrderBy(Vars.o, Query.ORDER_DESCENDING);
 
-                ListPaginator<Node> paginator = new ListPaginatorSparql(query, q -> {
+                QueryExecutionFactoryQuery qef = q -> {
                     RDFConnection conn = rdfDataSource.getConnection();
                     return new QueryExecutionDecoratorBase<QueryExecution>(conn.query(q)) {
                         @Override
@@ -291,8 +293,10 @@ public class DataRetriever {
                             }
                         }
                     };
-                })
-                .map(binding -> binding.get(Vars.o));
+                };
+
+                ListPaginator<Node> paginator = new ListPaginatorSparql(query, qef)
+                		.map(binding -> binding.get(Vars.o));
 
                 DataStreamSourceRx<Node> source = new DataStreamSourceRx<>(ArrayOps.createFor(Node.class), paginator);
 

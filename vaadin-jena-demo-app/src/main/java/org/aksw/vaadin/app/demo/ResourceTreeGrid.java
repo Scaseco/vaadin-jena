@@ -34,8 +34,6 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdfconnection.RDFConnectionFactory;
-import org.apache.jena.rdfconnection.SparqlQueryConnection;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sys.JenaSystem;
 import org.apache.jena.vocabulary.RDFS;
@@ -108,10 +106,10 @@ public class ResourceTreeGrid
         Node datasetNode = NodeFactory.createURI("http://dcat.linkedgeodata.org/dataset/osm-bremen-2018-04-04");
         Dataset ds = RDFDataMgr.loadDataset("linkedgeodata-2018-04-04.dcat.ttl");
         ResourceCache resourceCache = new ResourceCache();
-        SparqlQueryConnection conn = RDFConnectionFactory.connect(ds);
+//        SparqlQueryConnection conn = RDFConnectionFactory.connect(ds);
         QueryExecutionFactory qef = new QueryExecutionFactoryDataset(ds);
 
-        ShapedNode sn = ShapedNode.create(datasetNode, schema, resourceCache, conn);
+        ShapedNode sn = ShapedNode.create(datasetNode, schema, resourceCache, qef);
     //    LookupService<Node, ResourceMetamodel> metaDataService = ResourceExplorer.createMetamodelLookup(conn);
 
         Multimap<NodeSchema, Node> mm = HashMultimap.create();

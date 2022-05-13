@@ -111,7 +111,7 @@ public abstract class DataProviderSparqlBase<T>
 
         logger.debug("Computing resultset size for\n" + baseQuery);
 
-        Range<Long> range = SparqlRx.fetchCountQuery(qef::createQueryExecution, baseQuery, null, null).blockingGet();
+        Range<Long> range = SparqlRx.fetchCountQuery(qef, baseQuery, null, null).blockingGet();
         CountInfo countInfo = RangeUtils.toCountInfo(range);
         long count = countInfo.getCount();
 

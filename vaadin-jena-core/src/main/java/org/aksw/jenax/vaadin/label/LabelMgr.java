@@ -50,7 +50,7 @@ public class LabelMgr<R, L> {
         protected BiConsumer<Object, Map<R, L>> labelCallback;
     }
 
-    /** A cache with weak keys pointing to resources*/
+    /** A cache with weak keys pointing to resources */
     protected LoadingCache<Object, State<R, L>> componentToResources;
 
     protected Map<R, L> activeLabels = new HashMap<>();
@@ -283,8 +283,8 @@ public class LabelMgr<R, L> {
             Set<R> removals = Sets.difference(prior, resources);
             Set<R> additions = Sets.difference(resources, prior);
 
-            System.out.println("Label removals: " + removals);
-            System.out.println("Label additions: " + additions);
+            // System.out.println("Label removals: " + removals);
+            // System.out.println("Label additions: " + additions);
 
             entry.resources = resources;
             entry.labelCallback = (o, lm) -> callback.accept((X)o, lm);
