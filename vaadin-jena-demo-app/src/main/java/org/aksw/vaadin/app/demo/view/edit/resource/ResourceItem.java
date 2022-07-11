@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
@@ -17,6 +16,7 @@ import org.aksw.commons.util.page.PaginatorImpl;
 import org.aksw.jena_sparql_api.collection.observable.GraphChange;
 import org.aksw.jenax.arq.util.node.PathUtils;
 import org.aksw.jenax.arq.util.triple.TripleUtils;
+import org.aksw.jenax.path.core.PathPP;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
 import org.aksw.vaadin.app.demo.view.edit.resource.DataRetriever.ResourceInfo;
 import org.aksw.vaadin.common.bind.VaadinBindUtils;
@@ -27,10 +27,10 @@ import org.apache.jena.sparql.path.P_Path0;
 import org.apache.jena.sparql.path.Path;
 
 import com.google.common.collect.Range;
-import com.google.common.collect.Sets;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Span;
@@ -49,6 +49,8 @@ public class ResourceItem
 
     protected ObservableValue<List<Path>> visibleProperties;
 
+
+
     // protected Map<Path, Component> attachedComponents = new LinedHashMap<>();
 
     // Path for which components have been attached
@@ -57,7 +59,12 @@ public class ResourceItem
     // Components that have been created and which may or may not be attached to this component
     protected Map<Path, Component> pathToComponentCache = new LinkedHashMap<>();
 
-    public ResourceItem(ResourceInfo state, GraphChange graphEditorModel, ObservableValue<List<Path>> visibleProperties,
+
+    protected ObservableValue<PathPP> breadcrumb;
+
+    public ResourceItem(ResourceInfo state, GraphChange graphEditorModel,
+            ObservableValue<List<Path>> visibleProperties,
+            ObservableValue<PathPP> breadcrumb,
             VaadinLabelMgr<Node, String> labelService) {
         addClassName("card");
 
@@ -66,6 +73,8 @@ public class ResourceItem
 
         this.state = state;
         this.visibleProperties = visibleProperties;
+
+        this.breadcrumb = breadcrumb;
 
 
         this.add(new H3("Resource: " + state.getNode()));
@@ -133,7 +142,8 @@ public class ResourceItem
 
 
     public void updateProperties(VerticalLayout contentRow, Path path, long offset, long limit) {
-        Node p = PathUtils.asStep(path).getNode();
+        P_Path0 step = PathUtils.asStep(path);
+        Node p = step.getNode();
         Long itemCount = state.getCountForPath(path);
 
         if (itemCount == null) {
@@ -145,7 +155,19 @@ public class ResourceItem
 
 
         HorizontalLayout headerRow = new HorizontalLayout();
-        headerRow.add(labelService.forHasText(new H4("" + p), p));
+        H4 pHeading = new H4("" + p);
+        headerRow.add(labelService.forHasText(pHeading, p));
+
+        ContextMenu contextMenu = new ContextMenu(pHeading);
+        contextMenu.addItem("Navigate to " + p, ev -> {
+            PathPP pp = breadcrumb.get();
+            PathPP newPP = pp.resolve(step);
+            breadcrumb.set(newPP);
+        });
+
+        // contextMenu.
+
+
 
         if (itemCount != null && itemCount > 1) {
 
@@ -203,6 +225,8 @@ public class ResourceItem
         int component = p0.isForward() ? 2 : 0;
         ObservableValue<Node> value = graphEditorModel.createFieldForExistingTriple(t, component);
 
+        // boolean hasChanged = !Objects.equals(o, value.get());
+
 
         Button resetValueBtn = new Button(new Icon(VaadinIcon.ROTATE_LEFT));
         resetValueBtn.getElement().setProperty("title", "Reset this field to its original value");
@@ -251,12 +275,21 @@ public class ResourceItem
 
         Node originalValue = o; // value.get();
         resetValueBtn.setVisible(false);
-        value.addValueChangeListener(ev -> {
-            boolean newValueDiffersFromOriginal = !Objects.equals(originalValue, ev.getNewValue());
 
-            resetValueBtn.setVisible(newValueDiffersFromOriginal);
-            markAsDeleted.setVisible(!newValueDiffersFromOriginal);
-        });
+
+        value.addValueChangeListener(ev -> {
+            boolean valueChanged = !Objects.equals(originalValue, ev.getNewValue());
+
+            resetValueBtn.setVisible(valueChanged);
+            markAsDeleted.setVisible(!valueChanged);
+
+            if (valueChanged) {
+                r.getStyle().set("background-color", "var(--lumo-primary-color-50pct)");
+            } else {
+                r.getStyle().set("background-color", null);
+            }
+
+        }).fire();
         VaadinBindUtils.bind(rdfTermEditor, value);
 
 

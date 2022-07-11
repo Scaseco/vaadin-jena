@@ -24,14 +24,14 @@ import org.aksw.commons.io.buffer.array.ArrayOps;
 import org.aksw.commons.io.cache.AdvancedRangeCacheConfig;
 import org.aksw.commons.io.cache.AdvancedRangeCacheConfigImpl;
 import org.aksw.commons.io.cache.AdvancedRangeCacheImpl;
-import org.aksw.commons.io.input.DataStream;
-import org.aksw.commons.io.input.DataStreamSource;
-import org.aksw.commons.io.input.DataStreamSources;
-import org.aksw.commons.io.input.DataStreams;
+import org.aksw.commons.io.input.ReadableChannel;
+import org.aksw.commons.io.input.ReadableChannelSource;
+import org.aksw.commons.io.input.ReadableChannelSources;
+import org.aksw.commons.io.input.ReadableChannels;
 import org.aksw.commons.io.slice.Slice;
 import org.aksw.commons.io.slice.SliceAccessor;
 import org.aksw.commons.io.slice.SliceInMemoryCache;
-import org.aksw.commons.rx.io.DataStreamSourceRx;
+import org.aksw.commons.rx.io.ReadableChannelSourceRx;
 import org.aksw.commons.rx.lookup.ListPaginator;
 import org.aksw.commons.rx.lookup.LookupService;
 import org.aksw.jena_sparql_api.lookup.ListPaginatorSparql;
@@ -245,12 +245,12 @@ public class DataRetriever {
         protected RdfDataSource rdfDataSource;
         // protected Map<Path, Long> pathToCount = new LinkedHashMap<>();
 
-        protected Map<Path, DataStreamSource<Node[]>> pathToValues = new LinkedHashMap<>();
+        protected Map<Path, ReadableChannelSource<Node[]>> pathToValues = new LinkedHashMap<>();
 
 
         public ResourceInfo(Node src, RdfDataSource rdfDataSource) {
-            this.src = src;
-            this.rdfDataSource = rdfDataSource;
+            this.src = Objects.requireNonNull(src);
+            this.rdfDataSource = Objects.requireNonNull(rdfDataSource);
         }
 
         public Node getNode() {
@@ -258,11 +258,11 @@ public class DataRetriever {
         }
 
         public List<Node> getData(Path path, Range<Long> range) {
-            DataStreamSource<Node[]> cache = pathToValues.get(path);
+            ReadableChannelSource<Node[]> cache = pathToValues.get(path);
             List<Node> result = null;
             if (cache != null) {
-                try (DataStream<Node[]> dataStream = cache.newDataStream(range)) {
-                    result = DataStreams.newStream(dataStream).collect(Collectors.toList());
+                try (ReadableChannel<Node[]> dataStream = cache.newReadableChannel(range)) {
+                    result = ReadableChannels.newStream(dataStream).collect(Collectors.toList());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -270,8 +270,8 @@ public class DataRetriever {
             return result;
         }
 
-        public DataStreamSource<Node[]> setup(Path path) {
-            DataStreamSource<Node[]> cache = pathToValues.computeIfAbsent(path, p -> {
+        public ReadableChannelSource<Node[]> setup(Path path) {
+            ReadableChannelSource<Node[]> cache = pathToValues.computeIfAbsent(path, p -> {
 
                 TriplePath t = new TriplePath(src, p, Vars.o);
                 Element elt = ElementUtils.createElement(t);
@@ -296,13 +296,13 @@ public class DataRetriever {
                 };
 
                 ListPaginator<Node> paginator = new ListPaginatorSparql(query, qef)
-                		.map(binding -> binding.get(Vars.o));
+                        .map(binding -> binding.get(Vars.o));
 
-                DataStreamSourceRx<Node> source = new DataStreamSourceRx<>(ArrayOps.createFor(Node.class), paginator);
+                ReadableChannelSourceRx<Node> source = new ReadableChannelSourceRx<>(ArrayOps.createFor(Node.class), paginator);
 
                 AdvancedRangeCacheConfig arcc = AdvancedRangeCacheConfigImpl.newDefaultsForObjects(10000);
                 Slice<Node[]> slice = SliceInMemoryCache.create(ArrayOps.createFor(Node.class), 50000, 20);
-                DataStreamSource<Node[]> dss = DataStreamSources.cache(source, slice, arcc);
+                ReadableChannelSource<Node[]> dss = ReadableChannelSources.cache(source, slice, arcc);
                 return dss;
             });
 
@@ -319,7 +319,7 @@ public class DataRetriever {
         }
 
         public void setKnownSize(Path path, Long knownSize) {
-            DataStreamSource<Node[]> cache = setup(path);
+            ReadableChannelSource<Node[]> cache = setup(path);
 
             System.out.println("Set known size for " + path + " to " + knownSize);
             AdvancedRangeCacheImpl<Node[]> arc = (AdvancedRangeCacheImpl<Node[]>)cache;
@@ -328,7 +328,7 @@ public class DataRetriever {
         }
 
         public void putData(Path path, Node[] nodes) {
-            DataStreamSource<Node[]> cache = setup(path);
+            ReadableChannelSource<Node[]> cache = setup(path);
 
             AdvancedRangeCacheImpl<Node[]> arc = (AdvancedRangeCacheImpl<Node[]>)cache;
             Slice<Node[]> slice = arc.getSlice();
@@ -363,7 +363,7 @@ public class DataRetriever {
 
         public Long getCountForPath(Path path) {
             Long result = null;
-            DataStreamSource<Node[]> cache = pathToValues.get(path);
+            ReadableChannelSource<Node[]> cache = pathToValues.get(path);
             if (cache != null) {
                 AdvancedRangeCacheImpl<Node[]> arc = (AdvancedRangeCacheImpl<Node[]>)cache;
                 Slice<Node[]> slice = arc.getSlice();

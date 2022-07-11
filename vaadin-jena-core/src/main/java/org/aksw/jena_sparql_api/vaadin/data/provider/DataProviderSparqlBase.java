@@ -61,8 +61,7 @@ public abstract class DataProviderSparqlBase<T>
         return relation;
     }
 
-    @Override
-    protected Stream<T> fetchFromBackEnd(Query<T, Expr> query) {
+    public static org.apache.jena.query.Query toJena(Relation relation, Query<?, Expr> query) {
         org.apache.jena.query.Query baseQuery = createEffectiveQuery(relation, query);
         org.apache.jena.query.Query q = QueryUtils.applySlice(
                 baseQuery,
@@ -82,8 +81,13 @@ public abstract class DataProviderSparqlBase<T>
             }
         }
 
-        // System.out.println(q);
 
+        return q;
+    }
+
+    @Override
+    protected Stream<T> fetchFromBackEnd(Query<T, Expr> query) {
+        org.apache.jena.query.Query q = toJena(relation, query);
         logger.trace("Effective query: " + q);
 
         Flowable<T> solutionFlow = createSolutionFlow(q);

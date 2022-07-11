@@ -19,8 +19,10 @@ import org.aksw.commons.collection.observable.ObservableValueImpl;
 import org.aksw.commons.collections.PolaritySet;
 import org.aksw.jena_sparql_api.collection.observable.GraphChange;
 import org.aksw.jena_sparql_api.common.DefaultPrefixes;
+import org.aksw.jena_sparql_api.concepts.BinaryRelationImpl;
 import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jena_sparql_api.concepts.RelationUtils;
+import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBase;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinComponentUtils;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
@@ -32,6 +34,10 @@ import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.connection.query.QueryExecutionFactoryDataset;
 import org.aksw.jenax.dataaccess.LabelUtils;
+import org.aksw.jenax.path.core.PathOpsPP;
+import org.aksw.jenax.path.core.PathPP;
+import org.aksw.jenax.sparql.path.SimplePath;
+import org.aksw.jenax.sparql.relation.api.BinaryRelation;
 import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
@@ -49,11 +55,13 @@ import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.binding.BindingFactory;
 import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.expr.NodeValue;
+import org.apache.jena.sparql.path.P_Link;
 import org.apache.jena.sparql.path.P_Path0;
 import org.apache.jena.sparql.path.Path;
 import org.apache.jena.vocabulary.DCAT;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -64,6 +72,7 @@ import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.dnd.GridDropLocation;
 import com.vaadin.flow.component.grid.dnd.GridDropMode;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout.Orientation;
@@ -183,11 +192,23 @@ public class ResourceEditor
         );
 
         resourceGrid = new Grid<>();
+
+        // Rendering resources is expensive - therefore only fetching small amounts of them
         resourceGrid.setPageSize(10);
         resourceGridHeaderRow = resourceGrid.appendHeaderRow();
         resourceGridFilterRow = resourceGrid.appendHeaderRow();
 
         Breadcrumb breadcrumb = new Breadcrumb(labelService);
+        breadcrumb.getModel().set(PathOpsPP.get().newRoot()
+                .resolve(new P_Link(RDF.Nodes.type))
+                .resolve(new P_Link(RDFS.Nodes.label))
+                );
+
+        breadcrumb.addPathListener(ev -> {
+            Notification.show("Clicked: " + ev.getPath());
+        });
+
+
         VerticalLayout resourcePanel = new VerticalLayout();
         resourcePanel.setSizeFull();
         resourcePanel.add(breadcrumb);
@@ -228,15 +249,19 @@ public class ResourceEditor
 
 
         // Query resourceQuery = QueryFactory.create("SELECT ?s { { SELECT DISTINCT ?s { ?s ?p ?o } LIMIT 5 } }");
-        Query resourceQuery = QueryFactory.create("SELECT ?s { BIND(<http://dcat.linkedgeodata.org/dataset/osm-bremen-2018-04-04> AS ?s) }");
-        Relation resourceRelation = RelationUtils.fromQuery(resourceQuery);
+        Query resourceQuery = QueryFactory.create("SELECT ?o { BIND(<http://dcat.linkedgeodata.org/dataset/osm-bremen-2018-04-04> AS ?o) }");
+        UnaryRelation resourceRelation = RelationUtils.fromQuery(resourceQuery).toUnaryRelation();
+
+
+        Relation propertyRelation = pathToRelation(breadcrumb.getModel().get());
+
 
 
         // TODO replace with a guava cache
         Map<Node, ResourceInfo> globalResourceState = new HashMap<>();
         // propertyGrid.getSelectionModel();
 
-        DataProvider<Binding, Expr> resourceDataProvider = new DataProviderSparqlBinding(resourceRelation, qef) {
+        DataProviderSparqlBase<Binding> resourceDataProvider = new DataProviderSparqlBinding(resourceRelation, qef) {
 
             @Override
             public java.util.stream.Stream<Binding> fetch(com.vaadin.flow.data.provider.Query<Binding,Expr> t) {
@@ -245,7 +270,8 @@ public class ResourceEditor
                     bindings = stream.collect(Collectors.toList());
                 }
 
-                Set<Node> nodes = bindings.stream().map(b -> b.get(Vars.s)).collect(Collectors.toSet());
+                Var v = relation.getVars().get(0);
+                Set<Node> nodes = bindings.stream().map(b -> b.get(v)).collect(Collectors.toSet());
 
                 Map<Node, ResourceInfo> map = dataRetriever.fetch(nodes, PolaritySet.create(false));
                 globalResourceState.putAll(map);
@@ -279,13 +305,26 @@ public class ResourceEditor
         };
 
 
+        breadcrumb.addPathListener(ev -> {
+            PathPP pp = ev.getPath();
+            BinaryRelation rel = pathToRelation(pp);
+            UnaryRelation newRel =
+                    rel.prependOn(rel.getSourceVar()).with(resourceRelation)
+                    .project(rel.getTargetVar()).toUnaryRelation();
+            // UnaryRelation newRel = resourceRelation.join().with(rel).toUnaryRelation();
+
+            System.out.println("Combined concept: " + newRel);
+            resourceDataProvider.setRelation(newRel);
+            resourceDataProvider.refreshAll();
+        });
+
         // resourceDataProvider.fi;
 
         resourceGrid.addComponentColumn(binding -> {
             System.out.println("Binding: " + binding);
-            Node node = binding.get("s");
+            Node node = binding.get(Vars.o);
             ResourceInfo resourceInfo = globalResourceState.get(node);
-            return new ResourceItem(resourceInfo, graphEditorModel, visibleProperties, labelService);
+            return new ResourceItem(resourceInfo, graphEditorModel, visibleProperties, breadcrumb.getModel(), labelService);
         });
         resourceGrid.setDataProvider(resourceDataProvider);
         // resourceGrid.setDa
@@ -312,6 +351,19 @@ public class ResourceEditor
             // resourceGrid.r
         });
 
+    }
+
+    public static BinaryRelation pathToRelation(PathPP path) {
+        List<P_Path0> segments = path.getSegments();
+        BinaryRelation e;
+        if (segments.isEmpty()) {
+            e = BinaryRelationImpl.empty(Vars.o);
+        } else {
+            Path pp = SimplePath.toPropertyPath(segments);
+            e = BinaryRelationImpl.create(pp);
+        }
+
+        return e;
     }
 
     protected void syncPropertiesWithView(Relation relation, int offset, int limit) {
