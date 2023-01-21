@@ -3,8 +3,10 @@ package org.aksw.vaadin.app.demo.view.edit.resource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.aksw.commons.collection.observable.ObservableValue;
+import org.aksw.jenax.path.core.PathOpsPP;
 import org.aksw.jenax.path.core.PathPP;
 import org.aksw.jenax.vaadin.label.LabelMgr;
 import org.apache.jena.graph.Node;
@@ -34,7 +36,13 @@ public class Breadcrumb
         pathModel = PathPPModelImpl.create();
         pathModel.addValueChangeListener(ev -> {
             refresh();
-        });
+            PathPP newValue = ev.getNewValue();
+            if (!Objects.equals(newValue, ev.getOldValue())) {
+                fireEvent(new BreadcrumbEvent(this, false, newValue));
+            }
+        }).fire();
+
+        // pathModel.set(PathOpsPP.get().newRoot());
 
         // add(new Span("foo"));
         // add(new Span("foo"));

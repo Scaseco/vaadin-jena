@@ -184,13 +184,11 @@ public class DataRetriever {
             }
         }
 
-
         Multimap<PolaritySet<Path>, Node> inverted = HashMultimap.create();
         srcToPaths.forEach((k, v) -> inverted.put(v, k));
 
         System.out.println(inverted);
         Multimap<PolaritySet<Node>, Node> srcToFwdPaths = index(inverted, true);
-
 
         Element fwdElt = createSimplePattern(nodes, true, srcToFwdPaths, null);
 
@@ -204,9 +202,7 @@ public class DataRetriever {
         query.addOrderBy(Vars.p, Query.ORDER_DESCENDING);
         query.addOrderBy(Vars.o, Query.ORDER_DESCENDING);
 
-
-
-        Accumulator<Binding, Map<Node, Map<Path, List<Node>>>> acc =
+        Accumulator<Binding, ?, Map<Node, Map<Path, List<Node>>>> acc =
             AggBuilder.inputSplit((Binding b) -> b.get(Vars.s),
                 AggBuilder.inputSplit((Binding b) -> (Path)PathUtils.createStep(b.get(Vars.p), !NodeValue.FALSE.asNode().equals(b.get(Vars.d))),
                     AggBuilder.inputTransform((Binding b) -> b.get(Vars.o),

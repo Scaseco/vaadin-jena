@@ -1,21 +1,25 @@
 package org.aksw.vaadin.app.demo.view.edit.resource;
 
+import java.beans.PropertyChangeListener;
+import java.beans.VetoableChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.aksw.commons.collection.observable.CollectionChangedEventImpl;
 import org.aksw.commons.collection.observable.ObservableSet;
-import org.aksw.commons.collection.observable.ObservableSetImpl;
 import org.aksw.commons.collection.observable.ObservableValue;
 import org.aksw.commons.collection.observable.ObservableValueImpl;
+import org.aksw.commons.collection.observable.Registration;
 import org.aksw.commons.collections.PolaritySet;
 import org.aksw.jena_sparql_api.collection.observable.GraphChange;
 import org.aksw.jena_sparql_api.common.DefaultPrefixes;
@@ -34,7 +38,6 @@ import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.connection.query.QueryExecutionFactoryDataset;
 import org.aksw.jenax.dataaccess.LabelUtils;
-import org.aksw.jenax.path.core.PathOpsPP;
 import org.aksw.jenax.path.core.PathPP;
 import org.aksw.jenax.sparql.path.SimplePath;
 import org.aksw.jenax.sparql.relation.api.BinaryRelation;
@@ -42,7 +45,8 @@ import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
 import org.aksw.vaadin.app.demo.view.edit.resource.DataRetriever.ResourceInfo;
-import org.aksw.vaadin.common.bind.VaadinBindUtils;
+import org.aksw.vaadin.common.component.util.ConfirmDialogUtils;
+import org.aksw.vaadin.common.component.util.NotificationUtils;
 import org.apache.commons.collections4.list.SetUniqueList;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
@@ -55,28 +59,73 @@ import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.binding.BindingFactory;
 import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.expr.NodeValue;
-import org.apache.jena.sparql.path.P_Link;
 import org.apache.jena.sparql.path.P_Path0;
 import org.apache.jena.sparql.path.Path;
 import org.apache.jena.vocabulary.DCAT;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
+import org.claspina.confirmdialog.ConfirmDialog;
 
+import com.google.common.collect.ForwardingSet;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
+import com.vaadin.flow.component.grid.Grid.SelectionMode;
+import com.vaadin.flow.component.grid.GridMultiSelectionModel;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.dnd.GridDropLocation;
 import com.vaadin.flow.component.grid.dnd.GridDropMode;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout.Orientation;
 import com.vaadin.flow.data.provider.DataProvider;
+
+
+class ObservableSelectionModel<T>
+    extends ForwardingSet<T>
+    implements ObservableSet<T>
+{
+    protected GridMultiSelectionModel<T> model;
+//    propertyGridSelectionModel.addSelectionListener(ev -> {
+//    	ev.getAllSelectedItems()
+//    });
+
+    public ObservableSelectionModel(GridMultiSelectionModel<T> model) {
+        // super(model.getSelectedItems());
+        this.model = model;
+    }
+
+    @Override
+    public Runnable addVetoableChangeListener(VetoableChangeListener listener) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Registration addPropertyChangeListener(PropertyChangeListener listener) {
+        com.vaadin.flow.shared.Registration x = model.addSelectionListener(ev -> {
+            listener.propertyChange(new CollectionChangedEventImpl<Set<T>>(
+                    this, model.getSelectedItems(), ev.getAllSelectedItems(),
+                    null, null, null));
+        });
+        return Registration.from(x::remove, null);
+    }
+
+    @Override
+    public boolean delta(Collection<? extends T> additions, Collection<?> removals) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    protected Set<T> delegate() {
+        return model.getSelectedItems();
+    }
+}
 
 public class ResourceEditor
     extends VerticalLayout
@@ -89,7 +138,7 @@ public class ResourceEditor
 
     // When a grid's multi-select mode is enabled then it is not possible to reorder selected rows
     // Therefore we need to manage the set of properties linked to the form editor ourself
-    protected ObservableSet<Binding> selectedProperties = ObservableSetImpl.decorate(new HashSet<>());
+    // protected ObservableSet<Binding> selectedProperties = ObservableSetImpl.decorate(new HashSet<>());
 
 
     // protected RDFConnection conn;
@@ -143,53 +192,58 @@ public class ResourceEditor
         splitLayout.setOrientation(Orientation.HORIZONTAL);
 
         propertyGrid = new Grid<>();
+        propertyGrid.setSelectionMode(SelectionMode.MULTI);
         propertyGridHeaderRow = propertyGrid.appendHeaderRow();
         propertyGridFilterRow = propertyGrid.appendHeaderRow();
         propertyGrid.setRowsDraggable(true);
+        GridMultiSelectionModel<Binding> propertyGridSelectionModel = (GridMultiSelectionModel<Binding>)propertyGrid.getSelectionModel();
+        propertyGridSelectionModel.setSelectAllCheckboxVisibility(GridMultiSelectionModel.SelectAllCheckboxVisibility.VISIBLE);
 
 
 
-        propertyGrid.addDragStartListener(
-            event -> {
-                // store current dragged item so we know what to drop
-                draggedProperty = event.getDraggedItems().get(0);
+        ObservableSelectionModel<Binding> selectedProperties = new ObservableSelectionModel<>(propertyGridSelectionModel);
+
+        propertyGrid.addDragStartListener(event -> {
+            // store current dragged item so we know what to drop
+            List<Binding> draggedItems = event.getDraggedItems();
+            if (draggedItems.size() > 1) {
+                // This seems to be a dumb limitation of vaadin: We can not drag individual rows if multiple ones are selected.
+                NotificationUtils.error("Please temporarily deselect the row you wish to drag or drag a non-selected row. A framework limitation prevents dragging of individual selected rows.");
+            } else if (draggedItems.size() == 1){
+                draggedProperty = draggedItems.get(0);
                 propertyGrid.setDropMode(GridDropMode.BETWEEN);
             }
-        );
+        });
 
-        propertyGrid.addDragEndListener(
-            event -> {
-                draggedProperty = null;
-                // Once dragging has ended, disable drop mode so that
-                // it won't look like other dragged items can be dropped
-                propertyGrid.setDropMode(null);
+        propertyGrid.addDragEndListener(event -> {
+            draggedProperty = null;
+            // Once dragging has ended, disable drop mode so that
+            // it won't look like other dragged items can be dropped
+            propertyGrid.setDropMode(null);
+        });
+
+        propertyGrid.addDropListener(event -> {
+            Binding dropOverItem = event.getDropTargetItem().get();
+            if (!dropOverItem.equals(draggedProperty)) {
+                // reorder dragged item the backing gridItems container
+                availableProperties.remove(draggedProperty);
+                // calculate drop index based on the dropOverItem
+                int dropIndex =
+                        availableProperties.indexOf(dropOverItem) + (event.getDropLocation() == GridDropLocation.BELOW ? 1 : 0);
+                availableProperties.add(dropIndex, draggedProperty);
+                propertyGrid.getDataProvider().refreshAll();
+
+                // Set<Binding> selectedProperties = propertyGrid.getSelectionModel().getSelectedItems();
+
+                List<Path> orderedPaths = SetUniqueList.setUniqueList(availableProperties.stream()
+                        .filter(selectedProperties::contains)
+                        .map(b -> PathUtils.createStep(b.get(Vars.p), !NodeValue.FALSE.asNode().equals(b.get(Vars.d))))
+                        .collect(Collectors.toList()));
+
+
+                visibleProperties.set(orderedPaths);
             }
-        );
-
-        propertyGrid.addDropListener(
-            event -> {
-                Binding dropOverItem = event.getDropTargetItem().get();
-                if (!dropOverItem.equals(draggedProperty)) {
-                    // reorder dragged item the backing gridItems container
-                    availableProperties.remove(draggedProperty);
-                    // calculate drop index based on the dropOverItem
-                    int dropIndex =
-                            availableProperties.indexOf(dropOverItem) + (event.getDropLocation() == GridDropLocation.BELOW ? 1 : 0);
-                    availableProperties.add(dropIndex, draggedProperty);
-                    propertyGrid.getDataProvider().refreshAll();
-
-                    // Set<Binding> selectedProperties = propertyGrid.getSelectionModel().getSelectedItems();
-
-                    List<Path> orderedPaths = SetUniqueList.setUniqueList(availableProperties.stream()
-                            .filter(selectedProperties::contains)
-                            .map(b -> PathUtils.createStep(b.get(Vars.p), !NodeValue.FALSE.asNode().equals(b.get(Vars.d))))
-                            .collect(Collectors.toList()));
-
-
-                    visibleProperties.set(orderedPaths);
-                }
-            }
-        );
+        });
 
         resourceGrid = new Grid<>();
 
@@ -199,10 +253,10 @@ public class ResourceEditor
         resourceGridFilterRow = resourceGrid.appendHeaderRow();
 
         Breadcrumb breadcrumb = new Breadcrumb(labelService);
-        breadcrumb.getModel().set(PathOpsPP.get().newRoot()
-                .resolve(new P_Link(RDF.Nodes.type))
-                .resolve(new P_Link(RDFS.Nodes.label))
-                );
+//        breadcrumb.getModel().set(PathOpsPP.get().newRoot()
+//                .resolve(new P_Link(RDF.Nodes.type))
+//                .resolve(new P_Link(RDFS.Nodes.label))
+//                );
 
         breadcrumb.addPathListener(ev -> {
             Notification.show("Clicked: " + ev.getPath());
@@ -214,7 +268,16 @@ public class ResourceEditor
         resourcePanel.add(breadcrumb);
         resourcePanel.add(resourceGrid);
 
-        splitLayout.addToPrimary(propertyGrid);
+        Button addPropertyButton = new Button(VaadinIcon.PLUS.create());
+        addPropertyButton.addClickListener(ev -> {
+            availableProperties.add(BindingFactory.binding(Vars.p, NodeFactory.createURI("property" + new Random().nextInt()), Vars.d, NodeValue.TRUE.asNode()));
+            propertyGrid.getDataProvider().refreshAll();
+        });
+
+
+
+        splitLayout.addToPrimary(addPropertyButton, propertyGrid);
+        // splitLayout.addToPrimary(propertyGrid);
         splitLayout.addToSecondary(resourcePanel);
 
         splitLayout.setSizeFull();
@@ -240,7 +303,8 @@ public class ResourceEditor
 //        QueryExecutionFactoryQuery propertyQef = q -> QueryExecutionFactory.create(q, emptyDataset);
 
         setQueryForGridBinding(propertyGrid, propertyGridHeaderRow, propertyDataProvider, labelService);
-        VaadinSparqlUtils.configureGridFilter(propertyGrid, propertyGridFilterRow, propertyTableVars);
+        VaadinSparqlUtils.configureGridFilter(propertyGrid, propertyGridFilterRow, propertyTableVars,
+                var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
 
         // propertyGrid.setDataProvider(propertyDataProvider);
 
@@ -351,6 +415,25 @@ public class ResourceEditor
             // resourceGrid.r
         });
 
+
+        Button submitBtn = new Button("Submit");
+        submitBtn.addClickListener(ev -> {
+            ConfirmDialog dialog = ConfirmDialogUtils.confirmDialog("Confirm Submit",
+                    "" + graphEditorModel.toUpdateRequest(),
+                    "Ok",
+                    x -> {
+                    },
+                    "Cancel",
+                    x -> {
+                    });
+            //dialog.setConfirmButtonTheme("error primary");
+            dialog.setWidthFull();
+            dialog.open();
+
+        });
+        resourcePanel.add(submitBtn);
+
+
     }
 
     public static BinaryRelation pathToRelation(PathPP path) {
@@ -393,13 +476,13 @@ public class ResourceEditor
         grid.removeAllColumns();
 
 
-        grid.addComponentColumn(binding -> {
-            Checkbox cb = new Checkbox();
-            VaadinBindUtils.bind(cb, selectedProperties.fieldForPresence(binding));
-            // selectedProperties.addPropertyChangeListener(null)r;
-
-            return cb;
-        });
+//        grid.addComponentColumn(binding -> {
+//            Checkbox cb = new Checkbox();
+//            VaadinBindUtils.bind(cb, selectedProperties.fieldForPresence(binding));
+//            // selectedProperties.addPropertyChangeListener(null)r;
+//
+//            return cb;
+//        });
 
         for (Var var : vars) {
             Column<Binding> column = grid.addComponentColumn(binding -> {

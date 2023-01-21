@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,6 +33,7 @@ import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.expr.ExprVar;
 import org.apache.jena.sparql.expr.NodeValue;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
@@ -40,7 +42,9 @@ import com.vaadin.flow.component.grid.HeaderRow.HeaderCell;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ConfigurableFilterDataProvider;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.function.SerializableFunction;
 
 public class VaadinSparqlUtils {
 
@@ -251,11 +255,48 @@ public class VaadinSparqlUtils {
     }
 
 
-    public static Map<Var, TextField> configureGridFilter(Grid<Binding> grid, HeaderRow filterRow, Collection<Var> vars) {
+    public static void setQueryForGridBindingComponent(
+            Grid<Binding> grid,
+            HeaderRow headerRow,
+            QueryExecutionFactoryQuery qef,
+            Query query,
+            Function<Var, SerializableFunction<Binding, Component>> varToRenderer) {
+
+        Relation relation = RelationUtils.fromQuery(query);
+        DataProvider<Binding, Expr> dataProvider = new DataProviderSparqlBinding(relation, qef)
+                .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
+                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
+                )));
+
+        grid.setDataProvider(dataProvider);
+        // List<Var> vars = visibleColumns == null ? query.getProjectVars() : visibleColumns;
+        List<Var> vars = query.getProjectVars();
+        grid.removeAllColumns();
+
+        for (Var var : vars) {
+            Function<Binding, Component> renderer = varToRenderer.apply(var);
+            if (renderer == null) {
+                continue;
+            }
+
+            Column<Binding> column = grid.addColumn(new ComponentRenderer<Component, Binding>(renderer::apply));
+            headerRow.getCell(column).setText(var.getName());
+
+            column.setKey(var.getName());
+            column.setResizable(true);
+            column.setSortable(true);
+        }
+    }
+
+
+    public static Map<Var, TextField> configureGridFilter(
+            Grid<Binding> grid, HeaderRow filterRow, Collection<Var> vars, Function<Var, Function<String, Expr>> varToStrToExpr) {
         // HeaderRow filterRow = grid.appendHeaderRow();
 
         Map<Var, TextField> result = new LinkedHashMap<>();
         for (Var var : vars) {
+            Function<String, Expr> strToExpr = varToStrToExpr.apply(var);
+
             Column<Binding> column = grid.getColumnByKey(var.getName());
             if (column != null) {
                 HeaderCell cell = filterRow.getCell(column);
@@ -264,7 +305,7 @@ public class VaadinSparqlUtils {
                     result.put(var, tf);
                     tf.addValueChangeListener(event -> {
                         // if (grid.getDataProvider() instanceof InMemoryDataProvider) {
-                            registerGridFilters(grid, result);
+                            registerGridFilters(grid, result, strToExpr);
                             grid.getDataProvider().refreshAll();
                         // }
                     });
@@ -282,16 +323,26 @@ public class VaadinSparqlUtils {
         return result;
     }
 
-    public static void registerGridFilters(Grid<Binding> grid, Map<Var, ? extends HasValue<?, String>> filterFields) {
+    public static Optional<Expr> createFilterExpr(Var var, String str) {
+        Optional<Expr> result = str == null || str.isBlank()
+                ? Optional.empty()
+                : Optional.of(new E_StrContains(new E_StrLowerCase(new E_Str(new ExprVar(var))), NodeValue.makeString(str.toLowerCase())));
+        return result;
+    }
+
+    public static void registerGridFilters(Grid<Binding> grid, Map<Var, ? extends HasValue<?, String>> filterFields, Function<String, Expr> strToExpr) {
         DataProvider<Binding, ?> rawDataProvider = grid.getDataProvider();
         if (rawDataProvider instanceof ConfigurableFilterDataProvider) {
             ConfigurableFilterDataProvider<Binding, Expr, Expr> dataProvider = (ConfigurableFilterDataProvider<Binding, Expr, Expr>)rawDataProvider;
             List<Expr> exprs = filterFields.entrySet().stream()
                 .flatMap(e -> {
                     String str = e.getValue().getValue();
-                    Stream<Expr> r = str == null || str.isBlank()
-                            ? Stream.empty()
-                            : Stream.of(new E_StrContains(new E_StrLowerCase(new E_Str(new ExprVar(e.getKey()))), NodeValue.makeString(str.toLowerCase())));
+                    Expr expr = strToExpr.apply(str);
+                    Stream<Expr> r = expr == null ? Stream.empty() : Stream.of(expr);
+
+//                    Stream<Expr> r = str == null || str.isBlank()
+//                            ? Stream.empty()
+//                            : Stream.of(new E_StrContains(new E_StrLowerCase(new E_Str(new ExprVar(e.getKey()))), NodeValue.makeString(str.toLowerCase())));
 
                     return r;
                 })

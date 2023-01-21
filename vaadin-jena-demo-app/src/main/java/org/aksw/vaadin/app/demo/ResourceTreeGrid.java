@@ -2,7 +2,6 @@ package org.aksw.vaadin.app.demo;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.aksw.commons.path.core.Path;
 import org.aksw.commons.rx.lookup.LookupService;
@@ -28,6 +27,7 @@ import org.aksw.jenax.dataaccess.LabelUtils;
 import org.aksw.jenax.path.datatype.RDFDatatypePPath;
 import org.aksw.jenax.path.datatype.RDFDatatypePathNode;
 import org.aksw.jenax.reprogen.core.JenaPluginUtils;
+import org.aksw.vaadin.common.component.util.ConfirmDialogUtils;
 import org.aksw.vaadin.shacl.ShaclTreeGrid;
 import org.apache.jena.datatypes.TypeMapper;
 import org.apache.jena.graph.Node;
@@ -37,7 +37,6 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sys.JenaSystem;
 import org.apache.jena.vocabulary.RDFS;
-import org.claspina.confirmdialog.ButtonOption;
 import org.claspina.confirmdialog.ConfirmDialog;
 import org.topbraid.shacl.model.SHFactory;
 
@@ -49,7 +48,6 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 
 public class ResourceTreeGrid
@@ -140,7 +138,7 @@ public class ResourceTreeGrid
 
         Button submitBtn = new Button("Submit");
         submitBtn.addClickListener(ev -> {
-            ConfirmDialog dialog = confirmDialog("Confirm Submit",
+            ConfirmDialog dialog = ConfirmDialogUtils.confirmDialog("Confirm Submit",
                     "" + graphEditorModel.toUpdateRequest(),
                     "Ok",
                     x -> {
@@ -159,28 +157,4 @@ public class ResourceTreeGrid
         add(mainPanel);
 
     }
-
-
-// Signature compatible with ConfirmDialog of vaadin pro
-public ConfirmDialog confirmDialog(String header, String text, String confirmText,
-        Consumer<?> confirmListener,
-        String cancelText,
-        Consumer<?> cancelListener) {
-
-    TextArea textArea = new TextArea();
-    textArea.setValue(text);
-    textArea.setReadOnly(true);
-    // textArea.setEnabled(false);
-
-    ConfirmDialog result = ConfirmDialog
-        .create()
-        .withCaption(header)
-        .withMessage(textArea)
-        .withOkButton(() -> confirmListener.accept(null), ButtonOption.focus(), ButtonOption.caption(confirmText), ButtonOption.closeOnClick(true))
-        .withCancelButton(() -> cancelListener.accept(null), ButtonOption.caption(cancelText), ButtonOption.closeOnClick(true));
-
-    return result;
-
-}
-
 }

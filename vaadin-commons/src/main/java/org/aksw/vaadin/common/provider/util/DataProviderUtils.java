@@ -1,9 +1,8 @@
 package org.aksw.vaadin.common.provider.util;
 
+import org.aksw.vaadin.common.component.util.NotificationUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.data.provider.DataProvider;
 
 public class DataProviderUtils {
@@ -11,9 +10,11 @@ public class DataProviderUtils {
         DataProvider<T, F> result = new DataProviderWrapperWithCustomErrorHandler<>(
                 dataProvider,
                 th -> {
-                    Notification n = new Notification(ExceptionUtils.getRootCauseMessage(th), 5000);
-                    n.addThemeVariants(NotificationVariant.LUMO_ERROR);
-                    n.open();
+                    String msg = ExceptionUtils.getRootCauseMessage(th);
+                    NotificationUtils.error(msg);
+//                    Notification n = new Notification(ExceptionUtils.getRootCauseMessage(th), 5000);
+//                    n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+//                    n.open();
                 });
         return result;
     }
