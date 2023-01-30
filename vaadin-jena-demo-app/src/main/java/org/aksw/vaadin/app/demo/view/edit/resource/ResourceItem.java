@@ -9,11 +9,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.aksw.commons.collection.observable.ObservableCollection;
 import org.aksw.commons.collection.observable.ObservableValue;
 import org.aksw.commons.util.page.Page;
 import org.aksw.commons.util.page.Paginator;
 import org.aksw.commons.util.page.PaginatorImpl;
 import org.aksw.jena_sparql_api.collection.observable.GraphChange;
+import org.aksw.jena_sparql_api.collection.observable.RdfField;
 import org.aksw.jenax.arq.util.node.PathUtils;
 import org.aksw.jenax.arq.util.triple.TripleUtils;
 import org.aksw.jenax.path.core.PathPP;
@@ -84,13 +86,13 @@ public class ResourceItem
         // System.out.println("Known paths: " + paths);
 
         visibleProperties.addValueChangeListener(values -> {
-            refreshProperties();
+            refreshPropertyList();
         });
 
-        refreshProperties();
+        refreshPropertyList();
     }
 
-    public void refreshProperties() {
+    public void refreshPropertyList() {
         List<Path> requestedPaths = visibleProperties.get();
 
         Iterator<Path> itAttached = activePaths.iterator();
@@ -119,7 +121,7 @@ public class ResourceItem
                 c.setVisible(true);
             } else {
                 VerticalLayout contentRow = new VerticalLayout();
-                updateProperties(contentRow, path, 0, 5);
+                updatePropertyValues(contentRow, path, 0, 5);
                 c = contentRow;
                 pathToComponentCache.put(path, c);
             }
@@ -141,9 +143,10 @@ public class ResourceItem
     }
 
 
-    public void updateProperties(VerticalLayout contentRow, Path path, long offset, long limit) {
+    public void updatePropertyValues(VerticalLayout contentRow, Path path, long offset, long limit) {
         P_Path0 step = PathUtils.asStep(path);
         Node p = step.getNode();
+        boolean isFwd = step.isForward();
         Long itemCount = state.getCountForPath(path);
 
         if (itemCount == null) {
@@ -165,6 +168,25 @@ public class ResourceItem
             breadcrumb.set(newPP);
         });
 
+        Button addValueBtn = new Button(VaadinIcon.PLUS.create());
+        RdfField rdfField = graphEditorModel.createSetField(state.getNode(), p, isFwd);
+        ObservableCollection<Node> newValues = rdfField.getAddedAsSet();
+
+        addValueBtn.addClickListener(event -> {
+            // graphEditorModel.createSetField(p, p, isAttached());
+            Node newNode = graphEditorModel.freshNode();
+            newValues.add(newNode);
+        });
+
+        newValues.addPropertyChangeListener(ev -> {
+            for (Node o : newValues) {
+                Component editor = createEditor(state.getNode(), path, o);
+                contentRow.add(editor);
+            }
+        });
+
+        headerRow.add(addValueBtn);
+
         // contextMenu.
 
 
@@ -185,7 +207,7 @@ public class ResourceItem
                 Button pageBtn = new Button("" + page.getPageNumber());
                 if (!page.isActive()) {
                     pageBtn.addClickListener(ev -> {
-                        updateProperties(contentRow, path, page.getPageOffset(), limit);
+                        updatePropertyValues(contentRow, path, page.getPageOffset(), limit);
                     });
                 } else {
                     pageBtn.setEnabled(false);
@@ -196,6 +218,7 @@ public class ResourceItem
         }
 
         contentRow.add(headerRow);
+
 
         List<Node> values = state.getData(path, Range.closedOpen(offset, offset + limit));
         if (values != null) {

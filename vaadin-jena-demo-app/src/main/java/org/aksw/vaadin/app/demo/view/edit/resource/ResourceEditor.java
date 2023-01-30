@@ -21,6 +21,9 @@ import org.aksw.commons.collection.observable.ObservableValue;
 import org.aksw.commons.collection.observable.ObservableValueImpl;
 import org.aksw.commons.collection.observable.Registration;
 import org.aksw.commons.collections.PolaritySet;
+import org.aksw.commons.util.page.Page;
+import org.aksw.commons.util.page.Paginator;
+import org.aksw.commons.util.page.PaginatorImpl;
 import org.aksw.jena_sparql_api.collection.observable.GraphChange;
 import org.aksw.jena_sparql_api.common.DefaultPrefixes;
 import org.aksw.jena_sparql_api.concepts.BinaryRelationImpl;
@@ -245,6 +248,7 @@ public class ResourceEditor
             }
         });
 
+
         resourceGrid = new Grid<>();
 
         // Rendering resources is expensive - therefore only fetching small amounts of them
@@ -252,10 +256,11 @@ public class ResourceEditor
         resourceGridHeaderRow = resourceGrid.appendHeaderRow();
         resourceGridFilterRow = resourceGrid.appendHeaderRow();
 
+
         Breadcrumb breadcrumb = new Breadcrumb(labelService);
 //        breadcrumb.getModel().set(PathOpsPP.get().newRoot()
 //                .resolve(new P_Link(RDF.Nodes.type))
-//                .resolve(new P_Link(RDFS.Nodes.label))
+//                .resolve(new P_Link(RDFS.Nodes.label))$
 //                );
 
         breadcrumb.addPathListener(ev -> {
@@ -263,9 +268,14 @@ public class ResourceEditor
         });
 
 
+
+        Button addResourceBtn = new Button(VaadinIcon.PLUS.create());
+        // addResourceBtn.add
+
         VerticalLayout resourcePanel = new VerticalLayout();
         resourcePanel.setSizeFull();
         resourcePanel.add(breadcrumb);
+        resourcePanel.add(addResourceBtn);
         resourcePanel.add(resourceGrid);
 
         Button addPropertyButton = new Button(VaadinIcon.PLUS.create());
@@ -393,7 +403,7 @@ public class ResourceEditor
         resourceGrid.setDataProvider(resourceDataProvider);
         // resourceGrid.setDa
         // VaadinSparqlUtils.setQueryForGridBinding(resourceGrid, resourceGridHeaderRow, qef, resourceQuery);
-        // VaadinSparqlUtils.configureGridFilter(resourceGrid, resourceGridFilterRow, resourceQuery.getProjectVars());
+        // VaadinSparqlUtils.configureGridFilter(resourceGrid, resourceGridFilterRow, resourceQuery.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
 
 
 
@@ -459,6 +469,8 @@ public class ResourceEditor
 
 
 
+    /** Configure a grid to be backed by the given data provider for sparql bindings -
+     * thereby rendering the binding values using the given labelService */
     public void setQueryForGridBinding(
             Grid<Binding> grid,
             HeaderRow headerRow,

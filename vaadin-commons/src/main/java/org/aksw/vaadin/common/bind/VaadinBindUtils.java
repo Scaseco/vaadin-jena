@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import javax.annotation.CheckReturnValue;
+
 import org.aksw.commons.collection.observable.ObservableCollection;
 import org.aksw.commons.collection.observable.ObservableValue;
 
@@ -46,7 +48,7 @@ public class VaadinBindUtils {
     }
 
 
-
+    @CheckReturnValue
     public static <V> Registration bind(HasValue<?, V> hasValue, ObservableValue<V> store) {
         V value = store.get();
         hasValue.setValue(value);
