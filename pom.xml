@@ -15,12 +15,12 @@
 		<version>4.2.0-1-SNAPSHOT</version> </parent> -->
 
 	<properties>
-		<vaadin.version>14.9.4</vaadin.version>
+		<vaadin.version>14.10.0</vaadin.version>
 		<spring-boot.version>2.3.3.RELEASE</spring-boot.version>
 		<jackson.version>2.10.3</jackson.version>
 
-		<jenax.version>4.8.0-1-SNAPSHOT</jenax.version>
-		<aksw-commons.version>0.9.5-SNAPSHOT</aksw-commons.version>
+		<jenax.version>4.8.0-3-SNAPSHOT</jenax.version>
+		<aksw-commons.version>0.9.6-SNAPSHOT</aksw-commons.version>
 		<!-- <facete3.version>1.2.0-SNAPSHOT</facete3.version> -->
 
 		<slf4j.version>1.8.0-beta4</slf4j.version>

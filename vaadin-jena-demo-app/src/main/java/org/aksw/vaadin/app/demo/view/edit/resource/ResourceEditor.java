@@ -280,8 +280,15 @@ public class ResourceEditor
 
         Button addPropertyButton = new Button(VaadinIcon.PLUS.create());
         addPropertyButton.addClickListener(ev -> {
-            availableProperties.add(BindingFactory.binding(Vars.p, NodeFactory.createURI("property" + new Random().nextInt()), Vars.d, NodeValue.TRUE.asNode()));
-            propertyGrid.getDataProvider().refreshAll();
+            ConfirmDialogUtils.confirmInputDialog("Add Property", null, "Add Property",
+                    iri -> {
+                        if (iri == null || iri.isEmpty()) {
+                            NotificationUtils.error("Ignoring empty IRI");
+                        } else {
+                            availableProperties.add(BindingFactory.binding(Vars.p, NodeFactory.createURI(iri), Vars.d, NodeValue.TRUE.asNode()));
+                            propertyGrid.getDataProvider().refreshAll();
+                        }
+                    }, "Cancel", null).open();
         });
 
 

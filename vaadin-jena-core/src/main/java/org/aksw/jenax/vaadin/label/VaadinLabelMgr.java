@@ -1,20 +1,13 @@
 package org.aksw.jenax.vaadin.label;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.Objects;
-import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.aksw.commons.collections.trees.TreeUtils;
 import org.aksw.commons.rx.lookup.LookupService;
 import org.aksw.commons.util.concurrent.ScheduleOnce2;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinComponentUtils;
 
-import com.google.common.collect.Sets;
-import com.google.common.graph.Traverser;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasText;
 import com.vaadin.flow.component.UI;
@@ -71,7 +64,11 @@ public class VaadinLabelMgr<R, L>
     }
 
     public <X extends HasText> X forHasText(X component, R resource) {
-        register(component, Collections.singleton(resource), (c, lmap) -> {
+        return forHasText(this, component, resource);
+    }
+
+    public static <R, L, X extends HasText> X forHasText(LabelMgr<R, L> labelMgr, X component, R resource) {
+        labelMgr.register(component, resource, (c, lmap) -> {
             L label = lmap.get(resource);
             String text = Objects.toString(label);
             c.setText(text);

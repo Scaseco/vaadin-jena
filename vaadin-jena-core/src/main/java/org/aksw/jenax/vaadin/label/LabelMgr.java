@@ -5,12 +5,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiConsumer;
@@ -28,6 +28,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.Sets;
+import com.vaadin.flow.component.HasText;
 
 
 /**
@@ -42,6 +43,8 @@ import com.google.common.collect.Sets;
  * @param <L>
  */
 public class LabelMgr<R, L> {
+
+    private static final Object DUMMY = new Object();
 
     private static final Logger logger = LoggerFactory.getLogger(LabelMgr.class);
 
@@ -59,7 +62,9 @@ public class LabelMgr<R, L> {
     protected Map<R, Long> resourceRefCount = new ConcurrentHashMap<>();
 
     // The set of components that are awaiting updates
-    protected Map<Object, Void> pendingComponents = Collections.synchronizedMap(new WeakHashMap<>());
+    protected Map<Object, Object> pendingComponents = CacheBuilder.newBuilder().weakKeys().<Object, Object>build().asMap();
+    // Collections.synchronizedMap(new IdentityHashMap<>()); // CacheBuilder.newBuilder().weakKeys().<Object, Object>build().asMap();
+//     new MapMaker().weakKeys(). //Collections.synchronizedMap(new WeakHashMap<>());
 
     // The set of resources for which to request labels on the next iteration
     protected Set<R> pendingResources = new HashSet<>();
@@ -76,11 +81,12 @@ public class LabelMgr<R, L> {
 
       componentToResources = CacheBuilder.newBuilder()
           .removalListener((RemovalNotification<Object, State<R, L>> n) -> {
-              Set<R> resources = n.getValue().resources;
-              for (R r : resources) {
-                  decRefCount(r);
+              synchronized (n) {
+                  Set<R> resources = n.getValue().resources;
+                  for (R r : resources) {
+                      decRefCount(r);
+                  }
               }
-
               // resourceRefCount
           })
           .weakKeys()
@@ -141,10 +147,14 @@ public class LabelMgr<R, L> {
 
         boolean result = false;
         if (state != null) {
-            // Check for whether all labels are available - if so, apply them
-            result = state.resources.stream().allMatch(activeLabels::containsKey);
+            synchronized (state) {
+                // Check for whether all labels are available - if so, apply them
+                result = state.resources.stream().allMatch(activeLabels::containsKey);
 
-            state.labelCallback.accept(component, activeLabels);
+                if (result) {
+                    state.labelCallback.accept(component, activeLabels);
+                }
+            }
         }
 
         return result;
@@ -248,6 +258,11 @@ public class LabelMgr<R, L> {
     }
 
 
+    /** Convenience method for a single resource. */
+    public <X> void register(X component, R resource, BiConsumer<? super X, Map<R, L>> callback) {
+        register(component, Collections.singleton(resource), callback);
+    }
+
     /**
      * <b>Registrations are subject to GC when the component gets GC'd.
      * For this to work, callbacks MUST NOT strongly reference the component. Instead,
@@ -273,6 +288,7 @@ public class LabelMgr<R, L> {
         State<R, L> entry;
         try {
             entry = componentToResources.get(component);
+            // System.out.println("Lookup for component " + ((HasText)component).getText() + " with resources " + resources);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
@@ -295,7 +311,7 @@ public class LabelMgr<R, L> {
             if (!additions.isEmpty()) {
                 boolean couldApplyImmediately = applyNow(component);
                 if (!couldApplyImmediately) {
-                    pendingComponents.put(component, null);
+                    pendingComponents.put(component, DUMMY);
 
                     scheduleRetrieval();
                 }

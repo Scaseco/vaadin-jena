@@ -1,5 +1,6 @@
 package org.aksw.vaadin.app.demo;
 
+import org.aksw.vaadin.app.demo.view.edit.propertylist.TableMapperView;
 import org.aksw.vaadin.app.demo.view.edit.resource.ResourceEditorView;
 import org.aksw.vaadin.app.demo.view.label.LabelView;
 import org.aksw.vaadin.app.demo.view.welcome.LandingPageView;
@@ -65,7 +66,8 @@ public class MainLayout
         tabs.add(
                 createTab(VaadinIcon.HOME, "Home", LandingPageView.class),
                 createTab(VaadinIcon.FOLDER_ADD, "New Data Project", ResourceEditorView.class),
-                createTab(VaadinIcon.EYE, "Labels", LabelView.class)
+                createTab(VaadinIcon.EYE, "Labels", LabelView.class),
+                createTab(VaadinIcon.TABLE, "TableMapper", TableMapperView.class)
 //                createTab(VaadinIcon.EYE, "Browse", BrowseRepoView.class),
 //                createTab(VaadinIcon.CONNECT, "Connections", ConnectionMgmtView.class),
 //                createTab(VaadinIcon.DATABASE, "Catalogs", CatalogMgmtView.class)
