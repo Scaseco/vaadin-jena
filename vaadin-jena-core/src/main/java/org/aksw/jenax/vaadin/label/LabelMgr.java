@@ -96,9 +96,26 @@ public class LabelMgr<R, L> {
                   return new State<R, L>();
               }
           });
-
-
     }
+
+    public void setLookupService(LookupService<R, L> lookupService) {
+        this.lookupService = lookupService;
+    }
+
+    public LookupService<R, L> getLookupService() {
+        return lookupService;
+    }
+
+    public void refreshAll() {
+        for (Entry<Object, State<R, L>> e : componentToResources.asMap().entrySet()) {
+            pendingComponents.put(e.getKey(), DUMMY);
+            pendingResources.addAll(e.getValue().resources);
+        }
+        activeLabels.clear();
+        labelCache.invalidateAll();
+        scheduleRetrieval();
+    }
+
 
     protected synchronized void loadPending() {
         List<Object> components = new ArrayList<>(pendingComponents.keySet());

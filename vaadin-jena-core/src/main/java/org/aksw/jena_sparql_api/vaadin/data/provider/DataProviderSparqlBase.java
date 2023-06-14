@@ -34,6 +34,9 @@ public abstract class DataProviderSparqlBase<T>
 
     private static final long serialVersionUID = 1L;
 
+    // This feels like a hack - it might be better to have the distinct flag part of the relation but this needs more thought
+    protected boolean alwaysDistinct = false;
+
     protected Relation relation;
     protected QueryExecutionFactoryQuery qef;
 
@@ -45,6 +48,15 @@ public abstract class DataProviderSparqlBase<T>
         this.relation = relation;
         this.qef = qef;
     }
+
+    public void setAlwaysDistinct(boolean alwaysDistinct) {
+        this.alwaysDistinct = alwaysDistinct;
+    }
+
+    public boolean getAlwaysDistinct() {
+        return alwaysDistinct;
+    }
+
 
     public void setRelation(Relation relation) {
         this.relation = relation;
@@ -88,6 +100,10 @@ public abstract class DataProviderSparqlBase<T>
     @Override
     protected Stream<T> fetchFromBackEnd(Query<T, Expr> query) {
         org.apache.jena.query.Query q = toJena(relation, query);
+        if (alwaysDistinct) {
+            q.setDistinct(true);
+        }
+
         logger.trace("Effective query: " + q);
 
         Flowable<T> solutionFlow = createSolutionFlow(q);
@@ -112,6 +128,10 @@ public abstract class DataProviderSparqlBase<T>
         }
 
         org.apache.jena.query.Query baseQuery = createEffectiveQuery(relation, query);
+        if (alwaysDistinct) {
+            baseQuery.setDistinct(true);
+        }
+
 
         logger.debug("Computing resultset size for\n" + baseQuery);
 

@@ -64,10 +64,10 @@ public class MainLayout
     private Tabs getTabs() {
         RouteTabs tabs = new RouteTabs();
         tabs.add(
-                createTab(VaadinIcon.HOME, "Home", LandingPageView.class),
-                createTab(VaadinIcon.FOLDER_ADD, "New Data Project", ResourceEditorView.class),
-                createTab(VaadinIcon.EYE, "Labels", LabelView.class),
-                createTab(VaadinIcon.TABLE, "TableMapper", TableMapperView.class)
+                RouteTabs.newTab(VaadinIcon.HOME, "Home", LandingPageView.class),
+                RouteTabs.newTab(VaadinIcon.FOLDER_ADD, "New Data Project", ResourceEditorView.class),
+                RouteTabs.newTab(VaadinIcon.EYE, "Labels", LabelView.class),
+                RouteTabs.newTab(VaadinIcon.TABLE, "TableMapper", TableMapperView.class)
 //                createTab(VaadinIcon.EYE, "Browse", BrowseRepoView.class),
 //                createTab(VaadinIcon.CONNECT, "Connections", ConnectionMgmtView.class),
 //                createTab(VaadinIcon.DATABASE, "Catalogs", CatalogMgmtView.class)
@@ -83,22 +83,4 @@ public class MainLayout
     //  tabs.setOrientation(Tabs.Orientation.VERTICAL);
       return tabs;
     }
-
-    private RouterLink createTab(VaadinIcon viewIcon, String viewName, Class<? extends Component> routeClass) {
-      Icon icon = viewIcon.create();
-      icon.getStyle()
-              .set("box-sizing", "border-box")
-              .set("margin-inline-end", "var(--lumo-space-m)")
-              .set("margin-inline-start", "var(--lumo-space-xs)")
-              .set("padding", "var(--lumo-space-xs)");
-
-      RouterLink link = new RouterLink();
-      link.add(icon, new Span(viewName));
-      link.setTabIndex(-1);
-      link.setRoute(routeClass);
-
-      // return new Tab(link);
-      return link;
-    }
-
 }

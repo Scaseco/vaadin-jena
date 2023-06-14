@@ -220,7 +220,10 @@ public class VaadinSparqlUtils {
             List<Var> visibleColumns) {
 
         Relation relation = RelationUtils.fromQuery(query);
-        DataProvider<Binding, Expr> dataProvider = new DataProviderSparqlBinding(relation, qef)
+        DataProviderSparqlBinding coreDataProvider = new DataProviderSparqlBinding(relation, qef);
+        coreDataProvider.setAlwaysDistinct(true);
+
+        DataProvider<Binding, Expr> dataProvider = coreDataProvider
                 .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
                         Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
                 )));
