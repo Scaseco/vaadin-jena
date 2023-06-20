@@ -82,8 +82,6 @@ public class TabSheet
      *
      */
     public Tab newTab(String id, String name, ManagedComponent content) {
-        System.out.println("ADDING TAB " + name);
-
         Tab priorTab = idToTab.get(id);
         if (priorTab != null) {
             destroyTab(priorTab);
@@ -95,6 +93,8 @@ public class TabSheet
 
         Component contentComponent = content.getComponent();
 
+        Tab selectedTab = tabs.getSelectedTab();
+
         idToTab.put(id, newTab);
         tabsToPages.put(newTab, content);
         tabs.add(newTab);
@@ -102,8 +102,7 @@ public class TabSheet
 
         contentComponent.setVisible(false);
 
-        Tab selectedTab = tabs.getSelectedTab();
-        if (selectedTab == null) {
+        if (selectedTab == null || newTab == selectedTab) {
             setSelectedTab(newTab);
         }
 
@@ -155,7 +154,6 @@ public class TabSheet
         tabs.remove(tab);
         tabsToPages.remove(tab);
         idToTab.inverse().remove(tab);
-
         page.close();
     }
 

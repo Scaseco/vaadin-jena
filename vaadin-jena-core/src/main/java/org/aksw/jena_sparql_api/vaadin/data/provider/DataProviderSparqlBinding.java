@@ -31,13 +31,9 @@ public class DataProviderSparqlBinding
         return new DataProviderSparqlBinding(relation, qef);
     }
 
-
     @Override
     protected Flowable<Binding> createSolutionFlow(Query query) {
         // System.out.println(query);
         return SparqlRx.execSelectRaw(() -> qef.createQueryExecution(query));
     }
-
-
-
 }

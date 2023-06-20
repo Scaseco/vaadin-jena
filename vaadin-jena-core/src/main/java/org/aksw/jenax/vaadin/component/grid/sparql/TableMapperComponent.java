@@ -1,18 +1,15 @@
-package org.aksw.vaadin.app.demo.view.edit.propertylist;
+package org.aksw.jenax.vaadin.component.grid.sparql;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,26 +24,29 @@ import org.aksw.facete.v3.api.FacetNode;
 import org.aksw.facete.v3.api.FacetedDataQuery;
 import org.aksw.facete.v3.api.FacetedQuery;
 import org.aksw.facete.v3.impl.FacetedQueryImpl;
+import org.aksw.facete.v4.impl.ElementGenerator;
 import org.aksw.jena_sparql_api.common.DefaultPrefixes;
-import org.aksw.jena_sparql_api.concepts.ConceptUtils;
+import org.aksw.jena_sparql_api.concepts.Concept;
 import org.aksw.jena_sparql_api.concepts.RelationUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlRdfNode;
-import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
 import org.aksw.jenax.arq.connection.core.QueryExecutionFactories;
+import org.aksw.jenax.arq.connection.core.RDFConnections;
 import org.aksw.jenax.arq.dataset.api.ResourceInDataset;
 import org.aksw.jenax.arq.datasource.RdfDataSourceWithBnodeRewrite;
+import org.aksw.jenax.arq.util.node.NodeUtils;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
+import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.dataaccess.LabelUtils;
-import org.aksw.jenax.path.core.AliasedStep;
-import org.aksw.jenax.path.core.PathOpsPPA;
+import org.aksw.jenax.path.core.FacetPath;
+import org.aksw.jenax.path.core.FacetPathOps;
+import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.path.core.PathPP;
-import org.aksw.jenax.path.core.PathPPA;
 import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
-import org.aksw.jenax.vaadin.label.LabelMgr;
+import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
 import org.aksw.jenax.vaadin.label.VaadinRdfLabelMgrImpl;
 import org.aksw.vaadin.common.component.tab.TabSheet;
@@ -57,25 +57,20 @@ import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdfconnection.RDFConnection;
-import org.apache.jena.sparql.core.Var;
+import org.apache.jena.rdfconnection.SparqlQueryConnection;
 import org.apache.jena.sparql.engine.binding.Binding;
-import org.apache.jena.sparql.path.P_Path0;
-import org.apache.jena.sparql.syntax.Element;
-import org.apache.jena.sparql.syntax.ElementGroup;
-import org.apache.jena.sparql.syntax.ElementOptional;
-import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import org.vaadin.addons.componentfactory.PaperSlider;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
+import com.google.common.math.LongMath;
 import com.vaadin.flow.component.HasText;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
-import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.grid.HeaderRow.HeaderCell;
 import com.vaadin.flow.component.grid.dnd.GridDropLocation;
 import com.vaadin.flow.component.grid.dnd.GridDropMode;
 import com.vaadin.flow.component.html.Span;
@@ -83,10 +78,8 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.tabs.Tabs;
-import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.provider.ListDataProvider;
@@ -209,7 +202,7 @@ interface Sampler<I, O> {
 class NestedGrid
     extends VerticalLayout
 {
-    protected TreeDataProvider<PathPPA> schema;
+    protected TreeDataProvider<FacetPath> schema;
     protected Grid<RDFNode> grid = new Grid<>();
 
     public NestedGrid() {
@@ -226,119 +219,7 @@ class NestedGrid
 }
 
 
-/**
- * A function fn for which holds that if fn(x) = fn(y) then x = y.
- */
-interface InjectiveFunction<I, O>
-    extends Function<I, O>
-{
-    @Override
-    O apply(I i);
-}
 
-class DynamicInjectiveFunction<I, O>
-    implements InjectiveFunction<I, O>
-{
-    protected BiMap<I, O> map;
-    protected Generator<O> generator;
-
-    protected DynamicInjectiveFunction(BiMap<I, O> map, Generator<O> generator) {
-        super();
-        this.map = map;
-        this.generator = generator;
-    }
-
-    public static <I, O> DynamicInjectiveFunction<I, O> of(Generator<O> generator) {
-        return new DynamicInjectiveFunction<>(HashBiMap.create(), generator);
-    }
-
-    @Override
-    public O apply(I i) {
-        O result = map.computeIfAbsent(i, key -> {
-            // Return the next value from the generator
-            O r = GeneratorBlacklist.create(generator, map.inverse().keySet()).next();
-            return r;
-        });
-        return result;
-    }
-
-    public BiMap<I, O> getMap() {
-        return map;
-    }
-
-}
-
-
-class PathTreeToSparql {
-
-    public static Query createQuery(UnaryRelation baseConcept, TreeData<PathPPA> treeData, Predicate<PathPPA> isProjected) {
-
-        Generator<Var> varGen = GeneratorFromFunction.createInt().map(i -> Var.alloc("v" + i));
-
-        Var rootVar = baseConcept.getVar();
-        DynamicInjectiveFunction<PathPPA, Var> ifn = DynamicInjectiveFunction.of(varGen);
-        ifn.getMap().put(PathOpsPPA.get().newRoot(), rootVar);
-        // Var rootVar = ifn.apply(PathOpsPPA.get().newRoot());
-
-        ElementGroup group = new ElementGroup();
-        baseConcept.getElements().forEach(group::addElement);
-        for (PathPPA rootPath : treeData.getRootItems()) {
-            Element elt = accumulate(rootVar, rootPath, ifn, treeData::getChildren);
-            ElementUtils.toElementList(elt).forEach(group::addElement);
-            // group.addElement(elt);
-        }
-        Element elt = group.size() == 1 ? group.get(0) : group;
-
-        List<Var> visibleVars = ifn.getMap().entrySet().stream()
-                .filter(e -> isProjected.test(e.getKey()))
-                .map(Entry::getValue)
-                .collect(Collectors.toList());
-
-        Query result = new Query();
-        result.setQuerySelectType();
-        result.setQueryPattern(elt);
-        result.addProjectVars(visibleVars);
-
-        System.out.println("Generated Query: " + result);
-        return result;
-    }
-
-    public static Element accumulate(
-            Var parentVar,
-            PathPPA path,
-            Function<PathPPA, Var> pathToVar,
-            Function<PathPPA, ? extends Iterable<PathPPA>> getChildren) {
-        Element result;
-
-        Element coreElt = null;
-        Var targetVar = pathToVar.apply(path);
-        if (!path.getSegments().isEmpty()) {
-            AliasedStep step = path.getFileName().toSegment();
-            P_Path0 p = step.getStep();
-
-            coreElt = ElementUtils.createElementPath(parentVar, p, targetVar);
-        }
-
-        Iterable<PathPPA> children = getChildren.apply(path);
-        if (children != null && children.iterator().hasNext()) {
-            ElementGroup eltGrp = new ElementGroup();
-            if (coreElt != null) {
-                eltGrp.addElement(coreElt);
-            }
-
-            for (PathPPA subPath : children) {
-                Element subElt = accumulate(targetVar, subPath, pathToVar, getChildren);
-                ElementOptional optElt = new ElementOptional(subElt);
-                eltGrp.addElement(optElt);
-            }
-            result = eltGrp.size() == 1 ? eltGrp.get(0) : eltGrp;
-        } else {
-            result = coreElt == null ? new ElementGroup() : coreElt;
-        }
-
-        return result;
-    }
-}
 
 
 // Can we separate slice/order/projection from the predicateNode?
@@ -348,10 +229,10 @@ class PathTreeToSparql {
 
 
 class PredicateRecord {
-    public PathPPA activePath;
+    public FacetPath activePath;
     public boolean isForward;
     public RDFNode predicate;
-    public PredicateRecord(PathPPA activePath, boolean isForward, RDFNode predicate) {
+    public PredicateRecord(FacetPath activePath, boolean isForward, RDFNode predicate) {
         super();
         this.activePath = activePath;
         this.isForward = isForward;
@@ -375,26 +256,30 @@ class PredicateRecord {
 class DetailsView
     extends VerticalLayout
 {
-    protected VaadinLabelMgr<Node, String> labelMgr;
+    protected LabelService<Node, String> labelMgr;
 
-    protected TreeDataProvider<PathPPA> treeDataProvider;
+    protected TreeDataProvider<FacetPath> treeDataProvider;
 
-    protected RdfDataSource dataSource;
+    // protected RdfDataSource dataSource;
+    protected QueryExecutionFactoryQuery qef;
     protected FacetTreeModel model;
-    protected PathPPA activePath;
+    protected FacetPath activePath;
 
     protected Button removePathBtn = new Button(VaadinIcon.TRASH.create());
 
     /** The grid of values of the selected property */
     protected Grid<RDFNode> valueGrid = new Grid<>();
 
+
+    protected Grid<RDFNode> predicateValuesGrid = new Grid<>();
+
     protected Grid<PredicateRecord> predicateGrid = new Grid<>();
 
-    public PathPPA getActivePath() {
+    public FacetPath getActivePath() {
         return activePath;
     }
 
-    public void setActivePath(PathPPA activePath) {
+    public void setActivePath(FacetPath activePath) {
         this.activePath = activePath;
     }
 
@@ -403,7 +288,7 @@ class DetailsView
     public void refresh() {
         title.setText("(none)");
 
-        QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(dataSource);
+        // QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(dataSource);
 
         FacetedQuery fq = FacetedQueryImpl.create(null).baseConcept(model.getBaseConcept());
         FacetNode fn = goTo(fq.root(), activePath);
@@ -421,7 +306,8 @@ class DetailsView
         valueGrid.removeAllColumns();
           Column<RDFNode> column = valueGrid.addComponentColumn(rdfNode -> {
               Span r = new Span("" + debugCounter.getAndIncrement());
-              labelMgr.forHasText(r, rdfNode.asNode());
+              VaadinLabelMgr.forHasText(labelMgr, r, rdfNode.asNode());
+              // labelMgr.forHasText(r, rdfNode.asNode());
               return r;
             }); //.setHeader(varName);
 
@@ -429,6 +315,21 @@ class DetailsView
         column.setResizable(true);
         column.setSortable(true);
 
+
+        {
+            predicateValuesGrid.setDataProvider(dataProvider);
+            predicateValuesGrid.removeAllColumns();
+              Column<RDFNode> xcolumn = predicateValuesGrid.addComponentColumn(rdfNode -> {
+                  Span r = new Span("" + debugCounter.getAndIncrement());
+                  VaadinLabelMgr.forHasText(labelMgr, r, rdfNode.asNode());
+                  // labelMgr.forHasText(r, rdfNode.asNode());
+                  return r;
+                }); //.setHeader(varName);
+
+            xcolumn.setKey(varName);
+            xcolumn.setResizable(true);
+            xcolumn.setSortable(true);
+        }
 
         // title.setText(activePath.toString() + " - " + query);
         TableMapperComponent.labelForAliasedPath(labelMgr, title, activePath);
@@ -447,9 +348,39 @@ class DetailsView
     protected TextField filterField;
 
 
-    protected IntegerField offsetField;
-    /** The maximum number of children to show at this node */
-    protected Select<Long> limitField;
+    protected PaperSlider scanOffsetSlider;
+    protected PaperSlider scanLimitSlider;
+    protected PaperSlider entityOffsetSlider;
+    protected PaperSlider entityLimitSlider;
+
+
+    public static PaperSlider createSlider(String label, int min, int max, int markers, int value) {
+        PaperSlider slider = new PaperSlider(label);
+        slider.setMin(min);
+        slider.setMax(max);
+        slider.setMaxMarkers(markers);
+        slider.setValue(value);
+        slider.setSnaps(true);
+        slider.setPinned(true);
+
+        // slider.setWidthFull();
+
+        return slider;
+    }
+
+
+    public static Long tickToAmount(Integer value) {
+        Long result = value == null || value.intValue() == 0 ? null : LongMath.pow(10, value);
+        return result;
+    }
+
+    public SampleRange getSampleRange() {
+        Long scanOffset = tickToAmount(scanOffsetSlider.getValue());
+        Long scanLimit = tickToAmount(scanLimitSlider.getValue());
+        Long entityOffset = tickToAmount(entityOffsetSlider.getValue());
+        Long entityLimit = tickToAmount(entityLimitSlider.getValue());
+        return new SampleRange(scanOffset, scanLimit, entityOffset, entityLimit);
+    }
 
 
     // TODO Slider for which predicates to retrieve
@@ -466,22 +397,31 @@ class DetailsView
         VerticalLayout valuesLayout = new VerticalLayout();
 
         VerticalLayout predicatesLayout = new VerticalLayout();
+        SplitLayout predicatesSplitLayout = new SplitLayout();
 
         isReverseToggle = new Checkbox();
         filterField = new TextField();
 
-        limitField = new Select<>();
-        limitField.setItems(Arrays.asList(5l, 10l, 20l));
+        HorizontalLayout samplerLayout = new HorizontalLayout();
+        scanOffsetSlider = createSlider("Scan Offset", 0, 9, 9, 0);
+        scanLimitSlider = createSlider("Scan Limit", 0, 9, 9, 6);
+        entityOffsetSlider = createSlider("Entity Limit", 0, 9, 9, 0);
+        entityLimitSlider = createSlider("Entity Offset", 0, 9, 9, 0);
 
-        offsetField = new IntegerField();
-        offsetField.setValue(2);
-        // offsetField.set//setStepButtonsVisible(true);
-        offsetField.setMin(0);
-        offsetField.setMax(9);
+        samplerLayout.add(scanOffsetSlider);
+        samplerLayout.add(scanLimitSlider);
+//        samplerLayout.add(entityOffsetSlider);
+//        samplerLayout.add(entityLimitSlider);
 
+        Button testSamplerBtn = new Button("test");
+        testSamplerBtn.addClickListener(ev -> {
+            NotificationUtils.error("" + getSampleRange());
+        });
+        samplerLayout.add(testSamplerBtn);
+        add(samplerLayout);
 
         removePathBtn.addClickListener(ev -> {
-            List<PathPPA> children = treeDataProvider.getTreeData().getChildren(activePath);
+            List<FacetPath> children = treeDataProvider.getTreeData().getChildren(activePath);
             Consumer<Object> action = x -> {
                     treeDataProvider.getTreeData().removeItem(activePath);
                     treeDataProvider.refreshAll();
@@ -506,24 +446,37 @@ class DetailsView
         // valuesLayout.add(isReverseToggle);
         valuesLayout.add(valueGrid);
 
-        Button samplePredicatesBtn = new Button("Sample Predicates");
 
-        samplePredicatesBtn.addClickListener(ev -> {
-            fetchPredicates();
+        /** Adds two columns for the predicates and values */
+        Button addAnyBtn = new Button("Add ANY");
+        addAnyBtn.addClickListener(ev -> {
+            boolean isFwd = !Boolean.TRUE.equals(isReverseToggle.getValue());
+            {
+                FacetPath newPath = allocate(treeDataProvider.getTreeData(), activePath, NodeUtils.ANY_IRI, isFwd, FacetStep.PREDICATE);
+                treeDataProvider.getTreeData().addItem(activePath, newPath);
+            }
+            {
+                FacetPath newPath = allocate(treeDataProvider.getTreeData(), activePath, NodeUtils.ANY_IRI, isFwd, FacetStep.TARGET);
+                treeDataProvider.getTreeData().addItem(activePath, newPath);
+            }
+            treeDataProvider.refreshAll();
+
         });
 
-        predicatesLayout.add(samplePredicatesBtn);
+
+        predicatesLayout.add(addAnyBtn);
 
         predicateGrid.addComponentColumn(predicateRecord -> {
             Node predicateNode = predicateRecord.predicate.asNode();
             Span label = new Span(predicateNode.toString());
 
-            labelMgr.forHasText(label, predicateNode);
+            // labelMgr.forHasText(label, predicateNode);
+            VaadinLabelMgr.forHasText(labelMgr, label, predicateNode);
 
             Button addInstanceBtn = new Button(VaadinIcon.PLUS_CIRCLE_O.create());
             addInstanceBtn.addClickListener(ev -> {
                 // Allocate the next alias in the tree data
-                PathPPA newPath = allocate(treeDataProvider.getTreeData(), predicateRecord.activePath, predicateRecord.predicate.asNode(), predicateRecord.isForward);
+                FacetPath newPath = allocate(treeDataProvider.getTreeData(), predicateRecord.activePath, predicateRecord.predicate.asNode(), predicateRecord.isForward, null);
 
                 treeDataProvider.getTreeData().addItem(predicateRecord.activePath, newPath);
                 treeDataProvider.refreshAll();
@@ -547,15 +500,23 @@ class DetailsView
 
 
         FormLayout form = new FormLayout();
-        form.addFormItem(limitField, "Limit");
-        form.addFormItem(offsetField, "Offset");
-
         form.addFormItem(isReverseToggle, "show reverse predicates");
         form.addFormItem(filterField, "Filter predicates");
+
         predicatesLayout.add(form);
 
-        tabSheet.add("Subjects", valuesLayout);
-        tabSheet.add("Predicates", predicatesLayout);
+        Button samplePredicatesBtn = new Button("Sample Predicates");
+
+        samplePredicatesBtn.addClickListener(ev -> {
+            fetchPredicates();
+        });
+
+        predicatesLayout.add(samplePredicatesBtn);
+
+        predicatesSplitLayout.addToPrimary(predicatesLayout);
+        tabSheet.add("Predicates", predicatesSplitLayout);
+        tabSheet.add("Values", valuesLayout);
+        // VaadinComponentUtils.notifyResize(tabSheet, true);
 
         add(titleRow);
 
@@ -563,7 +524,10 @@ class DetailsView
     }
 
     public void fetchPredicates() {
-        RDFConnection conn = dataSource.getConnection();
+
+        // Bridge qef to conn
+        RDFConnection conn = RDFConnections.of(qef);
+
         try {
             FacetedQuery fq = FacetedQueryImpl.create(conn).baseConcept(model.getBaseConcept());
             FacetNode fn = goTo(fq.root(), activePath);
@@ -587,14 +551,14 @@ class DetailsView
 //    	start.get
 //    }
 
-    public static PathPPA allocate(TreeData<PathPPA> treeData, PathPPA parent, Node predicate, boolean isForward) {
-        List<PathPPA> children = treeData.getChildren(parent);
+    public static FacetPath allocate(TreeData<FacetPath> treeData, FacetPath parent, Node predicate, boolean isForward, Integer targetComponent) {
+        List<FacetPath> children = treeData.getChildren(parent);
 
         // Collect all taken aliases
         Set<String> usedAliases = children.stream()
                 .map(item -> item.getFileName().toSegment())
-                .filter(step -> step.getNode().equals(predicate) && step.isForward() == isForward)
-                .map(AliasedStep::getAlias)
+                .filter(step -> step.getNode().equals(predicate) && step.isForward() == isForward && step.getTargetComponent() == targetComponent)
+                .map(FacetStep::getAlias)
                 .collect(Collectors.toSet());
 
         Generator<String> aliasGen =
@@ -602,13 +566,13 @@ class DetailsView
                     GeneratorFromFunction.createInt().map(i -> i == 0 ? null : Integer.toString(i)),
                     usedAliases);
         String nextAlias = aliasGen.next();
-        PathPPA result = parent.resolve(new AliasedStep(predicate, isForward, nextAlias));
+        FacetPath result = parent.resolve(new FacetStep(predicate, isForward, nextAlias, targetComponent));
         return result;
     }
 
-    public static FacetNode goTo(FacetNode start, PathPPA path) {
+    public static FacetNode goTo(FacetNode start, FacetPath path) {
         FacetNode current = path.isAbsolute() ? start.root() : start;
-        for (AliasedStep step : path.getSegments()) {
+        for (FacetStep step : path.getSegments()) {
             Direction dir = Direction.ofFwd(step.isForward());
             Node node = step.getNode();
             FacetMultiNode fmn = current.step(node, dir);
@@ -624,10 +588,10 @@ class DetailsView
     }
 
 
-    public DetailsView(VaadinLabelMgr<Node, String> labelMgr, RdfDataSource dataSource, FacetTreeModel model, TreeDataProvider<PathPPA> treeDataProvider) {
+    public DetailsView(LabelService<Node, String> labelMgr, QueryExecutionFactoryQuery qef, FacetTreeModel model, TreeDataProvider<FacetPath> treeDataProvider) {
         this();
         this.labelMgr = labelMgr;
-        this.dataSource = dataSource;
+        this.qef = qef;
         this.model = model;
         this.treeDataProvider = treeDataProvider;
     }
@@ -703,20 +667,21 @@ class TreeRuntimeModel {
 public class TableMapperComponent
     extends VerticalLayout
 {
-    protected VaadinLabelMgr<Node, String> labelMgr;
+    protected LabelService<Node, String> labelMgr;
 
-    protected TreeDataProvider<PathPPA> treeDataProvider = new TreeDataProvider<>(new TreeData<>());
+    protected TreeDataProvider<FacetPath> treeDataProvider = new TreeDataProvider<>(new TreeData<>());
 
-    protected TreeGrid<PathPPA> treeGrid = new TreeGrid<>();
+    protected TreeGrid<FacetPath> treeGrid = new TreeGrid<>();
     protected DetailsView detailsView;
 
-    protected Map<PathPPA, Boolean> pathToVisibility = new HashMap<>();
+    protected Map<FacetPath, Boolean> pathToVisibility = new HashMap<>();
 
     // protected SubjectDetailsView subjectDetailsView = new SubjectDetailsView();
     protected PredicateDetailsView predicateDetailsView = new PredicateDetailsView();
 
 
-    protected RdfDataSource dataSource;
+    // protected RdfDataSource dataSource;
+    protected QueryExecutionFactoryQuery qef;
 
 
     protected DataProviderSparqlBinding sparqlDataProvider;
@@ -726,11 +691,11 @@ public class TableMapperComponent
     public TableMapperComponent() {
 
         // QueryExecutionFactoryQuery qef = query -> RDFConnection.connect("http://localhost:8642/sparql").query(query);
-        baseConcept = ConceptUtils.createSubjectConcept();
+        baseConcept = new Concept(ElementUtils.createElementTriple(Vars.x, Vars.y, Vars.z), Vars.x);
 
         RdfDataSource base = () -> RDFConnection.connect("http://localhost:8642/sparql");
 
-        dataSource = base
+        RdfDataSource dataSource = base
                 .decorate(RdfDataSourceWithBnodeRewrite::wrapWithAutoBnodeProfileDetection)
                 // .decorate(RdfDataSourceWithLocalCache::new)
                 ;
@@ -738,19 +703,28 @@ public class TableMapperComponent
         RDFConnection conn = dataSource.getConnection();
         FacetedQuery fq = FacetedQueryImpl.create(conn);
 
+        System.out.println("BaseConcept: " + baseConcept);
+
         if(baseConcept != null) {
             fq.baseConcept(baseConcept);
         }
 
-        fq.root().fwd(RDF.type).one().availableValues().exec().forEach(rdfNode -> System.out.println(rdfNode));
+        // fq.root().fwd(RDF.type).one().availableValues().exec().forEach(rdfNode -> System.out.println(rdfNode));
 
-        QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(dataSource);
+        // SparqlQueryConnection c2 = fq.root().fwd().facetCounts().resolver().fwd().toFacetedQuery().root().fwd().facetCounts().resolver().fwd().virtualConn();
+
+        // SparqlQueryConnection c2 = fq.root().fwd().facetCounts().resolver().fwd().virtualConn();
+        SparqlQueryConnection c2 = fq.connection();
+
+
+
+        this.qef = QueryExecutionFactories.of(c2); // QueryExecutionFactories.of(dataSource);
         Property labelProperty = RDFS.label;// DCTerms.description;
 
         LookupService<Node, String> ls1 = LabelUtils.getLabelLookupService(qef, labelProperty, DefaultPrefixes.get());
         LookupService<Node, String> ls2 = keys -> Flowable.fromIterable(keys).map(k -> Map.entry(k, Objects.toString(k)));
 
-        labelMgr = new VaadinRdfLabelMgrImpl(ls1);
+        VaadinRdfLabelMgrImpl labelMgr = new VaadinRdfLabelMgrImpl(ls1);
 
 
         Button resetLabelsBtn = new Button("Toggle Labels");
@@ -759,11 +733,15 @@ public class TableMapperComponent
             labelMgr.setLookupService(ls);
             labelMgr.refreshAll();
         });
+
+        // this.dataSource = dataSource;
+        this.labelMgr = labelMgr;
+
         add(resetLabelsBtn);
 
 
 
-        this.detailsView = new DetailsView(labelMgr, dataSource, new FacetTreeModel(baseConcept), treeDataProvider);
+        this.detailsView = new DetailsView(labelMgr, qef, new FacetTreeModel(baseConcept), treeDataProvider);
         // FacetedQuery fq = new XFacetedQueryImpl(null, null)
 
         //this.sparqlDataProvider = new ListDataProvider<>(Collections.emptyList());
@@ -772,7 +750,33 @@ public class TableMapperComponent
         initComponent();
     }
 
-    public static void labelForAliasedPath(LabelMgr<Node, String> labelMgr, HasText hasText, PathPPA path) {
+    public TableMapperComponent(QueryExecutionFactoryQuery qef, UnaryRelation baseConcept, LabelService<Node, String> labelService) {
+        this.qef = qef;
+        this.baseConcept = baseConcept;
+        this.labelMgr = labelService;
+
+
+        this.detailsView = new DetailsView(labelMgr, qef, new FacetTreeModel(baseConcept), treeDataProvider);
+
+
+        initComponent();
+    }
+
+
+    // HeaderCell is not derived from HasText!
+    public static void labelForAliasPathLastStep(LabelService<Node, String> labelMgr, HeaderCell headerCell, FacetPath path) {
+        if (path.getSegments().isEmpty()) {
+            headerCell.setText("");
+        } else {
+            FacetStep step = path.getFileName().toSegment();
+            labelMgr.register(headerCell, step.getNode(), (c, map) -> {
+                String label = toString(step, map::get);
+                c.setText(label);
+            });
+        }
+    }
+
+    public static void labelForAliasedPath(LabelService<Node, String> labelMgr, HasText hasText, FacetPath path) {
         Set<Node> nodes = path.streamNodes().collect(Collectors.toSet());
         if (nodes.isEmpty()) {
             String label = toLabel(path, Collections.emptyMap());
@@ -785,7 +789,7 @@ public class TableMapperComponent
         }
     }
 
-    public static String toLabel(PathPPA path, Map<Node, String> map) {
+    public static String toLabel(FacetPath path, Map<Node, String> map) {
         String result = "";
         if (path.isAbsolute()) {
              result += "/ ";
@@ -798,15 +802,17 @@ public class TableMapperComponent
         return result;
     }
 
-    public static String toString(AliasedStep step, Function<Node, String> nodeToLabel) {
+    public static String toString(FacetStep step, Function<Node, String> nodeToLabel) {
         String result = ""
             + nodeToLabel.apply(step.getNode())
             + (step.isForward() ? "" : " -1")
-            + (Strings.isNullOrEmpty(step.getAlias()) ? "" : " " + step.getAlias());
+            + (Strings.isNullOrEmpty(step.getAlias()) ? "" : " " + step.getAlias())
+            + (FacetStep.PREDICATE.equals(step.getTargetComponent()) ? " #" : "");
+
         return result;
     }
 
-    protected PathPPA draggedProperty = null;
+    protected FacetPath draggedProperty = null;
 
 
     public void initComponent() {
@@ -816,7 +822,7 @@ public class TableMapperComponent
         layout.setSplitterPosition(20);
         layout.setWidthFull();
 
-        PathPPA rootPath = PathOpsPPA.get().newRoot();
+        FacetPath rootPath = FacetPathOps.get().newRoot();
         treeDataProvider.getTreeData().addRootItems(rootPath);
 
         treeGrid.setDataProvider(treeDataProvider);
@@ -832,11 +838,11 @@ public class TableMapperComponent
 
         treeGrid.addDragStartListener(event -> {
             // store current dragged item so we know what to drop
-            List<PathPPA> draggedItems = event.getDraggedItems();
+            List<FacetPath> draggedItems = event.getDraggedItems();
             if (draggedItems.size() > 1) {
                 // This seems to be a dumb limitation of vaadin: We can not drag individual rows if multiple ones are selected.
                 NotificationUtils.error("Please temporarily deselect the row you wish to drag or drag a non-selected row. A framework limitation prevents dragging of individual selected rows.");
-            } else if (draggedItems.size() == 1){
+            } else if (draggedItems.size() == 1) {
                 draggedProperty = draggedItems.get(0);
                 treeGrid.setDropMode(GridDropMode.BETWEEN);
             }
@@ -850,16 +856,16 @@ public class TableMapperComponent
         });
 
         treeGrid.addDropListener(event -> {
-            TreeData<PathPPA> treeData = treeDataProvider.getTreeData();
-            PathPPA dropOverItem = event.getDropTargetItem().get();
+            TreeData<FacetPath> treeData = treeDataProvider.getTreeData();
+            FacetPath dropOverItem = event.getDropTargetItem().get();
             if (draggedProperty != null && !draggedProperty.equals(dropOverItem)) {
-                PathPPA dropOverParent = dropOverItem.getParent();
-                PathPPA dragParent = draggedProperty.getParent();
+                FacetPath dropOverParent = dropOverItem.getParent();
+                FacetPath dragParent = draggedProperty.getParent();
 
                 if (dragParent.equals(dropOverParent)) {
-                    List<PathPPA> children = treeData.getChildren(dragParent);
+                    List<FacetPath> children = treeData.getChildren(dragParent);
                     int dropIndex = children.indexOf(dropOverItem) + (event.getDropLocation() == GridDropLocation.BELOW ? 1 : 0);
-                    PathPPA sibling = dropIndex <= 0 ? null : children.get(dropIndex - 1);
+                    FacetPath sibling = dropIndex <= 0 ? null : children.get(dropIndex - 1);
 
                     treeData.moveAfterSibling(draggedProperty, sibling);
 
@@ -895,8 +901,8 @@ public class TableMapperComponent
 //            avatar.setName(person.getFullName());
 //            avatar.setImage(person.getPictureUrl());
 //
-            List<AliasedStep> steps = node.getSegments();
-            AliasedStep lastStep = steps.isEmpty() ? null : steps.get(steps.size() - 1);
+            List<FacetStep> steps = node.getSegments();
+            FacetStep lastStep = steps.isEmpty() ? null : steps.get(steps.size() - 1);
 
             Span label = new Span();
             if (lastStep == null) {
@@ -905,9 +911,10 @@ public class TableMapperComponent
             } else {
                 Node n = lastStep.getNode();
                 boolean isFwd = lastStep.isForward();
+                boolean targetsPredicate = FacetStep.PREDICATE.equals(lastStep.getTargetComponent());
                 labelMgr.register(label, n, (c, map) -> {
                     String s = map.get(n);
-                    c.setText(s + (!isFwd ? " -1" : ""));
+                    c.setText(s + (!isFwd ? " -1" : "") + (targetsPredicate ? " # " : ""));
                 });
             }
 
@@ -927,7 +934,7 @@ public class TableMapperComponent
             row.setSpacing(true);
             row.add(column);
             return row;
-        }).setHeader("Property Tree");
+        }).setHeader("Property Tree").setResizable(true);
 
         treeGrid.addComponentColumn(path -> {
             boolean isVisible = pathToVisibility.computeIfAbsent(path, x -> true);
@@ -936,7 +943,7 @@ public class TableMapperComponent
             Checkbox cb = new Checkbox();
             cb.setValue(isVisible);
             cb.addClickListener(ev -> {
-                pathToVisibility.put(path, !isVisible);
+                pathToVisibility.put(path, cb.getValue());
             });
 
             HorizontalLayout row = new HorizontalLayout(); //avatar, column);
@@ -951,10 +958,10 @@ public class TableMapperComponent
 //            column.setPadding(false);
 //            column.setSpacing(false);
 //            return column;
-        }).setHeader("Visible");
+        }).setHeader("Visible").setResizable(true);
 
         treeGrid.addItemClickListener(ev -> {
-            PathPPA path = ev.getItem();
+            FacetPath path = ev.getItem();
             detailsView.setActivePath(path);
 
             detailsView.refresh();
@@ -969,28 +976,36 @@ public class TableMapperComponent
 //        layout.setFlexGrow(3, detailsView);
         add(layout);
 
-        Grid<Binding> sparqlGrid = new Grid<>();
-        sparqlGrid.setPageSize(10000);
-        sparqlGrid.setWidthFull();
-        HeaderRow headerRow = sparqlGrid.appendHeaderRow();
-        HeaderRow filterRow = sparqlGrid.appendHeaderRow();
+        // HeaderRow headerRow = sparqlGrid.appendHeaderRow();
+        // HeaderRow filterRow = sparqlGrid.appendHeaderRow();
+
+        VerticalLayout sparqlGridContainer = new VerticalLayout();
 
         Button refreshTableBtn = new Button("Update table");
         refreshTableBtn.addClickListener(ev -> {
-            QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(dataSource);
+
+            Grid<Binding> sparqlGrid = new Grid<>();
+            sparqlGrid.setPageSize(10000);
+            sparqlGrid.setWidthFull();
+            sparqlGrid.setColumnReorderingAllowed(true);
+
+            // QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(dataSource);
 
 
-            Query query = PathTreeToSparql.createQuery(baseConcept, treeDataProvider.getTreeData(), path -> Boolean.TRUE.equals(pathToVisibility.get(path)));
+            MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeDataProvider.getTreeData(), path -> !Boolean.FALSE.equals(pathToVisibility.get(path)));
 //            Query query =
 //            RelationUtils.createQuery(null);
-            VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);
-            VaadinSparqlUtils.configureGridFilter(sparqlGrid, filterRow, query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
+            // VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);
+            // VaadinSparqlUtils.configureGridFilter(sparqlGrid, filterRow, query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
+            SparqlGrid.setQueryForGridBinding(sparqlGrid, qef, labelMgr, mappedQuery);
 
+            sparqlGridContainer.removeAll();
+            sparqlGridContainer.add(sparqlGrid);
 
         });
 
         add(refreshTableBtn);
-        add(sparqlGrid);
+        add(sparqlGridContainer);
 
     }
 }

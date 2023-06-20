@@ -193,6 +193,11 @@
 				<version>${jenax.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>org.aksw.scaseco.vaadin</groupId>
+				<artifactId>vaadin-commons</artifactId>
+				<version>${jenax.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.aksw.jenax</groupId>
 				<artifactId>jenax-arq-datashapes</artifactId>
 				<version>${jenax.version}</version>

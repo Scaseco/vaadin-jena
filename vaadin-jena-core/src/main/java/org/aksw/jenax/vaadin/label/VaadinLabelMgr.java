@@ -57,7 +57,10 @@ public class VaadinLabelMgr<R, L>
             super.scheduleApplication(components);
 
             // TODO Argument should have component type
-            Collection<Component> cs = components.stream().map(x -> (Component)x).collect(Collectors.toList());
+            Collection<Component> cs = components.stream()
+                    .filter(x -> x instanceof Component)
+                    .map(x -> (Component)x)
+                    .collect(Collectors.toList());
             VaadinComponentUtils.notifyResizeAncestors(cs, false,
                     c -> c instanceof Grid);
         });
@@ -67,7 +70,7 @@ public class VaadinLabelMgr<R, L>
         return forHasText(this, component, resource);
     }
 
-    public static <R, L, X extends HasText> X forHasText(LabelMgr<R, L> labelMgr, X component, R resource) {
+    public static <R, L, X extends HasText> X forHasText(LabelService<R, L> labelMgr, X component, R resource) {
         labelMgr.register(component, resource, (c, lmap) -> {
             L label = lmap.get(resource);
             String text = Objects.toString(label);

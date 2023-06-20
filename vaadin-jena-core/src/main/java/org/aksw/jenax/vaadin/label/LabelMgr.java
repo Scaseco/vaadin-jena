@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +27,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.Sets;
-import com.vaadin.flow.component.HasText;
 
 
 /**
@@ -42,7 +40,9 @@ import com.vaadin.flow.component.HasText;
  * @param <R>
  * @param <L>
  */
-public class LabelMgr<R, L> {
+public class LabelMgr<R, L>
+    implements LabelService<R, L>
+{
 
     private static final Object DUMMY = new Object();
 
