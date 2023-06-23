@@ -1,5 +1,6 @@
 package org.aksw.facete.v4.impl;
 
+import org.aksw.facete.v3.api.ConstraintApiImpl;
 import org.aksw.facete.v3.api.ConstraintFacade;
 import org.aksw.facete.v3.api.Direction;
 import org.aksw.facete.v3.api.FacetDirNode;
@@ -19,13 +20,23 @@ public class FacetNodeImpl
 {
     protected FacetedQueryImpl facetedQuery;
 
-    /** The tree query node that backs this views */
+    /** The tree query node that backs path-based views */
     protected TreeQueryNode node;
 
     public FacetNodeImpl(FacetedQueryImpl facetedQuery, TreeQueryNode node) {
         super();
         this.facetedQuery = facetedQuery;
         this.node = node;
+    }
+
+    // TODO Add interface method
+    public TreeQueryNode node() {
+        return node;
+    }
+
+    public FacetNode resolve(FacetPath path) {
+        TreeQueryNode target = node.resolve(path);
+        return facetedQuery.wrapNode(target);
     }
 
     @Override
@@ -110,12 +121,13 @@ public class FacetNodeImpl
 
     @Override
     public FacetNode root() {
-        throw new UnsupportedOperationException();
+        return facetedQuery.root();
     }
 
     @Override
-    public ConstraintFacade<? extends FacetNode> constraints() {
-        throw new UnsupportedOperationException();
+    public ConstraintFacade<? extends FacetNode> enterConstraints() {
+        ConstraintApiImpl constraints = facetedQuery.relationQuery.constraints.getFacade(node);
+        return new ConstraintFacadeImpl<FacetNode>(this, this, constraints);
     }
 
     @Override

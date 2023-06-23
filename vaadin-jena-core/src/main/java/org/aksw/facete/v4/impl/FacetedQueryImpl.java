@@ -5,18 +5,15 @@ import java.util.function.Supplier;
 
 import org.aksw.commons.util.cache.CacheUtils;
 import org.aksw.facete.v3.api.FacetConstraint;
-import org.aksw.facete.v3.api.FacetConstraints;
 import org.aksw.facete.v3.api.FacetNode;
 import org.aksw.facete.v3.api.FacetedQuery;
-import org.aksw.facete.v3.api.TreeQuery;
-import org.aksw.facete.v3.api.TreeQueryImpl;
 import org.aksw.facete.v3.api.TreeQueryNode;
 import org.aksw.jena_sparql_api.concepts.Concept;
+import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.apache.jena.ext.com.google.common.base.Preconditions;
 import org.apache.jena.rdfconnection.SparqlQueryConnection;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.sparql.core.Var;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -25,17 +22,29 @@ public class FacetedQueryImpl
     implements FacetedQuery
 {
     protected FacetedRelationQuery relationQuery;
-    protected FacetConstraints constraints;
+    // protected FacetConstraints constraints;
     protected TreeQueryNode focus;
 
     protected Cache<TreeQueryNode, FacetNode> viewCache = CacheBuilder.newBuilder().maximumSize(1000).build();
 
-    public FacetedQueryImpl() {
+
+    public FacetedQueryImpl(FacetedRelationQuery relationQuery, TreeQueryNode focus) {
         super();
-        TreeQuery treeQuery = new TreeQueryImpl();
-        this.constraints = new FacetConstraints(treeQuery);
-        this.focus = treeQuery.root();
+        this.relationQuery = relationQuery;
+        // this.constraints = constraints;
+        this.focus = focus;
     }
+
+    public FacetedRelationQuery relationQuery() {
+        return relationQuery;
+    }
+
+//    public FacetedQueryImpl() {
+//        super();
+//        TreeQuery treeQuery = new TreeQueryImpl();
+//        this.constraints = new FacetConstraints(treeQuery);
+//        this.focus = treeQuery.root();
+//    }
 
 
     FacetNode wrapNode(TreeQueryNode node) {
@@ -44,7 +53,8 @@ public class FacetedQueryImpl
 
     @Override
     public FacetNode root() {
-        return wrapNode(constraints.getTreeQuery().root());
+        return wrapNode(focus);
+        // return wrapNode(constraints.getTreeQuery().root());
     }
 
     @Override
@@ -84,8 +94,11 @@ public class FacetedQueryImpl
 
     @Override
     public UnaryRelation baseConcept() {
-        // TODO Auto-generated method stub
-        return null;
+        Var rootVar = relationQuery.varToRoot.inverse().get(focus);
+        Relation r = relationQuery.baseRelation.get();
+        return r.project(rootVar).toUnaryRelation();
+
+        // throw new UnsupportedOperationException("Use relationQuery().baseRelation()");
     }
 
     @Override
@@ -96,11 +109,5 @@ public class FacetedQueryImpl
     @Override
     public SparqlQueryConnection connection() {
         throw new UnsupportedOperationException("Execution API is now separate from the faceted query model");
-    }
-
-    public static void main(String[] args) {
-        FacetedQuery fq = new FacetedQueryImpl();
-        fq.root().fwd(RDF.type).one().bwd(RDFS.label).one().availableValues();
-
     }
 }

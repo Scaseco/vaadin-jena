@@ -2,12 +2,12 @@ package org.aksw.jenax.vaadin.component.grid.sparql;
 
 import java.util.Map;
 
+import org.aksw.facete.v3.api.TreeData;
 import org.aksw.jenax.path.core.FacetPath;
 import org.apache.jena.query.Query;
 import org.apache.jena.sparql.core.Var;
 
 import com.google.common.collect.BiMap;
-import com.vaadin.flow.data.provider.hierarchy.TreeData;
 
 /**
  * A query with information about which variable corresponds to which path

@@ -13,7 +13,10 @@ import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.apache.jena.graph.Node;
 import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.expr.Expr;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.SetMultimap;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -115,8 +118,9 @@ public class SparqlGridComponent
         sparqlGrid.setPageSize(10000);
         sparqlGrid.setWidthFull();
 
+        SetMultimap<FacetPath, Expr> constraintIndex = HashMultimap.create();
 
-        MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeDataProvider.getTreeData(), path -> !Boolean.FALSE.equals(pathToVisibility.get(path)));
+        MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeDataProvider.getTreeData(), constraintIndex, path -> !Boolean.FALSE.equals(pathToVisibility.get(path)));
 //        Query query =
 //        RelationUtils.createQuery(null);
         // VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);

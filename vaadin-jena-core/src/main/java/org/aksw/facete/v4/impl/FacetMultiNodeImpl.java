@@ -5,7 +5,7 @@ import java.util.Map;
 import org.aksw.facete.v3.api.FacetMultiNode;
 import org.aksw.facete.v3.api.FacetNode;
 import org.aksw.facete.v3.api.TreeQueryNode;
-import org.aksw.jenax.path.core.FacetPathOps;
+import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
 import org.apache.jena.rdf.model.Resource;
 
@@ -27,7 +27,7 @@ public class FacetMultiNodeImpl
     public FacetNode viaAlias(String alias) {
         FacetStep step = new FacetStep(property.asNode(), parent.direction.isForward(), alias, component);
         TreeQueryNode node = parent.parent.node;
-        FacetNode result = parent.parent.facetedQuery.wrapNode(node.resolve(FacetPathOps.newRelativePath(step)));
+        FacetNode result = parent.parent.facetedQuery.wrapNode(node.resolve(FacetPath.newRelativePath(step)));
         return result;
     }
 

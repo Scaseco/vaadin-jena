@@ -59,10 +59,13 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.rdfconnection.SparqlQueryConnection;
 import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.vocabulary.RDFS;
 import org.vaadin.addons.componentfactory.PaperSlider;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.SetMultimap;
 import com.google.common.math.LongMath;
 import com.vaadin.flow.component.HasText;
 import com.vaadin.flow.component.button.Button;
@@ -992,7 +995,9 @@ public class TableMapperComponent
             // QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(dataSource);
 
 
-            MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeDataProvider.getTreeData(), path -> !Boolean.FALSE.equals(pathToVisibility.get(path)));
+            SetMultimap<FacetPath, Expr> constraintIndex = HashMultimap.create();
+
+            MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeDataProvider.getTreeData(), constraintIndex, path -> !Boolean.FALSE.equals(pathToVisibility.get(path)));
 //            Query query =
 //            RelationUtils.createQuery(null);
             // VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);

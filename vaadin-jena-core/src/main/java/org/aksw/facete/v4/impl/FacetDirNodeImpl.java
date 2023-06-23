@@ -8,6 +8,7 @@ import org.aksw.facete.v3.api.FacetNode;
 import org.aksw.facete.v3.api.FacetValueCount;
 import org.aksw.facete.v3.api.FacetedDataQuery;
 import org.aksw.jenax.sparql.relation.api.BinaryRelation;
+import org.aksw.jenax.sparql.relation.api.TernaryRelation;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 
@@ -45,50 +46,52 @@ public class FacetDirNodeImpl
 
     @Override
     public BinaryRelation facetValueRelation() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public FacetedDataQuery<RDFNode> facets(boolean includeAbsent) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public FacetedDataQuery<FacetCount> facetCounts(boolean includeAbsent) {
-        // TODO Auto-generated method stub
-        return null;
+//        parent().step(direction).via(NodeUtils.ANY_IRI, FacetStep.PREDICATE).one().enterConstraints().exists().activate();
+//        parent().step(direction).via(NodeUtils.ANY_IRI, FacetStep.TARGET).one().enterConstraints().exists().activate();
+        // ElementGenerator.createQuery(parent.facetedQuery.relationQuery, x -> true);
+        ElementGenerator eltGen = ElementGenerator.configure(parent.facetedQuery);
+        TernaryRelation relation = eltGen.createRelationFacetValue(null, parent.node.getFacetPath(), org.aksw.commons.util.direction.Direction.ofFwd(direction.isForward()), null, null, false, false);
+        System.out.println(relation);
+        // Map<String, BinaryRelation> map = eltGen.createMapFacetsAndValues(parent.node.getFacetPath(), org.aksw.commons.util.direction.Direction.ofFwd(direction.isForward()), false, false, false);
+
+        //map.entrySet().forEach(x -> System.out.println("Entry: " + x));
+
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public FacetedDataQuery<FacetCount> facetFocusCounts(boolean includeAbsent) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public FacetedDataQuery<FacetValueCount> facetValueCounts() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public FacetedDataQuery<FacetValueCount> facetValueTypeCounts() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public FacetedDataQuery<FacetValueCount> facetValueCountsWithAbsent(boolean includeAbsent) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public FacetedDataQuery<FacetValueCount> nonConstrainedFacetValueCounts() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
 }
