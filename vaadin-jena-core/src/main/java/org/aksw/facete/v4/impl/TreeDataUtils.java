@@ -20,8 +20,21 @@ public class TreeDataUtils {
     }
 
     /** Bridge between Vaadin's and our TreeData structure */
-    public static <T> TreeData<T> copyInto(TreeData<T> target, org.aksw.facete.v3.api.TreeData<T> source) {
+    public static <T> TreeData<T> copyToVaadin(TreeData<T> target, org.aksw.facete.v3.api.TreeData<T> source) {
         target.addItems(source.getRootItems(), source::getChildren);
         return target;
+    }
+
+    public static <T> TreeData<T> toVaadin(org.aksw.facete.v3.api.TreeData<T> source) {
+        return copyToVaadin(new TreeData<>(), source);
+    }
+
+    public static <T> org.aksw.facete.v3.api.TreeData<T> copyToFacete(org.aksw.facete.v3.api.TreeData<T> target, TreeData<T> source) {
+        target.addItems(source.getRootItems(), source::getChildren);
+        return target;
+    }
+
+    public static <T> org.aksw.facete.v3.api.TreeData<T> toFacete(TreeData<T> source) {
+        return copyToFacete(new org.aksw.facete.v3.api.TreeData<>(), source);
     }
 }

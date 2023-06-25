@@ -8,11 +8,17 @@ import org.aksw.facete.v3.api.FacetNode;
 import org.aksw.facete.v3.api.FacetedDataQuery;
 import org.aksw.facete.v3.api.FacetedQuery;
 import org.aksw.facete.v3.api.TreeQueryNode;
+import org.aksw.facete.v3.bgp.api.BgpNode;
+import org.aksw.facete.v3.bgp.utils.PathAccessorImpl;
+import org.aksw.facete.v3.impl.FacetedDataQueryImpl;
+import org.aksw.jena_sparql_api.data_query.impl.FacetedQueryGenerator;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.relation.api.BinaryRelation;
+import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdfconnection.SparqlQueryConnection;
 import org.apache.jena.sparql.core.Var;
 
 public class FacetNodeImpl
@@ -130,13 +136,34 @@ public class FacetNodeImpl
         return new ConstraintFacadeImpl<FacetNode>(this, this, constraints);
     }
 
+//    public FacetedRelationQuery createValueQuery2(boolean applySelfConstraints) {
+//    	new FacetedRelationQuery(null;)
+//    }
+
+
+    public FacetedDataQuery<RDFNode> createValueQuery(boolean applySelfConstraints) {
+        ElementGenerator eltGen = ElementGenerator.configure(facetedQuery);
+        UnaryRelation relation = eltGen.getAvailableValuesAt(node.getFacetPath(), applySelfConstraints);
+
+        SparqlQueryConnection conn = facetedQuery.connection();
+        FacetedDataQuery<RDFNode> result = new FacetedDataQueryImpl<>(
+                conn,
+                relation.getElement(),
+                relation.getVar(),
+                null,
+                RDFNode.class);
+
+        return result;
+
+    }
+
     @Override
     public FacetedDataQuery<RDFNode> availableValues() {
-        throw new UnsupportedOperationException();
+        return createValueQuery(false);
     }
 
     @Override
     public FacetedDataQuery<RDFNode> remainingValues() {
-        throw new UnsupportedOperationException();
+        return createValueQuery(true);
     }
 }

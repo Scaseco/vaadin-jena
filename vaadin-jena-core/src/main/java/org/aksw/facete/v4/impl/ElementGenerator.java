@@ -271,6 +271,7 @@ public class ElementGenerator {
             createElementsForExprs2(globalAcc, exprs, false);
         }
 
+
         public MappedElement createElement() {
             Var rootVar = pathMapping.allocate(FacetPath.newAbsolutePath());
             ElementGroup group = new ElementGroup();
@@ -575,7 +576,7 @@ public class ElementGenerator {
   }
 
 
-    public static MappedQuery createQuery(FacetedRelationQuery frq, Predicate<FacetPath> isProjected) {
+    public static MappedQuery createQuery(FacetedRelationQuery frq) {
 //        UnaryRelation baseConcept;
 //        FacetConstraints constraints;
 
@@ -589,7 +590,6 @@ public class ElementGenerator {
         // For each variable create the element for the constraints.
         // TODO How to handle cross-variable constraints cleanly?
         for (Var rootVar : rootVars) {
-
 
             TreeData<FacetPath> treeData = new TreeData<>();
 
@@ -634,7 +634,8 @@ public class ElementGenerator {
             }
 
             UnaryRelation baseConcept = new Concept(baseRelation.getElement(), rootVar);
-            result = createQuery(rootVar, treeData, constraintIndex, isProjected);
+            Predicate<FacetPath> isProjected = frq::isVisible;
+            result = createQuery(baseConcept, treeData, constraintIndex, isProjected);
         }
 
         return result;
@@ -642,17 +643,19 @@ public class ElementGenerator {
 
 
 
-    public static MappedQuery createQuery(Var rootVar, TreeData<FacetPath> treeData, SetMultimap<FacetPath, Expr> constraintIndex, Predicate<FacetPath> isProjected) {
+    public static MappedQuery createQuery(UnaryRelation baseConcept, TreeData<FacetPath> treeData, SetMultimap<FacetPath, Expr> constraintIndex, Predicate<FacetPath> isProjected) {
 
         Generator<Var> varGen = GeneratorFromFunction.createInt().map(i -> Var.alloc("vv" + i));
 
-        // Var rootVar = baseConcept.getVar();
+        Var rootVar = baseConcept.getVar();
 //        Var superRootVar = Var.alloc("superRoot"); // Should not appear
         DynamicInjectiveFunction<FacetPath, Var> ifn = DynamicInjectiveFunction.of(varGen);
 //        FacetPath superRootPath = FacetPath.newAbsolutePath();
 //        for (Var rootVar : baseConcept.getVar()) {
 //            baseConcept.getVar();
 //        }
+
+
 
         FacetPath focusPath = FacetPath.newRelativePath();
         ifn.getMap().put(focusPath, rootVar);
@@ -688,6 +691,8 @@ public class ElementGenerator {
 //        Element elt = group.size() == 1 ? group.get(0) : group;
         Element elt = worker.createElement().getElement();
 
+        elt = ElementUtils.groupIfNeeded(baseConcept.getElement(), elt);
+
         List<Var> visibleVars = ifn.getMap().entrySet().stream()
                 .filter(e -> isProjected.test(e.getKey()))
                 .map(Entry::getValue)
@@ -705,79 +710,6 @@ public class ElementGenerator {
     }
 
 
-    /**
-     * Create a map for each constrained property to a relation that yields its values.
-     *
-     * The key of the map should probably be the facet FacetStep?!
-     */
-  public Map<String, TernaryRelation> createMapFacetsAndValues(FacetPath rawFacetOriginPath, Direction direction, boolean applySelfConstraints, boolean negated, boolean includeAbsent) {
-
-      FacetPath facetOriginPath = ElementGeneratorUtils.cleanPath(rawFacetOriginPath);
-
-      Map<String, TernaryRelation> result = new HashMap<>();
-
-      // TODO We could reuse a TreeData structure to avoid iterating all paths of all constraints?
-      Set<FacetPath> constrainedPaths = constraintIndex.keySet();
-      Set<FacetPath> constrainedChildPaths = FacetPathUtils.getDirectChildren(facetOriginPath, direction, constrainedPaths);
-
-//      ElementGenerator.createQuery(parent.facetedQuery.relationQuery, x -> true);
-      // this.pathMapping.allocate(facetOriginPath)
-
-      Var focusVar = pathMapping.allocate(focusPath);
-
-      for(FacetPath childPath : constrainedChildPaths) {
-
-          FacetStep facetStep = facetOriginPath.relativize(childPath).toSegment();
-
-          MappedElement mr = createRelationForPath(childPath, applySelfConstraints, negated, includeAbsent);
-          Var childVar = mr.getVar(childPath);
-
-          List<Element> elts = ElementUtils.toElementList(mr.getElement());
-          elts.add(new ElementBind(Vars.p, NodeValue.makeNode(facetStep.getNode())));
-
-
-          TernaryRelation br = new TernaryRelationImpl(ElementUtils.groupIfNeeded(elts), focusVar, Vars.p, childVar);
-
-
-          String pStr = childPath.getParent() == null ? "" : childPath.getFileName().toSegment().getNode().getURI();
-
-          // Substitute the empty predicate by the empty string
-          // The empty string predicate (zero length path) is different from
-          // the set of remaining predicates indicated by a null entry in the result map
-          pStr = pStr == null ? "" : pStr;
-
-
-          // Skip adding the relation empty string if the relation is empty
-//          if(!(pStr.isEmpty() && br.isEmpty())) {
-              result.put(pStr, br);
-//          }
-      }
-
-      // Add the predicate/value paths and generate the element again
-
-      // exclude all predicates that are constrained
-      // FIXME Was getRemainingFacets
-      BinaryRelation brrx = getRemainingFacetsWithoutAbsent(facetOriginPath, direction, negated, includeAbsent);
-      TernaryRelation brr = new TernaryRelationImpl(brrx.getElement(), focusVar, brrx.getSourceVar(), brrx.getTargetVar());
-
-      // Build the constraint to remove all prior properties
-      ExprList constrainedPredicates = new ExprList(result.keySet().stream()
-              .filter(pStr -> !pStr.isEmpty())
-              .map(NodeFactory::createURI)
-              .map(NodeValue::makeNode)
-              .collect(Collectors.toList()));
-
-      if(!constrainedPredicates.isEmpty()) {
-          List<Element> foo = brr.getElements();
-          foo.add(new ElementFilter(new E_NotOneOf(new ExprVar(brrx.getSourceVar()), constrainedPredicates)));
-          brr = new TernaryRelationImpl(ElementUtils.groupIfNeeded(foo), brr.getS(), brr.getP(), brr.getO());
-      }
-
-      result.put(null, brr);
-
-      return result;
-  }
-
 
 //  public MappedElement createRelationForPath(FacetPath childPath, ) {
 //      // TODO If the relation is of form ?s <p> ?o, then rewrite as ?s ?p ?o . FILTER(?p = <p>)
@@ -791,19 +723,123 @@ public class ElementGenerator {
 //      return result;
 //  }
 
-  /**
-   */
-  public MappedElement createRelationForPath(FacetPath childPath, boolean applySelfConstraints, boolean negated, boolean includeAbsent) {
-      // TODO If the relation is of form ?s <p> ?o, then rewrite as ?s ?p ?o . FILTER(?p = <p>)
 
-      // FIXME This still breaks - because of conflict between the relation generated for the constraint and for the path
-      SetMultimap<FacetPath, Expr> effectiveConstraints = applySelfConstraints
-              ? constraintIndex
-              : ElementGeneratorUtils.hideConstraintsForPath(constraintIndex, childPath);
+    public UnaryRelation getAvailableValuesAt(FacetPath rawPath, boolean applySelfConstraints) {
+        FacetPath path = ElementGeneratorUtils.cleanPath(rawPath);
 
-      MappedElement result = new Worker(facetTree, effectiveConstraints).createElement();
-      return result;
-  }
+        SetMultimap<FacetPath, Expr> effectiveConstraints = applySelfConstraints
+                ? constraintIndex
+                : ElementGeneratorUtils.hideConstraintsForPath(constraintIndex, path);
+
+
+        MappedElement me = new Worker(facetTree, effectiveConstraints).createElement();
+
+        Var var = pathMapping.allocate(path);
+        return new Concept(me.getElement(), var);
+    }
+
+    public TernaryRelation createRelationFacetValue(FacetPath focus, FacetPath facetPath, Direction direction, UnaryRelation pFilter, UnaryRelation oFilter, boolean applySelfConstraints, boolean includeAbsent) {
+        Map<String, TernaryRelation> facetValues = createMapFacetsAndValues(facetPath, direction, false, applySelfConstraints, includeAbsent);
+        // pFilter, oFilter,
+
+        List<Element> elements = facetValues.values().stream()
+                .map(e -> RelationUtils.rename(e, Arrays.asList(Vars.s, Vars.p, Vars.o)))
+                .map(Relation::toTernaryRelation)
+                .map(e -> pFilter == null ? e : e.joinOn(e.getP()).with(pFilter))
+                .map(Relation::getElement)
+                .collect(Collectors.toList());
+
+        Element e = ElementUtils.unionIfNeeded(elements);
+
+        TernaryRelation result = new TernaryRelationImpl(e, Vars.s, Vars.p, Vars.o);
+        return result;
+    }
+
+    /**
+     * Create a map for each constrained property to a relation that yields its values.
+     *
+     * The key of the map should probably be the facet FacetStep?!
+     */
+    public Map<String, TernaryRelation> createMapFacetsAndValues(FacetPath rawFacetOriginPath, Direction direction, boolean applySelfConstraints, boolean negated, boolean includeAbsent) {
+
+        FacetPath facetOriginPath = ElementGeneratorUtils.cleanPath(rawFacetOriginPath);
+
+        Map<String, TernaryRelation> result = new HashMap<>();
+
+        // TODO We could reuse a TreeData structure to avoid iterating all paths of all constraints?
+        Set<FacetPath> constrainedPaths = constraintIndex.keySet();
+        Set<FacetPath> constrainedChildPaths = FacetPathUtils.getDirectChildren(facetOriginPath, direction, constrainedPaths);
+
+      // ElementGenerator.createQuery(parent.facetedQuery.relationQuery, x -> true);
+      // this.pathMapping.allocate(facetOriginPath)
+
+        Var focusVar = pathMapping.allocate(focusPath);
+
+        for(FacetPath childPath : constrainedChildPaths) {
+
+            FacetStep facetStep = facetOriginPath.relativize(childPath).toSegment();
+
+            MappedElement mr = createRelationForPath(childPath, applySelfConstraints, negated, includeAbsent);
+            Var childVar = mr.getVar(childPath);
+
+            List<Element> elts = ElementUtils.toElementList(mr.getElement());
+            elts.add(new ElementBind(Vars.p, NodeValue.makeNode(facetStep.getNode())));
+
+            TernaryRelation br = new TernaryRelationImpl(ElementUtils.groupIfNeeded(elts), focusVar, Vars.p, childVar);
+
+
+            String pStr = childPath.getParent() == null ? "" : childPath.getFileName().toSegment().getNode().getURI();
+
+          // Substitute the empty predicate by the empty string
+          // The empty string predicate (zero length path) is different from
+          // the set of remaining predicates indicated by a null entry in the result map
+            pStr = pStr == null ? "" : pStr;
+
+
+          // Skip adding the relation empty string if the relation is empty
+//          if(!(pStr.isEmpty() && br.isEmpty())) {
+              result.put(pStr, br);
+//          }
+        }
+
+      // Add the predicate/value paths and generate the element again
+
+      // exclude all predicates that are constrained
+      // FIXME Was getRemainingFacets
+        BinaryRelation brrx = getRemainingFacetsWithoutAbsent(facetOriginPath, direction, negated, includeAbsent);
+        TernaryRelation brr = new TernaryRelationImpl(brrx.getElement(), focusVar, brrx.getSourceVar(), brrx.getTargetVar());
+
+      // Build the constraint to remove all prior properties
+        ExprList constrainedPredicates = new ExprList(result.keySet().stream()
+            .filter(pStr -> !pStr.isEmpty())
+            .map(NodeFactory::createURI)
+            .map(NodeValue::makeNode)
+            .collect(Collectors.toList()));
+
+        if(!constrainedPredicates.isEmpty()) {
+            List<Element> foo = brr.getElements();
+            foo.add(new ElementFilter(new E_NotOneOf(new ExprVar(brrx.getSourceVar()), constrainedPredicates)));
+            brr = new TernaryRelationImpl(ElementUtils.groupIfNeeded(foo), brr.getS(), brr.getP(), brr.getO());
+        }
+
+        result.put(null, brr);
+
+        return result;
+    }
+
+    /**
+     */
+    public MappedElement createRelationForPath(FacetPath childPath, boolean applySelfConstraints, boolean negated, boolean includeAbsent) {
+        // TODO If the relation is of form ?s <p> ?o, then rewrite as ?s ?p ?o . FILTER(?p = <p>)
+
+        // FIXME This still breaks - because of conflict between the relation generated for the constraint and for the path
+        SetMultimap<FacetPath, Expr> effectiveConstraints = applySelfConstraints
+                ? constraintIndex
+                : ElementGeneratorUtils.hideConstraintsForPath(constraintIndex, childPath);
+
+        MappedElement result = new Worker(facetTree, effectiveConstraints).createElement();
+        return result;
+    }
 
 
     public BinaryRelation getRemainingFacetsWithoutAbsent(FacetPath sourceFacetPath, Direction direction, boolean negated, boolean includeAbsent) {
@@ -824,92 +860,6 @@ public class ElementGenerator {
         Var oVar = me.getVar(oPath);
         BinaryRelation result = new BinaryRelationImpl(me.getElement(), pVar, oVar);
 
-        return result;
-    }
-
-//
-//    // Create a query for the facets at the given path
-//    public void facets(FacetPath facetPath, Direction direction, boolean includeAbsent) {
-//
-//        Map<String, TernaryRelation> relations = getFacetValuesCore(null, null, direction, false, false, includeAbsent);
-//
-//        UnaryRelation concept = FacetedQueryGenerator.createConceptFacets(relations, null);
-//
-////        FacetedDataQuery<RDFNode> result = new FacetedDataQueryImpl<>(
-////                null, // connection
-////                concept.getElement(),
-////                concept.getVar(),
-////                null,
-////                RDFNode.class);
-//    }
-//
-//
-//    /**
-//     * Map each predicate reachable from the sourceFacetPath to a graph pattern
-//     */
-//    public Map<String, BinaryRelation> createMapFacetsAndValues(FacetPath facetOriginPath, boolean isForward, boolean applySelfConstraints, boolean negated, boolean includeAbsent) {
-//
-//        // SetMultimap<P, Expr> constraintIndex = indexConstraints(pathAccessor, constraints);
-//
-//        Map<String, BinaryRelation> result = new HashMap<>();
-//
-//        Set<FacetPath> mentionedPaths = constraintIndex.keySet();
-//        Set<FacetPath> constrainedChildPaths = FacetPathUtils.getDirectChildren(facetOriginPath, isForward, mentionedPaths);
-//
-//        for(FacetPath childPath : constrainedChildPaths) {
-//            BinaryRelation br = createRelationForPath(childPath, constraintIndex, applySelfConstraints, negated, includeAbsent);
-//
-//            String pStr = childPath.getParent() == null ? "" : childPath.getFileName().toSegment().getNode().getURI();
-//
-//            // Substitute the empty predicate by the empty string
-//            // The empty string predicate (zero length path) is different from
-//            // the set of remaining predicates indicated by a null entry in the result map
-//            pStr = pStr == null ? "" : pStr;
-//
-//
-//            // Skip adding the relation empty string if the relation is empty
-//            if(!(pStr.isEmpty() && br.isEmpty())) {
-//                result.put(pStr, br);
-//            }
-//        }
-//
-//        // exclude all predicates that are constrained
-//
-//        BinaryRelation brr = getRemainingFacets(focusPath, facetOriginPath, isForward, constraintIndex, negated, includeAbsent);
-//
-//        // Build the constraint to remove all prior properties
-//        ExprList constrainedPredicates = new ExprList(result.keySet().stream()
-//                .filter(pStr -> !pStr.isEmpty())
-//                .map(NodeFactory::createURI)
-//                .map(NodeValue::makeNode)
-//                .collect(Collectors.toList()));
-//
-//        if(!constrainedPredicates.isEmpty()) {
-//            List<Element> foo = brr.getElements();
-//            foo.add(new ElementFilter(new E_NotOneOf(new ExprVar(brr.getSourceVar()), constrainedPredicates)));
-//            brr = new BinaryRelationImpl(ElementUtils.groupIfNeeded(foo), brr.getSourceVar(), brr.getTargetVar());
-//        }
-//
-//        result.put(null, brr);
-//
-//        return result;
-//    }
-//
-
-    public TernaryRelation createRelationFacetValue(FacetPath focus, FacetPath facetPath, Direction direction, UnaryRelation pFilter, UnaryRelation oFilter, boolean applySelfConstraints, boolean includeAbsent) {
-        Map<String, TernaryRelation> facetValues = createMapFacetsAndValues(facetPath, direction, false, applySelfConstraints, includeAbsent);
-        // pFilter, oFilter,
-
-        List<Element> elements = facetValues.values().stream()
-                .map(e -> RelationUtils.rename(e, Arrays.asList(Vars.s, Vars.p, Vars.o)))
-                .map(Relation::toTernaryRelation)
-                .map(e -> pFilter == null ? e : e.joinOn(e.getP()).with(pFilter))
-                .map(Relation::getElement)
-                .collect(Collectors.toList());
-
-        Element e = ElementUtils.unionIfNeeded(elements);
-
-        TernaryRelation result = new TernaryRelationImpl(e, Vars.s, Vars.p, Vars.o);
         return result;
     }
 
@@ -1210,6 +1160,77 @@ public class ElementGenerator {
 //        }
 //        return result;
 //    }
+
+
+//
+//    // Create a query for the facets at the given path
+//    public void facets(FacetPath facetPath, Direction direction, boolean includeAbsent) {
+//
+//        Map<String, TernaryRelation> relations = getFacetValuesCore(null, null, direction, false, false, includeAbsent);
+//
+//        UnaryRelation concept = FacetedQueryGenerator.createConceptFacets(relations, null);
+//
+////        FacetedDataQuery<RDFNode> result = new FacetedDataQueryImpl<>(
+////                null, // connection
+////                concept.getElement(),
+////                concept.getVar(),
+////                null,
+////                RDFNode.class);
+//    }
+//
+//
+//    /**
+//     * Map each predicate reachable from the sourceFacetPath to a graph pattern
+//     */
+//    public Map<String, BinaryRelation> createMapFacetsAndValues(FacetPath facetOriginPath, boolean isForward, boolean applySelfConstraints, boolean negated, boolean includeAbsent) {
+//
+//        // SetMultimap<P, Expr> constraintIndex = indexConstraints(pathAccessor, constraints);
+//
+//        Map<String, BinaryRelation> result = new HashMap<>();
+//
+//        Set<FacetPath> mentionedPaths = constraintIndex.keySet();
+//        Set<FacetPath> constrainedChildPaths = FacetPathUtils.getDirectChildren(facetOriginPath, isForward, mentionedPaths);
+//
+//        for(FacetPath childPath : constrainedChildPaths) {
+//            BinaryRelation br = createRelationForPath(childPath, constraintIndex, applySelfConstraints, negated, includeAbsent);
+//
+//            String pStr = childPath.getParent() == null ? "" : childPath.getFileName().toSegment().getNode().getURI();
+//
+//            // Substitute the empty predicate by the empty string
+//            // The empty string predicate (zero length path) is different from
+//            // the set of remaining predicates indicated by a null entry in the result map
+//            pStr = pStr == null ? "" : pStr;
+//
+//
+//            // Skip adding the relation empty string if the relation is empty
+//            if(!(pStr.isEmpty() && br.isEmpty())) {
+//                result.put(pStr, br);
+//            }
+//        }
+//
+//        // exclude all predicates that are constrained
+//
+//        BinaryRelation brr = getRemainingFacets(focusPath, facetOriginPath, isForward, constraintIndex, negated, includeAbsent);
+//
+//        // Build the constraint to remove all prior properties
+//        ExprList constrainedPredicates = new ExprList(result.keySet().stream()
+//                .filter(pStr -> !pStr.isEmpty())
+//                .map(NodeFactory::createURI)
+//                .map(NodeValue::makeNode)
+//                .collect(Collectors.toList()));
+//
+//        if(!constrainedPredicates.isEmpty()) {
+//            List<Element> foo = brr.getElements();
+//            foo.add(new ElementFilter(new E_NotOneOf(new ExprVar(brr.getSourceVar()), constrainedPredicates)));
+//            brr = new BinaryRelationImpl(ElementUtils.groupIfNeeded(foo), brr.getSourceVar(), brr.getTargetVar());
+//        }
+//
+//        result.put(null, brr);
+//
+//        return result;
+//    }
+//
+
 
 }
 

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.aksw.facete.v4.impl.ElementGenerator;
+import org.aksw.facete.v4.impl.TreeDataUtils;
 import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jenax.connection.query.QueryExecutionFactoryDataset;
 import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
@@ -23,9 +24,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 
-public class SparqlGridComponent
-    extends VerticalLayout
-{
+public class SparqlGridComponent extends VerticalLayout {
     protected QueryExecutionFactoryQuery qef;
     protected UnaryRelation baseConcept;
     protected LabelService<Node, String> labelMgr;
@@ -74,8 +73,6 @@ public class SparqlGridComponent
         this.resetGrid();
     }
 
-
-
     public QueryExecutionFactoryQuery getQef() {
         return qef;
     }
@@ -108,11 +105,9 @@ public class SparqlGridComponent
         this.treeDataProvider = treeDataProvider;
     }
 
-
     public void resetGrid() {
 
         this.removeAll();
-
 
         Grid<Binding> sparqlGrid = new Grid<>();
         sparqlGrid.setPageSize(10000);
@@ -120,16 +115,26 @@ public class SparqlGridComponent
 
         SetMultimap<FacetPath, Expr> constraintIndex = HashMultimap.create();
 
-        MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeDataProvider.getTreeData(), constraintIndex, path -> !Boolean.FALSE.equals(pathToVisibility.get(path)));
+        // MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept,
+        // treeDataProvider.getTreeData(), constraintIndex, path ->
+        // !Boolean.FALSE.equals(pathToVisibility.get(path)));
+
+        org.aksw.facete.v3.api.TreeData<FacetPath> treeProjection = TreeDataUtils
+                .toFacete(treeDataProvider.getTreeData());
+
+        MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeProjection, constraintIndex,
+                path -> !Boolean.FALSE.equals(pathToVisibility.get(path)));
+
 //        Query query =
 //        RelationUtils.createQuery(null);
         // VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);
-        // VaadinSparqlUtils.configureGridFilter(sparqlGrid, filterRow, query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
+        // VaadinSparqlUtils.configureGridFilter(sparqlGrid, filterRow,
+        // query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var,
+        // str).orElse(null));
         SparqlGrid.setQueryForGridBinding(sparqlGrid, qef, labelMgr, mappedQuery);
 
         TableMapperComponent tm = new TableMapperComponent(qef, baseConcept, labelMgr);
         this.add(tm);
-
 
         this.add(sparqlGrid);
 

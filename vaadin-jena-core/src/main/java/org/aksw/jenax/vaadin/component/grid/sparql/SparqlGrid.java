@@ -9,10 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.aksw.commons.collections.trees.TreeUtils;
 import org.aksw.commons.util.stream.SequentialGroupBySpec;
 import org.aksw.commons.util.stream.StreamOperatorSequentialGroupBy;
 import org.aksw.jena_sparql_api.concepts.RelationUtils;
@@ -113,6 +115,8 @@ public class SparqlGrid {
             Column<Binding> column = grid.addComponentColumn(binding -> {
                 Node node = binding.get(var);
                 Span r = new Span();
+                r.setWidthFull();
+                // r.getStyle().set("text-align", "center");
                 if (node != null) {
                     r.setText(NodeFmtLib.strTTL(node));
                     VaadinLabelMgr.forHasText(labelMgr, r, node);
@@ -153,7 +157,111 @@ public class SparqlGrid {
     }
 
 
+    /**
+     *
+     *
+     */
     public static <T> Multimap<T, HeaderCell> setupHeaders(
+            Grid<Binding> grid,
+            HeaderRow primaryHeaderRow,
+            Function<T, T> getParent,
+            List<Entry<Column<?>, T>> leafs) {
+
+        // Hierarchical headers can be repeated if paths are in arbitrary order
+        Multimap<T, HeaderCell> pathToCells = HashMultimap.create();
+
+        // Create the columns
+        // HeaderRow primaryHeaderRow = grid.prependHeaderRow();
+
+
+        List<Entry<T, HeaderCell>> headerLevel = new ArrayList<>();
+        for (Entry<Column<?>, T> leaf : leafs) {
+            T key = leaf.getValue();
+            Column<?> column = leaf.getKey();
+            HeaderCell cell = primaryHeaderRow.getCell(column);
+            pathToCells.put(key, cell);
+
+            headerLevel.add(new SimpleImmutableEntry<>(key, cell));
+        }
+
+        // Create the hierarchical header rows by moving from the leafs upwards
+        List<Entry<T, HeaderCell>> currentLevel = headerLevel;
+        Set<T> allNonNullParents;
+
+       // While there are non null paths as headers do ...
+        while ((allNonNullParents = currentLevel.stream()
+                    .map(Entry::getKey)
+                    .filter(Objects::nonNull)
+                    .map(getParent)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet()))
+                .size() > 1l) {
+
+            // Don't group items with their parent X as long as there are other parents that are descendants of X
+            Set<T> finalAllNonNullParents = allNonNullParents;
+
+            // Find all paths that do not appear as as an ancestor of any other path
+            // Complexity is O(n^2) here, could be improved
+            Set<T> groupableParents = allNonNullParents.stream()
+                    .filter(thisParent -> finalAllNonNullParents.stream()
+                            .noneMatch(otherParent -> TreeUtils.streamAncestors(getParent.apply(otherParent), getParent)
+                                    .anyMatch(otherAncestor -> Objects.equals(otherAncestor, thisParent))))
+                    .collect(Collectors.toSet());
+
+            // Group the children's cells by their respective parents
+            List<Entry<T, List<Entry<T, HeaderCell>>>> groups =
+                    StreamOperatorSequentialGroupBy.create(SequentialGroupBySpec.<Entry<T, HeaderCell>, T, List<Entry<T, HeaderCell>>>create(
+                            entry -> {
+                                T childKey = entry.getKey();
+                                T parentKey = entry.getKey() == null ? null : getParent.apply(childKey);
+                                T r = groupableParents.contains(parentKey) ? parentKey : childKey;
+                                return r;
+                            },
+                            (x, y) -> (x == null && y == null) ? false : Objects.equals(x, y),
+                            groupKey -> new ArrayList<>(), (acc, item) -> { acc.add(item); return acc; }))
+                    .transform(currentLevel.stream())
+                    .collect(Collectors.toList());
+
+            // The new hrow will be modified in place
+            HeaderRow hrow = grid.prependHeaderRow();
+            List<HeaderCell> copy = new ArrayList<>(hrow.getCells());
+
+            List<Entry<T, HeaderCell>> parentLevel = new ArrayList<>();
+            int offset = 0;
+            for (Entry<T, List<Entry<T, HeaderCell>>> group : groups) {
+                List<HeaderCell> cells = group.getValue().stream().map(Entry::getValue).collect(Collectors.toList());
+                // Listhrow.getCells()
+                HeaderCell mergedCell;
+                T groupKey = group.getKey();
+                boolean addHeading;
+                if (cells.size() > 1) {
+                    int n = cells.size();
+                    int nextOffset = offset + n;
+                    List<HeaderCell> toMerge = copy.subList(offset, nextOffset);
+                    offset = nextOffset;
+                    mergedCell = hrow.join(toMerge);
+                    parentLevel.add(new SimpleImmutableEntry<>(groupKey, mergedCell));
+                    addHeading = true;
+                } else {
+                    mergedCell = copy.get(offset);
+                    parentLevel.add(new SimpleImmutableEntry<>(groupKey, mergedCell));
+                    ++offset;
+                    addHeading = false;
+                }
+
+                if (groupKey != null && addHeading) {
+                    pathToCells.put(groupKey, mergedCell);
+                }
+            }
+
+            currentLevel = parentLevel;
+        }
+
+        // Header<T> header = new Header<>(idToLevel, levelToIdToCell, levelToHeader);
+        return pathToCells;
+    }
+
+    public static <T> Multimap<T, HeaderCell> setupHeadersOld(
             Grid<Binding> grid,
             HeaderRow primaryHeaderRow,
             Function<T, T> getParent,

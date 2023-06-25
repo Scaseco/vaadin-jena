@@ -2,7 +2,9 @@ package org.aksw.facete.v4.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -12,6 +14,7 @@ import org.aksw.facete.v3.api.FacetConstraints;
 import org.aksw.facete.v3.api.FacetNode;
 import org.aksw.facete.v3.api.FacetPathMapping;
 import org.aksw.facete.v3.api.FacetedQuery;
+import org.aksw.facete.v3.api.TreeData;
 import org.aksw.facete.v3.api.TreeQuery;
 import org.aksw.facete.v3.api.TreeQueryImpl;
 import org.aksw.facete.v3.api.TreeQueryNode;
@@ -76,7 +79,26 @@ class TreeRelation {
     }
 }
 
+/**
+ * A faceted relation query is backed by a relation.
+ * Faceted queries can be started over each of its columns in order to constrain the matching rows.
+ * A faceted query is an intensional description of a set of resources, whereas if left unconstrained then the set of
+ * resources are those present in the column.
+ *
+ * Similar to SPARQL queries, which have CONSTRUCT and SELECT query forms, there are different ways
+ * for how to project the underlying bindings.
+ * COLUMNS is akin to select queries, where the projection is specified as a flat list of facet paths.
+ * TREE corresponds to a hierarchical table. In this format columns can not be arbitrarily arranged: It is only possible to
+ * reorder siblings.
+ *
+ */
 public class FacetedRelationQuery {
+
+    public enum QueryType {
+        COLUMNS,
+        TREE
+    }
+
     protected Supplier<Relation> baseRelation;
 
     // Property connecting the root node of the query tree to the nodes that represent the initial variables
@@ -104,6 +126,18 @@ public class FacetedRelationQuery {
     // So the first level of FacetNodes that refers to the root variables is different from the other FacetNodes. But how to capture that?!
     protected FacetPathMapping pathMapping;
 
+
+    protected QueryType queryType;
+    protected TreeData<TreeQueryNode> treeProjection = new TreeData<>();
+    protected List<TreeQueryNode> listProjection = new ArrayList<>();
+
+    /** The set of facet paths which to project. Applies to both tree and list projections. */
+    protected Set<TreeQueryNode> isVisible = new LinkedHashSet<>();
+
+    public boolean isVisible(FacetPath path) {
+        TreeQueryNode node = constraints.getTreeQuery().root().resolve(path);
+        return isVisible.contains(node);
+    }
 
     public FacetedRelationQuery(Supplier<Relation> baseRelation) {
         super();
@@ -186,8 +220,9 @@ public class FacetedRelationQuery {
                     // .exists().activate()
                 .leaveConstraints()
             .parent()
-            .fwd()
-                .facetCounts();
+            .availableValues();
+            // .fwd()
+                //.facetCounts();
 
 
 //    	FacetedQuery fq = new FacetedQueryImpl();

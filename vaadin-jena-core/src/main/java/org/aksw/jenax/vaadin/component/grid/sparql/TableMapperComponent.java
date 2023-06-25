@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -16,7 +15,6 @@ import java.util.stream.Stream;
 import org.aksw.commons.collections.generator.Generator;
 import org.aksw.commons.collections.generator.GeneratorBlacklist;
 import org.aksw.commons.collections.generator.GeneratorFromFunction;
-import org.aksw.commons.rx.lookup.LookupService;
 import org.aksw.facete.v3.api.Direction;
 import org.aksw.facete.v3.api.FacetDirNode;
 import org.aksw.facete.v3.api.FacetMultiNode;
@@ -25,7 +23,7 @@ import org.aksw.facete.v3.api.FacetedDataQuery;
 import org.aksw.facete.v3.api.FacetedQuery;
 import org.aksw.facete.v3.impl.FacetedQueryImpl;
 import org.aksw.facete.v4.impl.ElementGenerator;
-import org.aksw.jena_sparql_api.common.DefaultPrefixes;
+import org.aksw.facete.v4.impl.TreeDataUtils;
 import org.aksw.jena_sparql_api.concepts.Concept;
 import org.aksw.jena_sparql_api.concepts.RelationUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
@@ -39,7 +37,6 @@ import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
-import org.aksw.jenax.dataaccess.LabelUtils;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetPathOps;
 import org.aksw.jenax.path.core.FacetStep;
@@ -48,25 +45,22 @@ import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
-import org.aksw.jenax.vaadin.label.VaadinRdfLabelMgrImpl;
 import org.aksw.vaadin.common.component.tab.TabSheet;
 import org.aksw.vaadin.common.component.util.ConfirmDialogUtils;
 import org.aksw.vaadin.common.component.util.NotificationUtils;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.Query;
-import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdfconnection.RDFConnection;
-import org.apache.jena.rdfconnection.SparqlQueryConnection;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.expr.Expr;
-import org.apache.jena.vocabulary.RDFS;
 import org.vaadin.addons.componentfactory.PaperSlider;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.math.LongMath;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasText;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -76,6 +70,7 @@ import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.grid.HeaderRow.HeaderCell;
 import com.vaadin.flow.component.grid.dnd.GridDropLocation;
 import com.vaadin.flow.component.grid.dnd.GridDropMode;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -88,8 +83,7 @@ import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
-
-import io.reactivex.rxjava3.core.Flowable;
+import com.vaadin.flow.dom.Style;
 
 /** A predicate tree's node types alternate between 'subject' and 'predicate'. The root is always a subject node. */
 //class PredicateNode
@@ -405,23 +399,6 @@ class DetailsView
         isReverseToggle = new Checkbox();
         filterField = new TextField();
 
-        HorizontalLayout samplerLayout = new HorizontalLayout();
-        scanOffsetSlider = createSlider("Scan Offset", 0, 9, 9, 0);
-        scanLimitSlider = createSlider("Scan Limit", 0, 9, 9, 6);
-        entityOffsetSlider = createSlider("Entity Limit", 0, 9, 9, 0);
-        entityLimitSlider = createSlider("Entity Offset", 0, 9, 9, 0);
-
-        samplerLayout.add(scanOffsetSlider);
-        samplerLayout.add(scanLimitSlider);
-//        samplerLayout.add(entityOffsetSlider);
-//        samplerLayout.add(entityLimitSlider);
-
-        Button testSamplerBtn = new Button("test");
-        testSamplerBtn.addClickListener(ev -> {
-            NotificationUtils.error("" + getSampleRange());
-        });
-        samplerLayout.add(testSamplerBtn);
-        add(samplerLayout);
 
         removePathBtn.addClickListener(ev -> {
             List<FacetPath> children = treeDataProvider.getTreeData().getChildren(activePath);
@@ -465,9 +442,28 @@ class DetailsView
             treeDataProvider.refreshAll();
 
         });
-
-
         predicatesLayout.add(addAnyBtn);
+
+
+        HorizontalLayout samplerLayout = new HorizontalLayout();
+        scanOffsetSlider = createSlider("Scan Offset", 0, 9, 9, 0);
+        scanLimitSlider = createSlider("Scan Limit", 0, 9, 9, 6);
+        entityOffsetSlider = createSlider("Entity Limit", 0, 9, 9, 0);
+        entityLimitSlider = createSlider("Entity Offset", 0, 9, 9, 0);
+
+        samplerLayout.add(scanOffsetSlider);
+        samplerLayout.add(scanLimitSlider);
+//        samplerLayout.add(entityOffsetSlider);
+//        samplerLayout.add(entityLimitSlider);
+
+        Button testSamplerBtn = new Button("test");
+        testSamplerBtn.addClickListener(ev -> {
+            NotificationUtils.error("" + getSampleRange());
+        });
+        samplerLayout.add(testSamplerBtn);
+        predicatesLayout.add(samplerLayout);
+
+
 
         predicateGrid.addComponentColumn(predicateRecord -> {
             Node predicateNode = predicateRecord.predicate.asNode();
@@ -517,8 +513,16 @@ class DetailsView
         predicatesLayout.add(samplePredicatesBtn);
 
         predicatesSplitLayout.addToPrimary(predicatesLayout);
-        tabSheet.add("Predicates", predicatesSplitLayout);
-        tabSheet.add("Values", valuesLayout);
+
+        Component predicatesIcon = VaadinIcon.MENU.create();
+        Component valuesIcon = VaadinIcon.TEXT_LABEL.create();
+        Component functionsIcon = VaadinIcon.FUNCION.create();
+        Component customPredicatesIcon = VaadinIcon.PLUS_CIRCLE.create();
+        tabSheet.add(predicatesIcon, predicatesSplitLayout);
+        tabSheet.add(valuesIcon, valuesLayout);
+        tabSheet.add(functionsIcon, new VerticalLayout());
+        tabSheet.add(customPredicatesIcon, new VerticalLayout());
+
         // VaadinComponentUtils.notifyResize(tabSheet, true);
 
         add(titleRow);
@@ -691,7 +695,7 @@ public class TableMapperComponent
 
     protected UnaryRelation baseConcept;
 
-    public TableMapperComponent() {
+    public TableMapperComponent(LabelService<Node, String> labelService) {
 
         // QueryExecutionFactoryQuery qef = query -> RDFConnection.connect("http://localhost:8642/sparql").query(query);
         baseConcept = new Concept(ElementUtils.createElementTriple(Vars.x, Vars.y, Vars.z), Vars.x);
@@ -712,35 +716,12 @@ public class TableMapperComponent
             fq.baseConcept(baseConcept);
         }
 
-        // fq.root().fwd(RDF.type).one().availableValues().exec().forEach(rdfNode -> System.out.println(rdfNode));
-
-        // SparqlQueryConnection c2 = fq.root().fwd().facetCounts().resolver().fwd().toFacetedQuery().root().fwd().facetCounts().resolver().fwd().virtualConn();
-
-        // SparqlQueryConnection c2 = fq.root().fwd().facetCounts().resolver().fwd().virtualConn();
-        SparqlQueryConnection c2 = fq.connection();
-
-
-
-        this.qef = QueryExecutionFactories.of(c2); // QueryExecutionFactories.of(dataSource);
-        Property labelProperty = RDFS.label;// DCTerms.description;
-
-        LookupService<Node, String> ls1 = LabelUtils.getLabelLookupService(qef, labelProperty, DefaultPrefixes.get());
-        LookupService<Node, String> ls2 = keys -> Flowable.fromIterable(keys).map(k -> Map.entry(k, Objects.toString(k)));
-
-        VaadinRdfLabelMgrImpl labelMgr = new VaadinRdfLabelMgrImpl(ls1);
-
-
-        Button resetLabelsBtn = new Button("Toggle Labels");
-        resetLabelsBtn.addClickListener(ev -> {
-            LookupService<Node, String> ls = labelMgr.getLookupService() == ls1 ? ls2 : ls1;
-            labelMgr.setLookupService(ls);
-            labelMgr.refreshAll();
-        });
+        this.qef = QueryExecutionFactories.of(conn);
 
         // this.dataSource = dataSource;
-        this.labelMgr = labelMgr;
+        this.labelMgr = labelService;
 
-        add(resetLabelsBtn);
+        // add(resetLabelsBtn);
 
 
 
@@ -771,8 +752,17 @@ public class TableMapperComponent
         if (path.getSegments().isEmpty()) {
             headerCell.setText("");
         } else {
+            Div span = new Div();
+            span.setWidthFull();
+            Style style = span.getStyle();
+            style.set("text-align", "center");
+            style.set("background-color", "hsla(214, 53%, 23%, 0.16)");
+
+            headerCell.setComponent(span);
+
             FacetStep step = path.getFileName().toSegment();
-            labelMgr.register(headerCell, step.getNode(), (c, map) -> {
+            // labelMgr.register(headerCell, step.getNode(), (c, map) -> {
+            labelMgr.register(span, step.getNode(), (c, map) -> {
                 String label = toString(step, map::get);
                 c.setText(label);
             });
@@ -997,7 +987,9 @@ public class TableMapperComponent
 
             SetMultimap<FacetPath, Expr> constraintIndex = HashMultimap.create();
 
-            MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeDataProvider.getTreeData(), constraintIndex, path -> !Boolean.FALSE.equals(pathToVisibility.get(path)));
+            org.aksw.facete.v3.api.TreeData<FacetPath> treeProjection = TreeDataUtils.toFacete(treeDataProvider.getTreeData());
+
+            MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeProjection, constraintIndex, path -> !Boolean.FALSE.equals(pathToVisibility.get(path)));
 //            Query query =
 //            RelationUtils.createQuery(null);
             // VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);

@@ -1,7 +1,7 @@
 package org.aksw.vaadin.app.demo.view.edit.propertylist;
 
 import org.aksw.jenax.vaadin.component.grid.sparql.TableMapperComponent;
-import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
+import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.vaadin.app.demo.MainLayout;
 import org.apache.jena.graph.Node;
 
@@ -14,10 +14,11 @@ import com.vaadin.flow.router.Route;
 public class TableMapperView
     extends VerticalLayout
 {
-    protected VaadinLabelMgr<Node, String> labelService;
+    // @Autowired
+    // protected LabelService<Node, String> labelService;
 
-    public TableMapperView() {
-        TableMapperComponent tableMapper = new TableMapperComponent();
+    public TableMapperView(LabelService<Node, String> labelService) {
+        TableMapperComponent tableMapper = new TableMapperComponent(labelService);
         add(tableMapper);
 
 //        Dataset dataset = RDFDataMgr.loadDataset("linkedgeodata-2018-04-04.dcat.ttl");

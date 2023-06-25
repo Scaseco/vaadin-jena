@@ -71,9 +71,18 @@ public class TabSheet
         return newTab(generatedId, name, ManagedComponentSimple.wrap(content));
     }
 
+    public Tab add(Component headerComponent, Component content) {
+        String generatedId = "tab" + nextTabId++;
+        return newTab(generatedId, headerComponent, ManagedComponentSimple.wrap(content));
+    }
+
 
     public Tab newTab(String id, String name, Component content) {
         return newTab(id, name, ManagedComponentSimple.wrap(content));
+    }
+
+    public Tab newTab(String id, String name, ManagedComponent content) {
+        return newTab(id, new Text(name), content);
     }
 
     /**
@@ -81,13 +90,13 @@ public class TabSheet
      * This method is also invoked when the 'new tab' button is clicked
      *
      */
-    public Tab newTab(String id, String name, ManagedComponent content) {
+    public Tab newTab(String id, Component headerComponent, ManagedComponent content) {
         Tab priorTab = idToTab.get(id);
         if (priorTab != null) {
             destroyTab(priorTab);
         }
 
-        Tab newTab = new Tab(new Text(name)); //new Tab(new Icon(VaadinIcon.PLUS));
+        Tab newTab = new Tab(headerComponent); //new Tab(new Icon(VaadinIcon.PLUS));
         newTab.setClassName("compact");
 
 
