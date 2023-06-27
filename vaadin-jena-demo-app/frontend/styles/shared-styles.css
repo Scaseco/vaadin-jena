@@ -31,7 +31,7 @@
 }
 
 .detail-text {
-  font-color: var(--lumo-shade-40pct);
+  color: var(--lumo-shade-40pct);
   font-size: 90%;
   font-style: italic;
 }

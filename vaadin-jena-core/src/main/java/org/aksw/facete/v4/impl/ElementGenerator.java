@@ -11,6 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -45,8 +46,18 @@ import org.aksw.jenax.vaadin.component.grid.sparql.DynamicInjectiveFunction;
 import org.aksw.jenax.vaadin.component.grid.sparql.MappedQuery;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.core.Var;
+import org.apache.jena.sparql.expr.E_Function;
 import org.apache.jena.sparql.expr.E_LogicalNot;
 import org.apache.jena.sparql.expr.E_NotOneOf;
 import org.apache.jena.sparql.expr.Expr;
@@ -62,12 +73,17 @@ import org.apache.jena.sparql.syntax.ElementBind;
 import org.apache.jena.sparql.syntax.ElementFilter;
 import org.apache.jena.sparql.syntax.ElementGroup;
 import org.apache.jena.sparql.syntax.ElementOptional;
+import org.apache.jena.sparql.syntax.ElementSubQuery;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.graph.Traverser;
 
 public class ElementGenerator {
+
+    // FIXME This must be made configurable
+    public static final Dataset virtualProperties = RDFDataMgr.loadDataset("virtual-properties.ttl");
+    public static final Property virtualPropertyDefinition = ResourceFactory.createProperty("https://w3id.org/aksw/norse#sparqlElement");
 
     protected FacetPathMapping pathMapping;
     protected FacetPath focusPath;
@@ -84,6 +100,45 @@ public class ElementGenerator {
         /** Mapping of element paths (FacetPaths with the component set to the TUPLE constant) */
         protected Map<FacetPath, ElementAcc> eltPathToAcc = new LinkedHashMap<>();
 
+    }
+
+    public static Element createElementFromConcretePredicate(Var parentVar, Node predicateNode, Var targetVar, boolean isFwd) {
+        Element result = null;
+        if (predicateNode.isURI()) {
+            String str = predicateNode.getURI();
+
+            String fnPrefix = "fn:";
+            if (str.startsWith(fnPrefix)) {
+                String fnIri = str.substring(fnPrefix.length());
+                result = new ElementBind(targetVar, new E_Function(fnIri, new ExprList(new ExprVar(parentVar))));
+            }
+
+            Model model = virtualProperties.getDefaultModel();
+            RDFNode rdfNode = model.asRDFNode(predicateNode);
+            if (rdfNode != null && rdfNode.isResource()) {
+                Resource r = rdfNode.asResource();
+                String definition = Optional.ofNullable(r.getProperty(virtualPropertyDefinition)).map(Statement::getString).orElse(null);
+                if (definition != null) {
+                    Query query = QueryFactory.create(definition);
+                    Relation relation = RelationUtils.fromQuery(query);
+                    BinaryRelation br = relation.toBinaryRelation();
+                    Map<Node, Node> remap = new HashMap<>();
+                    remap.put(br.getSourceVar(), parentVar);
+                    remap.put(br.getTargetVar(), targetVar);
+                    br = br.applyNodeTransform(NodeTransformLib2.wrapWithNullAsIdentity(remap::get));
+                    result = br.getElement();
+
+                    if (result instanceof ElementSubQuery) {
+                        result = ((ElementSubQuery)result).getQuery().getQueryPattern();
+                    }
+                }
+            }
+        }
+
+        if (result == null) {
+            result = ElementUtils.createElementTriple(parentVar, predicateNode, targetVar, isFwd);
+        }
+        return result;
     }
 
     class Worker {
@@ -143,10 +198,13 @@ public class ElementGenerator {
 
         public ElementAcc allocateEltAcc(Var parentVar, Var targetVar, FacetPath path) {
 
+            // FIXME Naively adding optionl elements does not work when facet paths are mapped to BIND elements
+            // In the example below, ?bar will be unbound:
+            // BIND("foo" AS ?foo) OPTIONAL { BIND(?foo AS ?bar) }
+
             FacetPath eid = FacetPathUtils.toElementId(path);
             ElementGroup container = new ElementGroup();
             boolean isMandatory = mandatoryElementIds.contains(eid);
-            Element root = isMandatory  ? container : new ElementOptional(container);
 
             Element coreElt = null;
             Node secondaryNode;
@@ -167,7 +225,8 @@ public class ElementGenerator {
                 }
 
                 if (FacetStep.isTarget(c)) {
-                    coreElt = ElementUtils.createElementTriple(parentVar, secondaryNode, targetVar, isFwd);
+                    coreElt = ElementGenerator.createElementFromConcretePredicate(parentVar, secondaryNode, targetVar, isFwd);
+                    // coreElt = ElementUtils.createElementTriple(parentVar, secondaryNode, targetVar, isFwd);
                 } else {
                     coreElt = ElementUtils.createElementTriple(parentVar, targetVar, secondaryNode, isFwd);
                 }
@@ -177,6 +236,9 @@ public class ElementGenerator {
                 // Add the base element if this is the root path
                 // container.addElement(baseElement);
             }
+
+            Element root = isMandatory || coreElt instanceof ElementBind ? container : new ElementOptional(container);
+
             return new ElementAcc(parentVar, root, container);
         }
 

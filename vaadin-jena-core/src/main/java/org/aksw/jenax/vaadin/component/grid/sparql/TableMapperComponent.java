@@ -28,6 +28,7 @@ import org.aksw.jena_sparql_api.concepts.Concept;
 import org.aksw.jena_sparql_api.concepts.RelationUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlRdfNode;
+import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
 import org.aksw.jenax.arq.connection.core.QueryExecutionFactories;
 import org.aksw.jenax.arq.connection.core.RDFConnections;
 import org.aksw.jenax.arq.dataset.api.ResourceInDataset;
@@ -49,9 +50,14 @@ import org.aksw.vaadin.common.component.tab.TabSheet;
 import org.aksw.vaadin.common.component.util.ConfirmDialogUtils;
 import org.aksw.vaadin.common.component.util.NotificationUtils;
 import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdfconnection.RDFConnection;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.expr.Expr;
 import org.vaadin.addons.componentfactory.PaperSlider;
@@ -67,6 +73,7 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
+import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.HeaderRow.HeaderCell;
 import com.vaadin.flow.component.grid.dnd.GridDropLocation;
 import com.vaadin.flow.component.grid.dnd.GridDropMode;
@@ -83,6 +90,7 @@ import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.dom.Style;
 
 /** A predicate tree's node types alternate between 'subject' and 'predicate'. The root is always a subject node. */
@@ -272,6 +280,11 @@ class DetailsView
 
     protected Grid<PredicateRecord> predicateGrid = new Grid<>();
 
+    protected Grid<Binding> functionsGrid = new Grid<>();
+    protected Grid<Binding> virtualPropertiesGrid = new Grid<>();
+
+
+
     public FacetPath getActivePath() {
         return activePath;
     }
@@ -382,7 +395,13 @@ class DetailsView
 
     // TODO Slider for which predicates to retrieve
 
-    public DetailsView() {
+    public DetailsView(LabelService<Node, String> labelMgr, QueryExecutionFactoryQuery qef, FacetTreeModel model, TreeDataProvider<FacetPath> treeDataProvider) {
+        super();
+        this.labelMgr = labelMgr;
+        this.qef = qef;
+        this.model = model;
+        this.treeDataProvider = treeDataProvider;
+
         TabSheet tabSheet = new TabSheet(Tabs.Orientation.VERTICAL);
 
         HorizontalLayout titleRow = new HorizontalLayout();
@@ -465,7 +484,7 @@ class DetailsView
 
 
 
-        predicateGrid.addComponentColumn(predicateRecord -> {
+        Column<?> predicateColumn = predicateGrid.addComponentColumn(predicateRecord -> {
             Node predicateNode = predicateRecord.predicate.asNode();
             Span label = new Span(predicateNode.toString());
 
@@ -494,8 +513,14 @@ class DetailsView
             return row;
         }).setHeader("Predicate");
 
+        HeaderRow predicateFilterRow = predicateGrid.appendHeaderRow();
 
         predicatesLayout.add(predicateGrid);
+
+        TextField predicateSearch = new TextField();
+        predicateSearch.setPlaceholder("Search...");
+        predicateSearch.setValueChangeMode(ValueChangeMode.TIMEOUT);
+        predicateFilterRow.getCell(predicateColumn).setComponent(predicateSearch);
 
 
         FormLayout form = new FormLayout();
@@ -514,14 +539,122 @@ class DetailsView
 
         predicatesSplitLayout.addToPrimary(predicatesLayout);
 
+        // Functions
+        // Streams.stream(FunctionRegistry.get().keys()).collect(Collectors.toList());
+        // RelationUtils.creat
+        // new DataProviderSparqlBinding(null, qef);
+
+        VerticalLayout functionsLayout = new VerticalLayout();
+        {
+            Query query = QueryFactory.create("SELECT * { ?function <http://jsa.aksw.org/fn/sys/listFunctions> () }");
+
+            // QueryExecutionFactoryQuery fnQef = QueryExecutionFactories.of(RdfDataEngines.of(DatasetFactory.empty()));
+            // HeaderRow headerRow = functionsGrid.appendHeaderRow();
+            // VaadinSparqlUtils.setQueryForGridBinding(functionsGrid, headerRow, qef, query);
+            functionsGrid.setDataProvider(VaadinSparqlUtils.createDataProvider(qef, query));
+            Var fnVar = Var.alloc("function");
+            functionsGrid.addComponentColumn(binding -> {
+
+                Node predicateNode = binding.get(fnVar);
+                Span label = new Span(predicateNode.toString());
+
+                // labelMgr.forHasText(label, predicateNode);
+                VaadinLabelMgr.forHasText(labelMgr, label, predicateNode);
+
+                Button addInstanceBtn = new Button(VaadinIcon.PLUS_CIRCLE_O.create());
+                addInstanceBtn.addClickListener(ev -> {
+                    if (activePath != null) {
+                        Node node = NodeFactory.createURI("fn:" + predicateNode.getURI());
+                        // Allocate the next alias in the tree data
+                        FacetPath newPath = allocate(treeDataProvider.getTreeData(), activePath, node, true, null);
+
+                        treeDataProvider.getTreeData().addItem(activePath, newPath);
+                        treeDataProvider.refreshAll();
+                    }
+                });
+
+//                VerticalLayout column = new VerticalLayout(label, addInstanceBtn);
+//                column.getStyle().set("line-height", "var(--lumo-line-height-m)");
+//                column.setPadding(false);
+//                column.setSpacing(false);
+    //
+                HorizontalLayout row = new HorizontalLayout(); //avatar, column);
+                row.setAlignItems(FlexComponent.Alignment.CENTER);
+                row.setSpacing(true);
+                // row.add(column);
+                row.add(label, addInstanceBtn);
+                return row;
+            })
+            .setHeader(fnVar.getName())
+            .setKey(fnVar.getName()); // Column key must match the var name for configureGridFilter
+
+            HeaderRow filterRow = functionsGrid.appendHeaderRow();
+            VaadinSparqlUtils.configureGridFilter(functionsGrid, filterRow, query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
+            functionsLayout.add(functionsGrid);
+
+        }
+
+
+        // Custom Predicates
+        VerticalLayout virtualPropertiesLayout = new VerticalLayout();
+        {
+            Query query = QueryFactory.create("SELECT ?customIri ?definition { ?customIri <https://w3id.org/aksw/norse#sparqlElement> ?definition }");
+
+            // QueryExecutionFactoryQuery fnQef = QueryExecutionFactories.of(RdfDataEngines.of(DatasetFactory.empty()));
+            // HeaderRow headerRow = functionsGrid.appendHeaderRow();
+            // VaadinSparqlUtils.setQueryForGridBinding(functionsGrid, headerRow, qef, query);
+            virtualPropertiesGrid.setDataProvider(VaadinSparqlUtils.createDataProvider(QueryExecutionFactories.of(ElementGenerator.virtualProperties), query));
+            Var iriVar = Var.alloc("customIri");
+            virtualPropertiesGrid.addComponentColumn(binding -> {
+
+                Node iriNode = binding.get(iriVar);
+                Span label = new Span(iriNode.toString());
+
+                // labelMgr.forHasText(label, predicateNode);
+                VaadinLabelMgr.forHasText(labelMgr, label, iriNode);
+
+                Button addInstanceBtn = new Button(VaadinIcon.PLUS_CIRCLE_O.create());
+                addInstanceBtn.addClickListener(ev -> {
+                    if (activePath != null) {
+                        // Allocate the next alias in the tree data
+                        FacetPath newPath = allocate(treeDataProvider.getTreeData(), activePath, iriNode, true, null);
+
+                        treeDataProvider.getTreeData().addItem(activePath, newPath);
+                        treeDataProvider.refreshAll();
+                    }
+                });
+
+//                VerticalLayout column = new VerticalLayout(label, addInstanceBtn);
+//                column.getStyle().set("line-height", "var(--lumo-line-height-m)");
+//                column.setPadding(false);
+//                column.setSpacing(false);
+    //
+                HorizontalLayout row = new HorizontalLayout(); //avatar, column);
+                row.setAlignItems(FlexComponent.Alignment.CENTER);
+                row.setSpacing(true);
+                // row.add(column);
+                row.add(label, addInstanceBtn);
+                return row;
+            })
+            .setHeader(iriVar.getName())
+            .setKey(iriVar.getName()); // Column key must match the var name for configureGridFilter
+
+            HeaderRow filterRow = virtualPropertiesGrid.appendHeaderRow();
+            VaadinSparqlUtils.configureGridFilter(virtualPropertiesGrid, filterRow, Collections.singleton(iriVar), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
+            virtualPropertiesLayout.add(virtualPropertiesGrid);
+        }
+
+
+
+
         Component predicatesIcon = VaadinIcon.MENU.create();
         Component valuesIcon = VaadinIcon.TEXT_LABEL.create();
         Component functionsIcon = VaadinIcon.FUNCION.create();
         Component customPredicatesIcon = VaadinIcon.PLUS_CIRCLE.create();
         tabSheet.add(predicatesIcon, predicatesSplitLayout);
         tabSheet.add(valuesIcon, valuesLayout);
-        tabSheet.add(functionsIcon, new VerticalLayout());
-        tabSheet.add(customPredicatesIcon, new VerticalLayout());
+        tabSheet.add(functionsIcon, functionsLayout);
+        tabSheet.add(customPredicatesIcon, virtualPropertiesLayout);
 
         // VaadinComponentUtils.notifyResize(tabSheet, true);
 
@@ -592,15 +725,6 @@ class DetailsView
             }
         }
         return current;
-    }
-
-
-    public DetailsView(LabelService<Node, String> labelMgr, QueryExecutionFactoryQuery qef, FacetTreeModel model, TreeDataProvider<FacetPath> treeDataProvider) {
-        this();
-        this.labelMgr = labelMgr;
-        this.qef = qef;
-        this.model = model;
-        this.treeDataProvider = treeDataProvider;
     }
 
 }

@@ -61,7 +61,7 @@ public class LabelMgr<R, L>
 
     protected Map<R, Long> resourceRefCount = new ConcurrentHashMap<>();
 
-    // The set of components that are awaiting updates
+    /** The set of components that are awaiting updates. The value is not used. */
     protected Map<Object, Object> pendingComponents = CacheBuilder.newBuilder().weakKeys().<Object, Object>build().asMap();
     // Collections.synchronizedMap(new IdentityHashMap<>()); // CacheBuilder.newBuilder().weakKeys().<Object, Object>build().asMap();
 //     new MapMaker().weakKeys(). //Collections.synchronizedMap(new WeakHashMap<>());

@@ -19,7 +19,7 @@ public class MappedQuery {
 
     /** These are the paths that have a corresponding variable in the query's projection */
     protected BiMap<Var, FacetPath> varToPath;
-    protected TreeData<FacetPath> tree; // FIXME We should not use a vaadin specific class here but rather some abstraction
+    protected TreeData<FacetPath> tree;
 
     public MappedQuery(TreeData<FacetPath> tree, Query query, BiMap<Var, FacetPath> varToPath) {
         super();

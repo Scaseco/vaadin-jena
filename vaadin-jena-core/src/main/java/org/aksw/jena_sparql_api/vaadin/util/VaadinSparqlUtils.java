@@ -204,6 +204,18 @@ public class VaadinSparqlUtils {
         }
     }
 
+    public static DataProvider<Binding, Expr> createDataProvider(QueryExecutionFactoryQuery qef, Query query) {
+        Relation relation = RelationUtils.fromQuery(query);
+        DataProviderSparqlBinding coreDataProvider = new DataProviderSparqlBinding(relation, qef);
+        coreDataProvider.setAlwaysDistinct(true);
+
+        DataProvider<Binding, Expr> dataProvider = coreDataProvider
+                .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
+                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
+                )));
+        return dataProvider;
+    }
+
     /**
      * Configure a grid's data provider based on a SPARQL SELECT query such that
      * pagination, sorting (TODO: and filtering) works out of the box.
@@ -219,15 +231,16 @@ public class VaadinSparqlUtils {
             Query query,
             List<Var> visibleColumns) {
 
-        Relation relation = RelationUtils.fromQuery(query);
-        DataProviderSparqlBinding coreDataProvider = new DataProviderSparqlBinding(relation, qef);
-        coreDataProvider.setAlwaysDistinct(true);
+//        Relation relation = RelationUtils.fromQuery(query);
+//        DataProviderSparqlBinding coreDataProvider = new DataProviderSparqlBinding(relation, qef);
+//        coreDataProvider.setAlwaysDistinct(true);
+//
+//        DataProvider<Binding, Expr> dataProvider = coreDataProvider
+//                .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
+//                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
+//                )));
 
-        DataProvider<Binding, Expr> dataProvider = coreDataProvider
-                .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
-                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
-                )));
-
+        DataProvider<Binding, Expr> dataProvider = createDataProvider(qef, query);
         grid.setDataProvider(dataProvider);
         List<Var> vars = visibleColumns == null ? query.getProjectVars() : visibleColumns;
         grid.removeAllColumns();
