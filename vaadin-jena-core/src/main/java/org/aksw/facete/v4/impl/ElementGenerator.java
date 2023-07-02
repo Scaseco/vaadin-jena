@@ -6,13 +6,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -24,6 +23,7 @@ import org.aksw.facete.v3.api.FacetConstraints;
 import org.aksw.facete.v3.api.FacetPathMapping;
 import org.aksw.facete.v3.api.NodeFacetPath;
 import org.aksw.facete.v3.api.TreeData;
+import org.aksw.facete.v3.api.TreeDataMap;
 import org.aksw.facete.v3.api.TreeQueryNode;
 import org.aksw.jena_sparql_api.concepts.BinaryRelationImpl;
 import org.aksw.jena_sparql_api.concepts.Concept;
@@ -33,7 +33,6 @@ import org.aksw.jena_sparql_api.data_query.impl.FacetedQueryGenerator;
 import org.aksw.jenax.arq.util.expr.ExprUtils;
 import org.aksw.jenax.arq.util.node.NodeTransformLib2;
 import org.aksw.jenax.arq.util.node.NodeUtils;
-import org.aksw.jenax.arq.util.syntax.ElementAcc;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.path.core.FacetPath;
@@ -46,18 +45,8 @@ import org.aksw.jenax.vaadin.component.grid.sparql.DynamicInjectiveFunction;
 import org.aksw.jenax.vaadin.component.grid.sparql.MappedQuery;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryFactory;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.core.Var;
-import org.apache.jena.sparql.expr.E_Function;
 import org.apache.jena.sparql.expr.E_LogicalNot;
 import org.apache.jena.sparql.expr.E_NotOneOf;
 import org.apache.jena.sparql.expr.Expr;
@@ -72,8 +61,6 @@ import org.apache.jena.sparql.syntax.Element;
 import org.apache.jena.sparql.syntax.ElementBind;
 import org.apache.jena.sparql.syntax.ElementFilter;
 import org.apache.jena.sparql.syntax.ElementGroup;
-import org.apache.jena.sparql.syntax.ElementOptional;
-import org.apache.jena.sparql.syntax.ElementSubQuery;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
@@ -81,12 +68,10 @@ import com.google.common.graph.Traverser;
 
 public class ElementGenerator {
 
-    // FIXME This must be made configurable
-    public static final Dataset virtualProperties = RDFDataMgr.loadDataset("virtual-properties.ttl");
-    public static final Property virtualPropertyDefinition = ResourceFactory.createProperty("https://w3id.org/aksw/norse#sparqlElement");
-
     protected FacetPathMapping pathMapping;
     protected FacetPath focusPath;
+
+    protected PropertyResolver propertyResolver = new PropertyResolver();
 
     // protected Element baseElement; // This element also exists in eltPathToAcc.get(FacetPath.newAbsolutePath())
 
@@ -96,60 +81,26 @@ public class ElementGenerator {
     // Should the value be a wrapper that conveniently links back to all mentioned paths?
     protected SetMultimap<FacetPath, Expr> constraintIndex;
 
-    static class Context {
-        /** Mapping of element paths (FacetPaths with the component set to the TUPLE constant) */
-        protected Map<FacetPath, ElementAcc> eltPathToAcc = new LinkedHashMap<>();
+//    static class Context {
+//        /** Mapping of element paths (FacetPaths with the component set to the TUPLE constant) */
+//        protected Map<FacetPath, ElementAcc> eltPathToAcc = new LinkedHashMap<>();
+//
+//    }
 
-    }
-
-    public static Element createElementFromConcretePredicate(Var parentVar, Node predicateNode, Var targetVar, boolean isFwd) {
-        Element result = null;
-        if (predicateNode.isURI()) {
-            String str = predicateNode.getURI();
-
-            String fnPrefix = "fn:";
-            if (str.startsWith(fnPrefix)) {
-                String fnIri = str.substring(fnPrefix.length());
-                result = new ElementBind(targetVar, new E_Function(fnIri, new ExprList(new ExprVar(parentVar))));
-            }
-
-            Model model = virtualProperties.getDefaultModel();
-            RDFNode rdfNode = model.asRDFNode(predicateNode);
-            if (rdfNode != null && rdfNode.isResource()) {
-                Resource r = rdfNode.asResource();
-                String definition = Optional.ofNullable(r.getProperty(virtualPropertyDefinition)).map(Statement::getString).orElse(null);
-                if (definition != null) {
-                    Query query = QueryFactory.create(definition);
-                    Relation relation = RelationUtils.fromQuery(query);
-                    BinaryRelation br = relation.toBinaryRelation();
-                    Map<Node, Node> remap = new HashMap<>();
-                    remap.put(br.getSourceVar(), parentVar);
-                    remap.put(br.getTargetVar(), targetVar);
-                    br = br.applyNodeTransform(NodeTransformLib2.wrapWithNullAsIdentity(remap::get));
-                    result = br.getElement();
-
-                    if (result instanceof ElementSubQuery) {
-                        result = ((ElementSubQuery)result).getQuery().getQueryPattern();
-                    }
-                }
-            }
-        }
-
-        if (result == null) {
-            result = ElementUtils.createElementTriple(parentVar, predicateNode, targetVar, isFwd);
-        }
-        return result;
-    }
 
     class Worker {
-        protected org.aksw.facete.v3.api.TreeData<FacetPath> facetTree;
+        // protected org.aksw.facete.v3.api.TreeData<FacetPath> facetTree;
         protected SetMultimap<FacetPath, Expr> localConstraintIndex;
 
         protected Set<FacetPath> mandatoryElementIds = new HashSet<>();
 
 
         /** Mapping of element paths (FacetPaths with the component set to the TUPLE constant) */
-        protected Map<FacetPath, ElementAcc> eltPathToAcc = new LinkedHashMap<>();
+        // protected Map<FacetPath, ElementAcc> eltPathToAcc = new LinkedHashMap<>();
+        // ElementAcc rootEltAcc = ElementAcc.newRoot(); // null; //new ElementAcc();
+        org.aksw.facete.v3.api.TreeData<FacetPath> facetTree;
+
+        TreeDataMap<FacetPath, ElementAcc> facetPathToAcc = new TreeDataMap<>();
 
         protected Map<FacetPath, Var> pathToVar = new HashMap<>();
 
@@ -195,7 +146,9 @@ public class ElementGenerator {
             }
         }
 
-
+        /**
+         * Create the element for the last facet step of a facet path (without recursion)
+         */
         public ElementAcc allocateEltAcc(Var parentVar, Var targetVar, FacetPath path) {
 
             // FIXME Naively adding optionl elements does not work when facet paths are mapped to BIND elements
@@ -203,7 +156,7 @@ public class ElementGenerator {
             // BIND("foo" AS ?foo) OPTIONAL { BIND(?foo AS ?bar) }
 
             FacetPath eid = FacetPathUtils.toElementId(path);
-            ElementGroup container = new ElementGroup();
+            // ElementGroup container = new ElementGroup();
             boolean isMandatory = mandatoryElementIds.contains(eid);
 
             Element coreElt = null;
@@ -225,21 +178,26 @@ public class ElementGenerator {
                 }
 
                 if (FacetStep.isTarget(c)) {
-                    coreElt = ElementGenerator.createElementFromConcretePredicate(parentVar, secondaryNode, targetVar, isFwd);
+                    coreElt = propertyResolver.resolve(parentVar, secondaryNode, targetVar, isFwd);
                     // coreElt = ElementUtils.createElementTriple(parentVar, secondaryNode, targetVar, isFwd);
                 } else {
                     coreElt = ElementUtils.createElementTriple(parentVar, targetVar, secondaryNode, isFwd);
                 }
 
-                container.addElement(coreElt);
+                //container.addElement(coreElt);
             } else {
+                coreElt = new ElementGroup();
                 // Add the base element if this is the root path
                 // container.addElement(baseElement);
             }
 
-            Element root = isMandatory || coreElt instanceof ElementBind ? container : new ElementOptional(container);
+            // Element root = isMandatory || coreElt instanceof ElementBind ? container : new ElementOptional(container);
+            BiFunction<Element, List<Element>, Element> combiner =  isMandatory || coreElt instanceof ElementBind
+                    ? ElementAcc::collectIntoGroup
+                    : ElementAcc::collectIntoOptionalGroup;
 
-            return new ElementAcc(parentVar, root, container);
+
+            return new ElementAcc(parentVar, coreElt, combiner);
         }
 
         public void allocateElements(Expr expr) {
@@ -252,7 +210,7 @@ public class ElementGenerator {
         public Var allocateElement(FacetPath path) {
             FacetPath eltId = FacetPathUtils.toElementId(path);
 
-            ElementAcc elementAcc = eltPathToAcc.get(eltId);
+            ElementAcc elementAcc = facetPathToAcc.get(eltId);
             Var parentVar;
             Var targetVar;
             if (elementAcc == null) {
@@ -260,7 +218,8 @@ public class ElementGenerator {
                 targetVar = pathToVar.computeIfAbsent(path, pathMapping::allocate);
 
                 elementAcc = allocateEltAcc(parentVar, targetVar, path);
-                eltPathToAcc.put(eltId, elementAcc);
+                facetPathToAcc.addItem(eltId.getParent(), eltId);
+                facetPathToAcc.put(eltId, elementAcc);
 
                 // Create the ElementAcc for the path if it hasn't happened yet
 //                Iterable<FacetPath> children = getChildren.apply(path);
@@ -281,7 +240,6 @@ public class ElementGenerator {
             return targetVar;
         }
 
-
         /**
          * TODO 'global' here means global to the current the sub-tree
          *
@@ -292,7 +250,7 @@ public class ElementGenerator {
          * @param getChildren
          */
         public void accumulate(
-                ElementGroup parentAcc,
+                TreeDataMap<FacetPath, ElementAcc> facetPathToAcc,
                 ElementGroup globalAcc,
                 Var parentVar,
                 FacetPath path, // TODO This should be the FacetNode and there might be subqueries
@@ -309,24 +267,25 @@ public class ElementGenerator {
 
             pathToVar.put(path, targetVar);
 
-            ElementAcc elementAcc = eltPathToAcc.get(eltId);
+            ElementAcc elementAcc = facetPathToAcc.get(eltId);
             if (elementAcc == null) {
                 elementAcc = allocateEltAcc(parentVar, targetVar, path);
-                eltPathToAcc.put(eltId, elementAcc);
+                facetPathToAcc.addItem(eltId.getParent(), eltId);
+                facetPathToAcc.put(eltId, elementAcc);
+            }
 
-                // Create the ElementAcc for the path if it hasn't happened yet
-                Iterable<FacetPath> children = getChildren.apply(path);
-                if (children != null && children.iterator().hasNext()) {
-                    for (FacetPath subPath : children) {
-                        // If there is no accumulator for the child then visit it
-                        accumulate(elementAcc.getContainer(), globalAcc, targetVar, subPath, getChildren);
-                    }
-                }
-
-                if (!elementAcc.getContainer().isEmpty()) {
-                    ElementUtils.copyElements(parentAcc, elementAcc.getResultElement());
+            // Create the ElementAcc for the path if it hasn't happened yet
+            Iterable<FacetPath> children = getChildren.apply(path);
+            if (children != null && children.iterator().hasNext()) {
+                for (FacetPath subPath : children) {
+                    // If there is no accumulator for the child then visit it
+                    accumulate(facetPathToAcc, globalAcc, targetVar, subPath, getChildren);
                 }
             }
+
+//            if (!elementAcc.getContainer().isEmpty()) {
+//                ElementUtils.copyElements(parentAcc, elementAcc.getResultElement());
+//            }
 
             // Create FILTER elements
             Set<Expr> exprs = localConstraintIndex.get(path);
@@ -335,24 +294,31 @@ public class ElementGenerator {
 
 
         public MappedElement createElement() {
-            Var rootVar = pathMapping.allocate(FacetPath.newAbsolutePath());
-            ElementGroup group = new ElementGroup();
+            FacetPath rootPath = FacetPath.newAbsolutePath();
+            Var rootVar = pathMapping.allocate(rootPath);
+            // ElementGroup group = new ElementGroup();
 
+
+            // TreeDataMap<FacetPath, ElementAcc> tree;
             ElementGroup filterGroup = new ElementGroup();
 
             // baseConcept.getElements().forEach(group::addElement);
-            for (FacetPath rootPath : facetTree.getRootItems()) {
-                accumulate(group, filterGroup, rootVar, rootPath, facetTree::getChildren);
+            for (FacetPath path : facetTree.getRootItems()) {
+                accumulate(facetPathToAcc, filterGroup, rootVar, path, facetTree::getChildren);
+//                accumulate(facetPathToAcc, filterGroup, null, null, facetTree::getChildren);
                 // ElementUtils.toElementList(elt).forEach(group::addElement);
                 // group.addElement(elt);
             }
 
-            ElementUtils.copyElements(group, filterGroup);
+            Element elt = collect(facetPathToAcc, rootPath);
+            elt = ElementUtils.flatten(elt);
+
+            //ElementUtils.copyElements(group, filterGroup);
 
             // Add filters for the constraints
-            Element elt = group.size() == 1 ? group.get(0) : group;
+            // Element elt = group.size() == 1 ? group.get(0) : group;
 
-            return new MappedElement(eltPathToAcc, pathToVar, elt);
+            return new MappedElement(facetPathToAcc, pathToVar, elt);
         }
 
 
@@ -515,6 +481,25 @@ public class ElementGenerator {
 
     }
 
+    public static Element collect(TreeDataMap<FacetPath, ElementAcc> tree, FacetPath currentPath) {
+        ElementAcc eltAcc = tree.get(currentPath);
+        Element elt = eltAcc.getElement();
+
+        // Create the ElementAcc for the path if it hasn't happened yet
+        Iterable<FacetPath> children = tree.getChildren(currentPath);
+        List<Element> childElts = new ArrayList<>();
+        if (children != null && children.iterator().hasNext()) {
+            for (FacetPath childPath : children) {
+                Element childElt = collect(tree, childPath);
+                // If there is no accumulator for the child then visit it
+                childElts.add(childElt);
+            }
+        }
+
+        Element result = eltAcc.getFactory().apply(elt, childElts);
+        return result;
+    }
+
 
     public Worker createWorkerForPath(FacetPath facetPath) {
         SetMultimap<FacetPath, Expr> localIndex = ElementGeneratorUtils.hideConstraintsForPath(constraintIndex, facetPath);
@@ -622,7 +607,7 @@ public class ElementGenerator {
 //              baseConcept.getVar();
 //          }
 
-          ifn.getMap().put(FacetPath.newRelativePath(), rootVar);
+          ifn.getMap().put(FacetPath.newAbsolutePath(), rootVar);
 
           FacetPathMapping fpm = ifn::apply;
           // Var rootVar = ifn.apply(PathOpsPPA.get().newRoot());
@@ -719,7 +704,7 @@ public class ElementGenerator {
 
 
 
-        FacetPath focusPath = FacetPath.newRelativePath();
+        FacetPath focusPath = FacetPath.newAbsolutePath();
         ifn.getMap().put(focusPath, rootVar);
 
 

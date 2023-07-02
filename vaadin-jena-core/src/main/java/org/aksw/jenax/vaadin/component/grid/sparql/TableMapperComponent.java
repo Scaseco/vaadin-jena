@@ -23,6 +23,7 @@ import org.aksw.facete.v3.api.FacetedDataQuery;
 import org.aksw.facete.v3.api.FacetedQuery;
 import org.aksw.facete.v3.impl.FacetedQueryImpl;
 import org.aksw.facete.v4.impl.ElementGenerator;
+import org.aksw.facete.v4.impl.PropertyResolver;
 import org.aksw.facete.v4.impl.TreeDataUtils;
 import org.aksw.jena_sparql_api.concepts.Concept;
 import org.aksw.jena_sparql_api.concepts.RelationUtils;
@@ -51,12 +52,10 @@ import org.aksw.vaadin.common.component.util.ConfirmDialogUtils;
 import org.aksw.vaadin.common.component.util.NotificationUtils;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdfconnection.RDFConnection;
-import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.expr.Expr;
@@ -603,7 +602,7 @@ class DetailsView
             // QueryExecutionFactoryQuery fnQef = QueryExecutionFactories.of(RdfDataEngines.of(DatasetFactory.empty()));
             // HeaderRow headerRow = functionsGrid.appendHeaderRow();
             // VaadinSparqlUtils.setQueryForGridBinding(functionsGrid, headerRow, qef, query);
-            virtualPropertiesGrid.setDataProvider(VaadinSparqlUtils.createDataProvider(QueryExecutionFactories.of(ElementGenerator.virtualProperties), query));
+            virtualPropertiesGrid.setDataProvider(VaadinSparqlUtils.createDataProvider(QueryExecutionFactories.of(PropertyResolver.virtualProperties), query));
             Var iriVar = Var.alloc("customIri");
             virtualPropertiesGrid.addComponentColumn(binding -> {
 

@@ -44,7 +44,7 @@ public class ElementGeneratorLateral {
     public static Element createElement(TreeData<FacetPath> tree, String rootVar, FacetPathMapping pathMapping) {
         // createElement(tree, current);
         // pathMapping.allocate(null)
-
+        throw new UnsupportedOperationException("finish this");
     }
 
     /**
@@ -68,7 +68,7 @@ public class ElementGeneratorLateral {
         }
         Element unionElt = ElementUtils.unionIfNeeded(unionMemberElts);
 
-        Element result = new ElementLateral();
+        Element result = null; //new ElementLateral();
         return result;
     }
 }
