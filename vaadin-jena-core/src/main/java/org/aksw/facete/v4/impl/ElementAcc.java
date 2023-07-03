@@ -1,5 +1,6 @@
 package org.aksw.facete.v4.impl;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 
@@ -8,6 +9,8 @@ import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.syntax.Element;
 import org.apache.jena.sparql.syntax.ElementGroup;
 import org.apache.jena.sparql.syntax.ElementOptional;
+
+import com.google.common.collect.Iterables;
 
 
 /**
@@ -37,12 +40,15 @@ public class ElementAcc {
     }
 
     public static Element collectIntoGroup(Element parentElts, List<Element> childElts) {
-        ElementGroup group = new ElementGroup();
-        ElementUtils.copyElements(group, parentElts);
-        for (Element childElt : childElts) {
-            ElementUtils.copyElements(group, childElt);
-        }
-        Element result = ElementUtils.flatten(group);
+        Element result = ElementUtils.flatMerge(
+                Iterables.concat(Collections.singleton(parentElts), childElts));
+
+//    	ElementGroup group = new ElementGroup();
+//        ElementUtils.copyElements(group, parentElts);
+//        for (Element childElt : childElts) {
+//            ElementUtils.copyElements(group, childElt);
+//        }
+//        Element result = ElementUtils.flatten(group);
         return result;
     }
 

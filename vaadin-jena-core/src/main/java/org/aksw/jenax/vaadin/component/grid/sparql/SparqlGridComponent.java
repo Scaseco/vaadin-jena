@@ -110,7 +110,7 @@ public class SparqlGridComponent extends VerticalLayout {
         this.removeAll();
 
         Grid<Binding> sparqlGrid = new Grid<>();
-        sparqlGrid.setPageSize(10000);
+        sparqlGrid.setPageSize(1000);
         sparqlGrid.setWidthFull();
 
         SetMultimap<FacetPath, Expr> constraintIndex = HashMultimap.create();

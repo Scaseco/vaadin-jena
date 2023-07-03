@@ -1101,7 +1101,7 @@ public class TableMapperComponent
         refreshTableBtn.addClickListener(ev -> {
 
             Grid<Binding> sparqlGrid = new Grid<>();
-            sparqlGrid.setPageSize(10000);
+            sparqlGrid.setPageSize(1000);
             sparqlGrid.setWidthFull();
             sparqlGrid.setColumnReorderingAllowed(true);
 

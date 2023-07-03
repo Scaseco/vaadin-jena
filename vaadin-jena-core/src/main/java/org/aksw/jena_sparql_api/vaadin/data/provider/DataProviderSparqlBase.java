@@ -107,7 +107,10 @@ public abstract class DataProviderSparqlBase<T>
         logger.trace("Effective query: " + q);
 
         Flowable<T> solutionFlow = createSolutionFlow(q);
-        Stream<T> result = solutionFlow.toList().blockingGet().stream();
+        List<T> items = solutionFlow.toList().blockingGet();
+        logger.info("Items from backend: " + items.size());
+        Stream<T> result = items.stream();
+        // Stream<T> result = solutionFlow.toList().blockingGet().stream();
 
 
 //        Stream<Binding> debug = toStream(SparqlRx.execSelectRaw(() -> qef.apply(q)));

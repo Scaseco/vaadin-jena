@@ -149,33 +149,34 @@ public class PropertyResolver {
                 result = new ElementBind(targetVar, new E_Function(fnIri, new ExprList(new ExprVar(parentVar))));
             }
 
-            BinaryRelation relation = null;
+            if (result == null) {
+                BinaryRelation relation = null;
+                Model model = virtualProperties.getDefaultModel();
+                RDFNode rdfNode = model.asRDFNode(predicateNode);
+                if (rdfNode != null && rdfNode.isResource()) {
+                    Resource r = rdfNode.asResource();
+                    String definition = Optional.ofNullable(r.getProperty(virtualPropertyDefinition)).map(Statement::getString).orElse(null);
+                    if (definition != null) {
+                        Query query = QueryFactory.create(definition);
+                        relation = RelationUtils.fromQuery(query).toBinaryRelation();
+                    }
 
-            Model model = virtualProperties.getDefaultModel();
-            RDFNode rdfNode = model.asRDFNode(predicateNode);
-            if (rdfNode != null && rdfNode.isResource()) {
-                Resource r = rdfNode.asResource();
-                String definition = Optional.ofNullable(r.getProperty(virtualPropertyDefinition)).map(Statement::getString).orElse(null);
-                if (definition != null) {
-                    Query query = QueryFactory.create(definition);
-                    relation = RelationUtils.fromQuery(query).toBinaryRelation();
-                }
+    //                if (relation == null) {
+    //                    relation = userDefinedProperties.get(str);
+    //                }
 
-//                if (relation == null) {
-//                    relation = userDefinedProperties.get(str);
-//                }
+                    BinaryRelation br = relation.toBinaryRelation();
+                    Map<Node, Node> remap = new HashMap<>();
+                    remap.put(br.getSourceVar(), parentVar);
+                    remap.put(br.getTargetVar(), targetVar);
+                    br = br.applyNodeTransform(NodeTransformLib2.wrapWithNullAsIdentity(remap::get));
+                    result = br.getElement();
 
-                BinaryRelation br = relation.toBinaryRelation();
-                Map<Node, Node> remap = new HashMap<>();
-                remap.put(br.getSourceVar(), parentVar);
-                remap.put(br.getTargetVar(), targetVar);
-                br = br.applyNodeTransform(NodeTransformLib2.wrapWithNullAsIdentity(remap::get));
-                result = br.getElement();
+                    result = ElementUtils.flatten(result);
 
-                result = ElementUtils.flatten(result);
-
-                if (result instanceof ElementSubQuery) {
-                    result = ((ElementSubQuery)result).getQuery().getQueryPattern();
+                    if (result instanceof ElementSubQuery) {
+                        result = ((ElementSubQuery)result).getQuery().getQueryPattern();
+                    }
                 }
             }
         }

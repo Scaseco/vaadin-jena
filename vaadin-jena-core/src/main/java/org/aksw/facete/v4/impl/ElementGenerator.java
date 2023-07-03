@@ -100,6 +100,7 @@ public class ElementGenerator {
         // ElementAcc rootEltAcc = ElementAcc.newRoot(); // null; //new ElementAcc();
         org.aksw.facete.v3.api.TreeData<FacetPath> facetTree;
 
+        /** The FacetPaths on this tree are purely element ids (they reference relations rather than components) */
         TreeDataMap<FacetPath, ElementAcc> facetPathToAcc = new TreeDataMap<>();
 
         protected Map<FacetPath, Var> pathToVar = new HashMap<>();
@@ -260,7 +261,8 @@ public class ElementGenerator {
 //            if (path != rawPath) {
 //                accumulate(parentAcc, globalAcc, parentVar, path, getChildren);
 //            }
-
+            FacetPath parentPath = path.getParent();
+            FacetPath parentEltId = parentPath == null ? null : FacetPathUtils.toElementId(parentPath);
             FacetPath eltId = FacetPathUtils.toElementId(path);
 
             Var targetVar = pathMapping.allocate(path);
@@ -270,7 +272,10 @@ public class ElementGenerator {
             ElementAcc elementAcc = facetPathToAcc.get(eltId);
             if (elementAcc == null) {
                 elementAcc = allocateEltAcc(parentVar, targetVar, path);
-                facetPathToAcc.addItem(eltId.getParent(), eltId);
+                // The element may exist if eltId is the empty path
+                if (!facetPathToAcc.contains(eltId)) {
+                    facetPathToAcc.addItem(parentEltId, eltId);
+                }
                 facetPathToAcc.put(eltId, elementAcc);
             }
 
@@ -737,8 +742,7 @@ public class ElementGenerator {
 //        }
 //        Element elt = group.size() == 1 ? group.get(0) : group;
         Element elt = worker.createElement().getElement();
-
-        elt = ElementUtils.groupIfNeeded(baseConcept.getElement(), elt);
+        elt = ElementUtils.flatMerge(baseConcept.getElement(), elt);
 
         List<Var> visibleVars = ifn.getMap().entrySet().stream()
                 .filter(e -> isProjected.test(e.getKey()))
