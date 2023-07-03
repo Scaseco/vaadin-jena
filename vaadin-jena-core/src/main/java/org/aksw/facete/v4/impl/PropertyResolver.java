@@ -159,23 +159,23 @@ public class PropertyResolver {
                     if (definition != null) {
                         Query query = QueryFactory.create(definition);
                         relation = RelationUtils.fromQuery(query).toBinaryRelation();
-                    }
 
     //                if (relation == null) {
     //                    relation = userDefinedProperties.get(str);
     //                }
 
-                    BinaryRelation br = relation.toBinaryRelation();
-                    Map<Node, Node> remap = new HashMap<>();
-                    remap.put(br.getSourceVar(), parentVar);
-                    remap.put(br.getTargetVar(), targetVar);
-                    br = br.applyNodeTransform(NodeTransformLib2.wrapWithNullAsIdentity(remap::get));
-                    result = br.getElement();
+                        BinaryRelation br = relation.toBinaryRelation();
+                        Map<Node, Node> remap = new HashMap<>();
+                        remap.put(br.getSourceVar(), parentVar);
+                        remap.put(br.getTargetVar(), targetVar);
+                        br = br.applyNodeTransform(NodeTransformLib2.wrapWithNullAsIdentity(remap::get));
+                        result = br.getElement();
 
-                    result = ElementUtils.flatten(result);
+                        result = ElementUtils.flatten(result);
 
-                    if (result instanceof ElementSubQuery) {
-                        result = ((ElementSubQuery)result).getQuery().getQueryPattern();
+                        if (result instanceof ElementSubQuery) {
+                            result = ((ElementSubQuery)result).getQuery().getQueryPattern();
+                        }
                     }
                 }
             }

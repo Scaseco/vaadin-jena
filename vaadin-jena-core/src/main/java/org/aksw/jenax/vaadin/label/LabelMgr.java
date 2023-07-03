@@ -27,6 +27,8 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.Sets;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.server.VaadinSession;
 
 
 /**
@@ -325,14 +327,17 @@ public class LabelMgr<R, L>
             additions.forEach(this::incRefCount);
             removals.forEach(this::decRefCount);
 
-            if (!additions.isEmpty()) {
+            // Always refresh on register
+            // if (!additions.isEmpty()) {
+            UI.getCurrent().access(() -> {
                 boolean couldApplyImmediately = applyNow(component);
                 if (!couldApplyImmediately) {
                     pendingComponents.put(component, DUMMY);
 
                     scheduleRetrieval();
                 }
-            }
+            });
+            // }
         }
     }
 }

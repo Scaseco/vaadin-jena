@@ -64,6 +64,7 @@ import org.vaadin.addons.componentfactory.PaperSlider;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
+import com.google.common.graph.Traverser;
 import com.google.common.math.LongMath;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasText;
@@ -281,8 +282,6 @@ class DetailsView
 
     protected Grid<Binding> functionsGrid = new Grid<>();
     protected Grid<Binding> virtualPropertiesGrid = new Grid<>();
-
-
 
     public FacetPath getActivePath() {
         return activePath;
@@ -804,6 +803,7 @@ public class TableMapperComponent
     protected TreeGrid<FacetPath> treeGrid = new TreeGrid<>();
     protected DetailsView detailsView;
 
+    protected Set<FacetPath> expandedPaths = new HashSet<>();
     protected Map<FacetPath, Boolean> pathToVisibility = new HashMap<>();
 
     // protected SubjectDetailsView subjectDetailsView = new SubjectDetailsView();
@@ -1053,7 +1053,7 @@ public class TableMapperComponent
         }).setHeader("Property Tree").setResizable(true);
 
         treeGrid.addComponentColumn(path -> {
-            boolean isVisible = pathToVisibility.computeIfAbsent(path, x -> true);
+            boolean isVisible = pathToVisibility.getOrDefault(path, true); //  .computeIfAbsent(path, x -> true);
 
             // Icon eyeIcon = VaadinIcon.EYE.create();
             Checkbox cb = new Checkbox();
@@ -1127,5 +1127,23 @@ public class TableMapperComponent
         add(refreshTableBtn);
         add(sparqlGridContainer);
 
+        treeGrid.addExpandListener(ev -> expandedPaths.addAll(ev.getItems()));
+        treeGrid.addCollapseListener(ev -> expandedPaths.removeAll(ev.getItems()));
+
+        // Add a listener that expands new nodes in the grid
+        treeDataProvider.addDataProviderListener(ev -> {
+            TreeData<FacetPath> treeData = treeDataProvider.getTreeData();
+            for (FacetPath path : Traverser.forTree(treeData::getChildren)
+                    .depthFirstPreOrder(treeData.getRootItems())) {
+                if (!pathToVisibility.containsKey(path)) {
+                    pathToVisibility.put(path, true);
+                    expandedPaths.add(path);
+                }
+
+                if (expandedPaths.contains(path)) {
+                    treeGrid.expand(path);
+                }
+            }
+        });
     }
 }
