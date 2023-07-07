@@ -1,6 +1,8 @@
 PREFIX eg: <http://www.example.org/>
 PREFIX norse: <https://w3id.org/aksw/norse#>
 
+# TODO Switch to shacl vocab for sparql queries (sh:select)
+
 norse:mostSpecificType
   a norse:CustomProperty ;
   norse:sparqlElement
@@ -16,5 +18,15 @@ SELECT ?s ?mostSpecificType {
       ?mostSpecificType <http://www.w3.org/2000/01/rdf-schema#subClassOf>+ ?anotherType .
     }
   }
+}
+""" .
+
+
+norse:listItems
+  a norse:CustomProperty ;
+  norse:sparqlElement
+"""
+SELECT ?s ?item {
+  ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>*/<http://www.w3.org/1999/02/22-rdf-syntax-ns#first> ?item .
 }
 """ .

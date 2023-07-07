@@ -2,7 +2,6 @@ package org.aksw.facete.v4.impl;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -12,7 +11,7 @@ import org.aksw.jenax.arq.datashape.viewselector.EntityClassifier;
 import org.aksw.jenax.arq.util.node.NodeTransformLib2;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.arq.util.var.Vars;
-import org.aksw.jenax.model.shacl.domain.ShNodeShape;
+import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.sparql.relation.api.BinaryRelation;
 import org.aksw.jenax.sparql.relation.api.Relation;
 import org.apache.jena.graph.Node;
@@ -35,10 +34,9 @@ import org.apache.jena.sparql.syntax.Element;
 import org.apache.jena.sparql.syntax.ElementBind;
 import org.apache.jena.sparql.syntax.ElementSubQuery;
 import org.topbraid.shacl.model.SHFactory;
-import org.topbraid.shacl.vocabulary.SH;
 
 /**
- * Class for converting RDF properties to SPARQL elements.
+ * Class for resolving paths of RDF properties (via {@link FacetPath}} to SPARQL elements.
  */
 public class PropertyResolver {
 

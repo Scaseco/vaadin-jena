@@ -317,7 +317,7 @@ public class DataRetriever {
         public void setKnownSize(Path path, Long knownSize) {
             ReadableChannelSource<Node[]> cache = setup(path);
 
-            System.out.println("Set known size for " + path + " to " + knownSize);
+            System.err.println("Set known size for " + path + " to " + knownSize);
             AdvancedRangeCacheImpl<Node[]> arc = (AdvancedRangeCacheImpl<Node[]>)cache;
             Slice<Node[]> slice = arc.getSlice();
             slice.mutateMetaData(md -> md.setKnownSize(knownSize));

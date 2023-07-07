@@ -30,6 +30,7 @@ import org.aksw.jena_sparql_api.concepts.RelationUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlRdfNode;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
+import org.aksw.jena_sparql_api.vaadin.util.VaadinStyleUtils;
 import org.aksw.jenax.arq.connection.core.QueryExecutionFactories;
 import org.aksw.jenax.arq.connection.core.RDFConnections;
 import org.aksw.jenax.arq.dataset.api.ResourceInDataset;
@@ -800,7 +801,7 @@ public class TableMapperComponent
 
     protected TreeDataProvider<FacetPath> treeDataProvider = new TreeDataProvider<>(new TreeData<>());
 
-    protected TreeGrid<FacetPath> treeGrid = new TreeGrid<>();
+    protected TreeGrid<FacetPath> propertyTreeGrid = new TreeGrid<>();
     protected DetailsView detailsView;
 
     protected Set<FacetPath> expandedPaths = new HashSet<>();
@@ -815,6 +816,8 @@ public class TableMapperComponent
 
 
     protected DataProviderSparqlBinding sparqlDataProvider;
+
+    VerticalLayout sparqlGridContainer = new VerticalLayout();
 
     protected UnaryRelation baseConcept;
 
@@ -871,15 +874,18 @@ public class TableMapperComponent
 
 
     // HeaderCell is not derived from HasText!
-    public static void labelForAliasPathLastStep(LabelService<Node, String> labelMgr, HeaderCell headerCell, FacetPath path) {
+    public static void labelForAliasPathLastStep(LabelService<Node, String> labelMgr, HeaderCell headerCell, FacetPath path, boolean isLeafPath) {
         if (path.getSegments().isEmpty()) {
             headerCell.setText("");
         } else {
             Div span = new Div();
             span.setWidthFull();
-            Style style = span.getStyle();
-            style.set("text-align", "center");
-            style.set("background-color", "hsla(214, 53%, 23%, 0.16)");
+
+            if (!isLeafPath) {
+                Style style = span.getStyle();
+                style.set("text-align", "center");
+                style.set("background-color", "hsla(214, 53%, 23%, 0.16)");
+            }
 
             headerCell.setComponent(span);
 
@@ -941,10 +947,13 @@ public class TableMapperComponent
         FacetPath rootPath = FacetPathOps.get().newRoot();
         treeDataProvider.getTreeData().addRootItems(rootPath);
 
-        treeGrid.setDataProvider(treeDataProvider);
-        treeGrid.expand(rootPath);
+        propertyTreeGrid.setDataProvider(treeDataProvider);
 
-        treeGrid.setRowsDraggable(true);
+        VaadinStyleUtils.setResizeVertical(propertyTreeGrid.getStyle());
+
+        propertyTreeGrid.expand(rootPath);
+
+        propertyTreeGrid.setRowsDraggable(true);
         // GridMultiSelectionModel<PathPPA> treeGridSelectionModel = (GridMultiSelectionModel<PathPPA>)treeGrid.getSelectionModel();
         // treeGridSelectionModel.setSelectAllCheckboxVisibility(GridMultiSelectionModel.SelectAllCheckboxVisibility.VISIBLE);
 
@@ -952,7 +961,7 @@ public class TableMapperComponent
 
         // ObservableSelectionModel<PathPPA> selectedProperties = new ObservableSelectionModel<>(treeGridSelectionModel);
 
-        treeGrid.addDragStartListener(event -> {
+        propertyTreeGrid.addDragStartListener(event -> {
             // store current dragged item so we know what to drop
             List<FacetPath> draggedItems = event.getDraggedItems();
             if (draggedItems.size() > 1) {
@@ -960,18 +969,18 @@ public class TableMapperComponent
                 NotificationUtils.error("Please temporarily deselect the row you wish to drag or drag a non-selected row. A framework limitation prevents dragging of individual selected rows.");
             } else if (draggedItems.size() == 1) {
                 draggedProperty = draggedItems.get(0);
-                treeGrid.setDropMode(GridDropMode.BETWEEN);
+                propertyTreeGrid.setDropMode(GridDropMode.BETWEEN);
             }
         });
 
-        treeGrid.addDragEndListener(event -> {
+        propertyTreeGrid.addDragEndListener(event -> {
             draggedProperty = null;
             // Once dragging has ended, disable drop mode so that
             // it won't look like other dragged items can be dropped
-            treeGrid.setDropMode(null);
+            propertyTreeGrid.setDropMode(null);
         });
 
-        treeGrid.addDropListener(event -> {
+        propertyTreeGrid.addDropListener(event -> {
             TreeData<FacetPath> treeData = treeDataProvider.getTreeData();
             FacetPath dropOverItem = event.getDropTargetItem().get();
             if (draggedProperty != null && !draggedProperty.equals(dropOverItem)) {
@@ -1012,7 +1021,7 @@ public class TableMapperComponent
 
 
 
-        treeGrid.addComponentHierarchyColumn(node -> {
+        propertyTreeGrid.addComponentHierarchyColumn(node -> {
 //            Avatar avatar = new Avatar();
 //            avatar.setName(person.getFullName());
 //            avatar.setImage(person.getPictureUrl());
@@ -1052,7 +1061,7 @@ public class TableMapperComponent
             return row;
         }).setHeader("Property Tree").setResizable(true);
 
-        treeGrid.addComponentColumn(path -> {
+        propertyTreeGrid.addComponentColumn(path -> {
             boolean isVisible = pathToVisibility.getOrDefault(path, true); //  .computeIfAbsent(path, x -> true);
 
             // Icon eyeIcon = VaadinIcon.EYE.create();
@@ -1076,7 +1085,7 @@ public class TableMapperComponent
 //            return column;
         }).setHeader("Visible").setResizable(true);
 
-        treeGrid.addItemClickListener(ev -> {
+        propertyTreeGrid.addItemClickListener(ev -> {
             FacetPath path = ev.getItem();
             detailsView.setActivePath(path);
 
@@ -1084,9 +1093,9 @@ public class TableMapperComponent
         });
 
 
-        treeGrid.setWidthFull();
+        propertyTreeGrid.setWidthFull();
         detailsView.setWidthFull();
-        layout.addToPrimary(treeGrid);
+        layout.addToPrimary(propertyTreeGrid);
         layout.addToSecondary(detailsView);
 //        layout.setFlexGrow(1, treeGrid);
 //        layout.setFlexGrow(3, detailsView);
@@ -1095,40 +1104,15 @@ public class TableMapperComponent
         // HeaderRow headerRow = sparqlGrid.appendHeaderRow();
         // HeaderRow filterRow = sparqlGrid.appendHeaderRow();
 
-        VerticalLayout sparqlGridContainer = new VerticalLayout();
 
         Button refreshTableBtn = new Button("Update table");
-        refreshTableBtn.addClickListener(ev -> {
-
-            Grid<Binding> sparqlGrid = new Grid<>();
-            sparqlGrid.setPageSize(1000);
-            sparqlGrid.setWidthFull();
-            sparqlGrid.setColumnReorderingAllowed(true);
-
-            // QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(dataSource);
-
-
-            SetMultimap<FacetPath, Expr> constraintIndex = HashMultimap.create();
-
-            org.aksw.facete.v3.api.TreeData<FacetPath> treeProjection = TreeDataUtils.toFacete(treeDataProvider.getTreeData());
-
-            MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeProjection, constraintIndex, path -> !Boolean.FALSE.equals(pathToVisibility.get(path)));
-//            Query query =
-//            RelationUtils.createQuery(null);
-            // VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);
-            // VaadinSparqlUtils.configureGridFilter(sparqlGrid, filterRow, query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
-            SparqlGrid.setQueryForGridBinding(sparqlGrid, qef, labelMgr, mappedQuery);
-
-            sparqlGridContainer.removeAll();
-            sparqlGridContainer.add(sparqlGrid);
-
-        });
+        refreshTableBtn.addClickListener(ev -> refreshTable());
 
         add(refreshTableBtn);
         add(sparqlGridContainer);
 
-        treeGrid.addExpandListener(ev -> expandedPaths.addAll(ev.getItems()));
-        treeGrid.addCollapseListener(ev -> expandedPaths.removeAll(ev.getItems()));
+        propertyTreeGrid.addExpandListener(ev -> expandedPaths.addAll(ev.getItems()));
+        propertyTreeGrid.addCollapseListener(ev -> expandedPaths.removeAll(ev.getItems()));
 
         // Add a listener that expands new nodes in the grid
         treeDataProvider.addDataProviderListener(ev -> {
@@ -1141,9 +1125,35 @@ public class TableMapperComponent
                 }
 
                 if (expandedPaths.contains(path)) {
-                    treeGrid.expand(path);
+                    propertyTreeGrid.expand(path);
                 }
             }
         });
+    }
+
+    public void refreshTable() {
+
+        Grid<Binding> sparqlGrid = new Grid<>();
+        sparqlGrid.setPageSize(1000);
+        sparqlGrid.setWidthFull();
+        sparqlGrid.setColumnReorderingAllowed(true);
+
+        // QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(dataSource);
+
+
+        SetMultimap<FacetPath, Expr> constraintIndex = HashMultimap.create();
+
+        org.aksw.facete.v3.api.TreeData<FacetPath> treeProjection = TreeDataUtils.toFacete(treeDataProvider.getTreeData());
+
+        MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeProjection, constraintIndex, path -> !Boolean.FALSE.equals(pathToVisibility.get(path)));
+//        Query query =
+//        RelationUtils.createQuery(null);
+        // VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);
+        // VaadinSparqlUtils.configureGridFilter(sparqlGrid, filterRow, query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
+        SparqlGrid.setQueryForGridBinding(sparqlGrid, qef, labelMgr, mappedQuery);
+
+        sparqlGridContainer.removeAll();
+        sparqlGridContainer.add(sparqlGrid);
+
     }
 }

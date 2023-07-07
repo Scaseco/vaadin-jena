@@ -5,6 +5,7 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -109,6 +110,7 @@ public class SparqlGrid {
 
         HeaderRow primaryHeaderRow = grid.appendHeaderRow();
         List<Entry<Column<?>, FacetPath>> pathToColumn = new ArrayList<>();
+
         for (Var var : vars) {
             FacetPath path = mappedQuery.getVarToPath().get(var);
 
@@ -137,8 +139,14 @@ public class SparqlGrid {
 
         Multimap<FacetPath, HeaderCell> pathToCells = setupHeaders(grid, primaryHeaderRow, FacetPath::getParent, pathToColumn);
 
+
+        Set<HeaderCell> leafCells = new HashSet<>(primaryHeaderRow.getCells());
+
+
         for (Entry<FacetPath, HeaderCell> entry : pathToCells.entries()) {
-            TableMapperComponent.labelForAliasPathLastStep(labelMgr, entry.getValue(), entry.getKey());
+            boolean isLeafPath = leafCells.contains(entry.getValue());
+
+            TableMapperComponent.labelForAliasPathLastStep(labelMgr, entry.getValue(), entry.getKey(), isLeafPath);
             // entry.getValue().setText("" + entry.getKey().toString());
         }
 

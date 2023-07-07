@@ -87,8 +87,16 @@ public class ElementGenerator {
 //
 //    }
 
+    public FacetPathMapping getPathMapping() {
+        return pathMapping;
+    }
 
-    class Worker {
+    public class Worker {
+
+        public ElementGenerator getElementGenerator() {
+            return ElementGenerator.this;
+        }
+
         // protected org.aksw.facete.v3.api.TreeData<FacetPath> facetTree;
         protected SetMultimap<FacetPath, Expr> localConstraintIndex;
 
@@ -163,27 +171,7 @@ public class ElementGenerator {
             Element coreElt = null;
             Node secondaryNode;
             if (!path.getSegments().isEmpty()) {
-                FacetStep step = path.getFileName().toSegment();
-                Node predicateNode = step.getNode();
-                boolean isFwd = step.isForward();
-
-                Integer c = step.getTargetComponent();
-
-                if (NodeUtils.ANY_IRI.equals(predicateNode)) {
-                    Integer toggledComponent = FacetStep.isTarget(c) ? FacetStep.PREDICATE : FacetStep.TARGET;
-                    FacetStep s = step.copyStep(toggledComponent);
-                // FacetStep toggledTarget = step.toggleTarget();
-                    secondaryNode = pathMapping.allocate(path.resolveSibling(s));
-                } else {
-                    secondaryNode = predicateNode;
-                }
-
-                if (FacetStep.isTarget(c)) {
-                    coreElt = propertyResolver.resolve(parentVar, secondaryNode, targetVar, isFwd);
-                    // coreElt = ElementUtils.createElementTriple(parentVar, secondaryNode, targetVar, isFwd);
-                } else {
-                    coreElt = ElementUtils.createElementTriple(parentVar, targetVar, secondaryNode, isFwd);
-                }
+                coreElt = createElementForLastStep(parentVar, targetVar, path);
 
                 //container.addElement(coreElt);
             } else {
@@ -201,6 +189,34 @@ public class ElementGenerator {
             return new ElementAcc(parentVar, coreElt, combiner);
         }
 
+        public Element createElementForLastStep(Var parentVar, Var targetVar, FacetPath path) {
+            Element coreElt;
+            FacetStep step = path.getFileName().toSegment();
+
+            Node secondaryNode;
+            Node predicateNode = step.getNode();
+            boolean isFwd = step.isForward();
+
+            Integer c = step.getTargetComponent();
+
+            if (NodeUtils.ANY_IRI.equals(predicateNode)) {
+                Integer toggledComponent = FacetStep.isTarget(c) ? FacetStep.PREDICATE : FacetStep.TARGET;
+                FacetStep s = step.copyStep(toggledComponent);
+            // FacetStep toggledTarget = step.toggleTarget();
+                secondaryNode = pathMapping.allocate(path.resolveSibling(s));
+            } else {
+                secondaryNode = predicateNode;
+            }
+
+            if (FacetStep.isTarget(c)) {
+                coreElt = propertyResolver.resolve(parentVar, secondaryNode, targetVar, isFwd);
+                // coreElt = ElementUtils.createElementTriple(parentVar, secondaryNode, targetVar, isFwd);
+            } else {
+                coreElt = ElementUtils.createElementTriple(parentVar, targetVar, secondaryNode, isFwd);
+            }
+            return coreElt;
+        }
+
         public void allocateElements(Expr expr) {
             Collection<FacetPath> paths = NodeFacetPath.mentionedPaths(expr);
             for(FacetPath path : paths) {
@@ -209,14 +225,20 @@ public class ElementGenerator {
         }
 
         public Var allocateElement(FacetPath path) {
+            FacetPath parentPath = path.getParent();
             FacetPath eltId = FacetPathUtils.toElementId(path);
 
             ElementAcc elementAcc = facetPathToAcc.get(eltId);
-            Var parentVar;
             Var targetVar;
             if (elementAcc == null) {
-                parentVar = allocateElement(path.getParent());
+                Var parentVar;
                 targetVar = pathToVar.computeIfAbsent(path, pathMapping::allocate);
+
+                if (parentPath != null) {
+                    parentVar = allocateElement(parentPath);
+                } else {
+                    parentVar = targetVar;
+                }
 
                 elementAcc = allocateEltAcc(parentVar, targetVar, path);
                 facetPathToAcc.addItem(eltId.getParent(), eltId);

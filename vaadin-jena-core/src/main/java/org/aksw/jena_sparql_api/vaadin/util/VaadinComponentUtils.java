@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.google.common.graph.Traverser;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.dom.Element;
+import com.vaadin.flow.dom.Style;
 
 public class VaadinComponentUtils {
     /**
@@ -63,6 +64,4 @@ public class VaadinComponentUtils {
 //    public static void notifyResize(Component component) {
 //        component.getElement().executeJs("this.notifyResize()");
 //    }
-
-
 }

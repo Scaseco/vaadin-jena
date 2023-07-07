@@ -28,6 +28,7 @@ public class TabSheet
 {
     private static final long serialVersionUID = 1L;
 
+    protected Component container;
     protected Tabs tabs = new Tabs();
     protected Div pages = new Div();
 
@@ -48,10 +49,14 @@ public class TabSheet
     // TODO The supplier is not a view-model; there should be some
     // DataProvider that provides the components
     public TabSheet(Component container) {
-        this.setWidthFull();
-        this.setHeightFull();
-        pages.setWidthFull();
-        pages.setHeightFull();
+        this.container = container;
+
+        setSizeFull();
+        pages.setSizeFull();
+//        this.setWidthFull();
+//        this.setHeightFull();
+//        pages.setWidthFull();
+//        pages.setHeightFull();
 
 //        HorizontalLayout container = new HorizontalLayout();
 
@@ -60,10 +65,21 @@ public class TabSheet
             setSelectedTab(selectedTab);
         });
 
-        ((HasSize)container).setWidthFull();
-        ((HasSize)container).setHeightFull();
+        ((HasSize)container).setSizeFull();;
         ((HasComponents)container).add(tabs, pages);
         add(container);
+    }
+
+    public Tabs getTabs() {
+        return tabs;
+    }
+
+    public Div getPages() {
+        return pages;
+    }
+
+    public Component getContainer() {
+        return container;
     }
 
     public Tab add(String name, Component content) {
