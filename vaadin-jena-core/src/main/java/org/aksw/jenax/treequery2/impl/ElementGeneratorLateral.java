@@ -37,6 +37,7 @@ import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.SortCondition;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdfconnection.RDFConnection;
@@ -229,13 +230,20 @@ public class ElementGeneratorLateral {
 
             Long limit = current.limit();
             Long offset = current.offset();
-            if (limit != null || offset != null) {
+            // int sortDirection = current.get
+            List<SortCondition> sortConditions = current.getSortConditions();
+
+            if (limit != null || offset != null || !sortConditions.isEmpty()) {
                 Query subQuery = new Query();
                 subQuery.setQuerySelectType();
                 subQuery.addProjectVars(Arrays.asList(parentVar, targetVar));
                 subQuery.setLimit(limit == null ? Query.NOLIMIT : limit);
                 subQuery.setOffset(offset == null ? Query.NOLIMIT : offset);
                 subQuery.setQueryPattern(nodeElement);
+
+                // FIXME In general we need to resolve path references!
+                sortConditions.forEach(subQuery::addOrderBy);
+
                 nodeElement = new ElementSubQuery(subQuery);
             }
 
@@ -408,9 +416,9 @@ public class ElementGeneratorLateral {
         // Both nodes should be backed by the same relation
         System.out.println("o limit: " + o.limit());
 
-        FacetPath ppath = p.getPath();
+        FacetPath ppath = p.getFacetPath();
         System.out.println("p path: " + ppath);
-        System.out.println("x path: " + x.getPath());
+        System.out.println("x path: " + x.getFacetPath());
 
         System.out.println("p relation: " + p.relationQuery().getRelation());
 
@@ -419,9 +427,10 @@ public class ElementGeneratorLateral {
 
           nq
           .fwd("urn:p1_1")
-              .bwd("urn:p2_1").limit(10l)
+              .bwd("urn:p2_1").limit(10l).sortAsc().sortNone()
           .getRoot()
-              .fwd("urn:1_2").limit(30l);
+              .fwd("urn:1_2").limit(30l) //.orderBy().fwd(RDFS.comment.asNode()).asc();
+          ;
 
         Element elt = new ElementGeneratorLateral().createElement(nq.relationQuery());
 

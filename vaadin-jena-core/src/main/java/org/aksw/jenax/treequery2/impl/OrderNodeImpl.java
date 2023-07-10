@@ -1,30 +1,54 @@
 package org.aksw.jenax.treequery2.impl;
 
+import org.aksw.facete.v3.api.TreeQueryImpl;
+import org.aksw.facete.v3.api.TreeQueryNode;
+import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
-import org.aksw.jenax.treequery2.OrderNode;
-import org.aksw.jenax.treequery2.old.NodeQueryOld;
-import org.aksw.jenax.treequery2.old.NodeQueryOldImpl;
+import org.aksw.jenax.treequery2.api.NodeQuery;
+import org.aksw.jenax.treequery2.api.OrderNode;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.SortCondition;
 
 public class OrderNodeImpl
-    extends NodeQueryOldImpl
     implements OrderNode
 {
-    // protected NodeQuery nodeQuery;
+    protected NodeQuery startNode;
+    protected TreeQueryNode traversalNode;
 
-    public OrderNodeImpl(NodeQueryOld parent, FacetStep step) {
-        super(parent, step);
+    public OrderNodeImpl(NodeQuery startNode) {
+        this(startNode, new TreeQueryImpl().root());
+    }
+
+    public OrderNodeImpl(NodeQuery startNode, TreeQueryNode traversalNode) {
+        super();
+        this.startNode = startNode;
+        this.traversalNode = traversalNode;
     }
 
     @Override
-    public NodeQueryOld asc() {
-        // TODO Auto-generated method stub
-        return null;
+    public OrderNode getOrCreateChild(FacetStep step) {
+        return new OrderNodeImpl(startNode, traversalNode.getOrCreateChild(step));
     }
 
     @Override
-    public NodeQueryOld desc() {
-        // TODO Auto-generated method stub
-        return null;
+    public NodeQuery getStartNode() {
+        return startNode;
     }
 
+    @Override
+    public NodeQuery asc() {
+        return sort(Query.ORDER_ASCENDING);
+    }
+
+    @Override
+    public NodeQuery desc() {
+        return sort(Query.ORDER_DESCENDING);
+    }
+
+    protected NodeQuery sort(int sortDirection) {
+        FacetPath facetPath = traversalNode.getFacetPath();
+        NodeQuery tgt = startNode.resolve(facetPath);
+        startNode.relationQuery().getSortConditions().add(new SortCondition(tgt.asJenaNode(), sortDirection));
+        return startNode;
+    }
 }

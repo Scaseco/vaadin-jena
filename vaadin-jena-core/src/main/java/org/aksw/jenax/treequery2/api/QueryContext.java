@@ -8,6 +8,7 @@ import org.apache.jena.sparql.core.Var;
 
 public interface QueryContext {
     Set<Var> getUsedVars();
+
     Generator<String> getScopeNameGenerator();
 
     PropertyResolver getPropertyResolver();

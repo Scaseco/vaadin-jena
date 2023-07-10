@@ -3,16 +3,49 @@ package org.aksw.jenax.treequery2.api;
 import java.util.Collection;
 import java.util.Map;
 
+import org.aksw.facete.v3.api.NodeFacetPath;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
+import org.aksw.jenax.path.core.HasFacetPath;
+import org.aksw.jenax.treequery2.impl.OrderNodeImpl;
 import org.apache.jena.graph.Node;
+import org.apache.jena.query.Query;
 import org.apache.jena.sparql.core.Var;
 
 public interface NodeQuery
-    extends HasSlice
+    extends FacetTraversable<NodeQuery>, HasSlice, HasFacetPath
     // extends NodeQuery
 {
-    default FacetPath getPath() {
+    default Node asJenaNode() {
+        return NodeFacetPath.of(this);
+    }
+
+    default NodeQuery sortAsc() {
+        return sort(Query.ORDER_ASCENDING);
+    }
+
+    default NodeQuery sortNone() {
+        return sort(Query.ORDER_UNKNOW);
+    }
+
+    default NodeQuery sortDefault() {
+        return sort(Query.ORDER_DEFAULT);
+    }
+
+    default NodeQuery sortDesc() {
+        return sort(Query.ORDER_DESCENDING);
+    }
+
+    /**
+     * Updates or adds the first sort condition of this query node's variable in the list of sort conditions
+     */
+    NodeQuery sort(int sortDirection);
+
+    /** Returns the direction of the first sort condition that matches this query node's variable */
+    int getSortDirection();
+
+    @Override
+    default FacetPath getFacetPath() {
         RelationQuery relationQuery = relationQuery();
         NodeQuery parentNode = relationQuery.getParentNode();
 
@@ -20,7 +53,7 @@ public interface NodeQuery
         if (parentNode == null) {
             result = FacetPath.newAbsolutePath();
         } else {
-            FacetPath base = parentNode.getPath();
+            FacetPath base = parentNode.getFacetPath();
             FacetStep step = reachingStep();
             if (step == null) {
                 throw new NullPointerException();
@@ -48,26 +81,6 @@ public interface NodeQuery
      * A collection of sub-paths of this node
      */
     Collection<NodeQuery> getChildren();
-
-    default NodeQuery fwd(String property) {
-        return getOrCreateChild(FacetStep.fwd(property));
-    }
-
-    default NodeQuery fwd(Node property) {
-        return getOrCreateChild(FacetStep.fwd(property));
-    }
-
-    default NodeQuery bwd(String property) {
-        return getOrCreateChild(FacetStep.bwd(property));
-    }
-
-    default NodeQuery bwd(Node property) {
-        return getOrCreateChild(FacetStep.bwd(property));
-    }
-
-    /** Returns null if there is no child reachable with the given step. */
-    // RootNode getChild(FacetStep step);
-    NodeQuery getOrCreateChild(FacetStep step);
 
 
 //	default boolean isChildOf(RelationNode relationNode) {
@@ -108,5 +121,9 @@ public interface NodeQuery
         RelationQuery relationQuery = relationQuery();
         relationQuery.limit(limit);
         return this;
+    }
+
+    default OrderNode orderBy() {
+        return new OrderNodeImpl(this);
     }
 }

@@ -11,6 +11,7 @@ import org.aksw.jenax.treequery2.impl.Partition;
 import org.aksw.jenax.treequery2.impl.QueryContextImpl;
 import org.aksw.jenax.treequery2.impl.RelationQueryImpl;
 import org.aksw.jenax.treequery2.old.NodeQueryOld;
+import org.apache.jena.query.SortCondition;
 import org.apache.jena.sparql.core.Var;
 
 public interface RelationQuery
@@ -40,6 +41,8 @@ public interface RelationQuery
         RelationQuery r = parentNode == null ? this : parentNode.relationQuery().root();
         return r;
     }
+
+    List<SortCondition> getSortConditions();
 
     /**
      * Returns the relation on which this RelationQuery is based.

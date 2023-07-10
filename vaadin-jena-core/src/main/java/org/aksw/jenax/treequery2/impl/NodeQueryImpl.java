@@ -2,8 +2,10 @@ package org.aksw.jenax.treequery2.impl;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import org.aksw.jena_sparql_api.concepts.Concept;
 import org.aksw.jenax.arq.util.var.Vars;
@@ -14,7 +16,11 @@ import org.aksw.jenax.treequery2.api.NodeQuery;
 import org.aksw.jenax.treequery2.api.QueryContext;
 import org.aksw.jenax.treequery2.api.RelationQuery;
 import org.apache.jena.graph.Node;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.SortCondition;
 import org.apache.jena.sparql.core.Var;
+import org.apache.jena.sparql.expr.Expr;
+import org.apache.jena.sparql.expr.ExprVar;
 import org.apache.jena.sparql.syntax.ElementGroup;
 
 /**
@@ -38,6 +44,34 @@ public class NodeQueryImpl
         this.var = var;
         this.reachingStep = reachingStep;
     }
+
+    @Override
+    public NodeQuery sort(int sortDirection) {
+        SortCondition sc = new SortCondition(var, sortDirection);
+
+        List<SortCondition> sortConditions = relationQuery.getSortConditions();
+        Expr ev = new ExprVar(var);
+        int idx = IntStream.range(0, sortConditions.size()).filter(i -> sortConditions.get(i).getExpression().equals(ev)).findFirst().orElse(-1);
+        if (idx < 0) {
+            if (sortDirection != Query.ORDER_UNKNOW)
+            sortConditions.add(sc);
+        } else {
+            if (sortDirection == Query.ORDER_UNKNOW) {
+                sortConditions.remove(idx);
+            } else {
+                sortConditions.set(idx, sc);
+            }
+        }
+        return this;
+    }
+
+    @Override
+    public int getSortDirection() {
+        Expr ev = new ExprVar(var);
+        int result = sortConditions.stream().filter(sc -> sc.getExpression().equals(ev)).map(SortCondition::getDirection).findFirst().orElse(Query.ORDER_UNKNOW);
+        return result;
+    }
+
 
     @Override
     public Map<FacetStep, RelationQuery> children() {

@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
-import org.aksw.jenax.treequery2.OrderNode;
+import org.aksw.jenax.treequery2.api.OrderNode;
 import org.aksw.jenax.treequery2.api.RelationQuery;
 import org.aksw.jenax.treequery2.impl.NodeQueryBase;
 import org.apache.jena.query.SortCondition;

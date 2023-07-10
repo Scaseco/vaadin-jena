@@ -86,6 +86,11 @@ public class RelationQueryImpl
         return relationSupplier.get();
     }
 
+    @Override
+    public List<SortCondition> getSortConditions() {
+        return sortConditions;
+    }
+
 //    @Override
 //    public RelationQuery parent() {
 //        return parent;
