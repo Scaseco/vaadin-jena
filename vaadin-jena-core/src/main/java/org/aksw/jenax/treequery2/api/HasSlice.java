@@ -1,4 +1,4 @@
-package org.aksw.jenax.treequery2;
+package org.aksw.jenax.treequery2.api;
 
 public interface HasSlice {
     Long offset();

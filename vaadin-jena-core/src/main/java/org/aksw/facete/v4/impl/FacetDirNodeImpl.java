@@ -9,6 +9,7 @@ import org.aksw.facete.v3.api.FacetValueCount;
 import org.aksw.facete.v3.api.FacetedDataQuery;
 import org.aksw.jenax.sparql.relation.api.BinaryRelation;
 import org.aksw.jenax.sparql.relation.api.TernaryRelation;
+import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 
@@ -25,7 +26,7 @@ public class FacetDirNodeImpl
     }
 
     @Override
-    public FacetMultiNode via(Resource property, Integer component) {
+    public FacetMultiNode via(Resource property, Node component) {
         return new FacetMultiNodeImpl(this, property, component);
     }
 

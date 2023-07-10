@@ -1,50 +1,55 @@
-package org.aksw.jenax.treequery2;
+package org.aksw.jenax.treequery2.old;
 
 import java.util.Collection;
 import java.util.List;
 
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
+import org.aksw.jenax.treequery2.OrderNode;
+import org.aksw.jenax.treequery2.api.HasSlice;
+import org.aksw.jenax.treequery2.api.RelationQuery;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.SortCondition;
 
-public interface QueryNode
+public interface NodeQueryOld
     extends HasSlice
 {
-    QueryNode getParent();
+    RelationQuery getRelation();
 
-    default QueryNode getRoot() {
-        QueryNode parent = getParent();
+    NodeQueryOld getParent();
+
+    default NodeQueryOld getRoot() {
+        NodeQueryOld parent = getParent();
         return parent == null ? this : parent.getRoot();
     }
 
     FacetPath getPath();
 
     // List<FacetStep> getChildren();
-    Collection<QueryNode> getChildren();
+    Collection<NodeQueryOld> getChildren();
 
 
     OrderNode order();
 
-    default QueryNode fwd(String property) {
+    default NodeQueryOld fwd(String property) {
         return getOrCreateChild(FacetStep.fwd(property));
     }
 
-    default QueryNode fwd(Node property) {
+    default NodeQueryOld fwd(Node property) {
         return getOrCreateChild(FacetStep.fwd(property));
     }
 
-    default QueryNode bwd(String property) {
+    default NodeQueryOld bwd(String property) {
         return getOrCreateChild(FacetStep.bwd(property));
     }
 
-    default QueryNode bwd(Node property) {
+    default NodeQueryOld bwd(Node property) {
         return getOrCreateChild(FacetStep.bwd(property));
     }
 
     /** Returns null if there is no child reachable with the given step. */
-    QueryNode getChild(FacetStep step);
-    QueryNode getOrCreateChild(FacetStep step);
+    NodeQueryOld getChild(FacetStep step);
+    NodeQueryOld getOrCreateChild(FacetStep step);
 
     // NodeQuery getSubQuery(); // Filter the set of resources
 
@@ -55,9 +60,31 @@ public interface QueryNode
     // b) navigate from the relation to the node - relationNode().limit().getTargetNode()
     // Well, actually the limit / offset methods of this node could just be shortcuts for getRelation().limit()
 
+    /**
+     * Convenience method to set the offset on the underlying relation.
+     */
     @Override
-    QueryNode offset(Long offset);
+    default NodeQueryOld offset(Long offset) {
+        getRelation().offset(offset);
+        return this;
+    }
 
     @Override
-    QueryNode limit(Long limit);
+    default Long offset() {
+        return getRelation().offset();
+    }
+
+    /**
+     * Convenience method to set the limit on the underlying relation.
+     */
+    @Override
+    default NodeQueryOld limit(Long limit) {
+        getRelation().limit(limit);
+        return this;
+    }
+
+    @Override
+    default Long limit() {
+        return getRelation().limit();
+    }
 }

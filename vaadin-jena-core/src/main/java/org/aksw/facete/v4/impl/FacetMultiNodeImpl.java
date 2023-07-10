@@ -7,6 +7,7 @@ import org.aksw.facete.v3.api.FacetNode;
 import org.aksw.facete.v3.api.TreeQueryNode;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
+import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.Resource;
 
 public class FacetMultiNodeImpl
@@ -14,9 +15,9 @@ public class FacetMultiNodeImpl
 {
     protected FacetDirNodeImpl parent;
     protected Resource property;
-    protected Integer component;
+    protected Node component;
 
-    public FacetMultiNodeImpl(FacetDirNodeImpl parent, Resource property, Integer component) {
+    public FacetMultiNodeImpl(FacetDirNodeImpl parent, Resource property, Node component) {
         super();
         this.parent = parent;
         this.property = property;

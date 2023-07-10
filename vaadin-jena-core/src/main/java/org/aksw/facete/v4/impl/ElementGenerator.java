@@ -71,7 +71,7 @@ public class ElementGenerator {
     protected FacetPathMapping pathMapping;
     protected FacetPath focusPath;
 
-    protected PropertyResolver propertyResolver = new PropertyResolver();
+    protected PropertyResolverImpl propertyResolver = new PropertyResolverImpl();
 
     // protected Element baseElement; // This element also exists in eltPathToAcc.get(FacetPath.newAbsolutePath())
 
@@ -197,10 +197,10 @@ public class ElementGenerator {
             Node predicateNode = step.getNode();
             boolean isFwd = step.isForward();
 
-            Integer c = step.getTargetComponent();
+            Node c = step.getTargetComponent();
 
             if (NodeUtils.ANY_IRI.equals(predicateNode)) {
-                Integer toggledComponent = FacetStep.isTarget(c) ? FacetStep.PREDICATE : FacetStep.TARGET;
+                Node toggledComponent = FacetStep.isTarget(c) ? FacetStep.PREDICATE : FacetStep.TARGET;
                 FacetStep s = step.copyStep(toggledComponent);
             // FacetStep toggledTarget = step.toggleTarget();
                 secondaryNode = pathMapping.allocate(path.resolveSibling(s));

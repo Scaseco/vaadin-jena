@@ -1,5 +1,6 @@
-package org.aksw.jenax.treequery2;
+package org.aksw.jenax.treequery2.impl;
 
+import org.aksw.jenax.treequery2.old.NodeQueryOld;
 import org.apache.jena.sparql.engine.binding.Binding;
 
 /** */
@@ -9,7 +10,8 @@ public interface ResultNode {
     Binding getPartitionBinding();
 
     /** Get the query node which provides the schema (the set of available properties) for this result node */
-    QueryNode getQueryNode();
+    NodeQueryOld getQueryNode();
+
 
     // Map<FacetStep, >
     // TODO We some streaming?! way to iterate the result bindings

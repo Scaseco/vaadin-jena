@@ -47,7 +47,6 @@ import org.aksw.jenax.sparql.relation.api.BinaryRelation;
 import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
-import org.aksw.vaadin.app.demo.view.edit.resource.DataRetriever.ResourceInfo;
 import org.aksw.vaadin.common.component.util.ConfirmDialogUtils;
 import org.aksw.vaadin.common.component.util.NotificationUtils;
 import org.apache.commons.collections4.list.SetUniqueList;

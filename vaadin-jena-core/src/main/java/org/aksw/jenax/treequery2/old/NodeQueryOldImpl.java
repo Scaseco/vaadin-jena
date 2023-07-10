@@ -1,4 +1,4 @@
-package org.aksw.jenax.treequery2;
+package org.aksw.jenax.treequery2.old;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,19 +9,21 @@ import java.util.Map;
 
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
+import org.aksw.jenax.treequery2.OrderNode;
+import org.aksw.jenax.treequery2.api.RelationQuery;
+import org.aksw.jenax.treequery2.impl.NodeQueryBase;
 import org.apache.jena.query.SortCondition;
 
-public class QueryNodeImpl
-    implements QueryNode
+public class NodeQueryOldImpl
+    extends NodeQueryBase
+    implements NodeQueryOld
 {
     protected FacetStep step;
-    protected QueryNode parent;
+    protected NodeQueryOld parent;
     protected Long offset;
     protected Long limit;
-    protected Map<FacetStep, QueryNode> children = new LinkedHashMap<>();
-    protected List<SortCondition> sortConditions = new ArrayList<>();
 
-    public QueryNodeImpl(QueryNode parent, FacetStep step) {
+    public NodeQueryOldImpl(NodeQueryOld parent, FacetStep step) {
         super();
         this.parent = parent;
         this.step = step;
@@ -33,7 +35,7 @@ public class QueryNodeImpl
     }
 
     @Override
-    public QueryNode offset(Long offset) {
+    public NodeQueryOld offset(Long offset) {
         this.offset = offset;
         return this;
     }
@@ -44,13 +46,13 @@ public class QueryNodeImpl
     }
 
     @Override
-    public QueryNode limit(Long limit) {
+    public NodeQueryOld limit(Long limit) {
         this.limit = limit;
         return this;
     }
 
     @Override
-    public QueryNode getParent() {
+    public NodeQueryOld getParent() {
         return parent;
     }
 
@@ -63,7 +65,7 @@ public class QueryNodeImpl
     }
 
     @Override
-    public Collection<QueryNode> getChildren() {
+    public Collection<NodeQueryOld> getChildren() {
         return children.values();
     }
 
@@ -73,23 +75,29 @@ public class QueryNodeImpl
     }
 
     @Override
-    public QueryNode getChild(FacetStep step) {
+    public NodeQueryOld getChild(FacetStep step) {
         return children.get(step);
     }
 
     @Override
-    public QueryNode getOrCreateChild(FacetStep step) {
-        QueryNode result = children.computeIfAbsent(step, s -> new QueryNodeImpl(this, s));
+    public NodeQueryOld getOrCreateChild(FacetStep step) {
+        NodeQueryOld result = children.computeIfAbsent(step, s -> new NodeQueryOldImpl(this, s));
         return result;
     }
 
-    public static QueryNode newRoot() {
-        return new QueryNodeImpl(null, null);
+    public static NodeQueryOld newRoot() {
+        return new NodeQueryOldImpl(null, null);
     }
 
     /** Start a traversal for a order. Orders are only applied when .asc() or .desc() is called. */
     @Override
     public OrderNode order() {
+        return null;
+    }
+
+    @Override
+    public RelationQuery getRelation() {
+        // TODO Auto-generated method stub
         return null;
     }
 }

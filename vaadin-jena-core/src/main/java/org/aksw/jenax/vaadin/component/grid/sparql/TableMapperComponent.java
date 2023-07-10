@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -23,7 +24,7 @@ import org.aksw.facete.v3.api.FacetedDataQuery;
 import org.aksw.facete.v3.api.FacetedQuery;
 import org.aksw.facete.v3.impl.FacetedQueryImpl;
 import org.aksw.facete.v4.impl.ElementGenerator;
-import org.aksw.facete.v4.impl.PropertyResolver;
+import org.aksw.facete.v4.impl.PropertyResolverImpl;
 import org.aksw.facete.v4.impl.TreeDataUtils;
 import org.aksw.jena_sparql_api.concepts.Concept;
 import org.aksw.jena_sparql_api.concepts.RelationUtils;
@@ -602,7 +603,7 @@ class DetailsView
             // QueryExecutionFactoryQuery fnQef = QueryExecutionFactories.of(RdfDataEngines.of(DatasetFactory.empty()));
             // HeaderRow headerRow = functionsGrid.appendHeaderRow();
             // VaadinSparqlUtils.setQueryForGridBinding(functionsGrid, headerRow, qef, query);
-            virtualPropertiesGrid.setDataProvider(VaadinSparqlUtils.createDataProvider(QueryExecutionFactories.of(PropertyResolver.virtualProperties), query));
+            virtualPropertiesGrid.setDataProvider(VaadinSparqlUtils.createDataProvider(QueryExecutionFactories.of(PropertyResolverImpl.virtualProperties), query));
             Var iriVar = Var.alloc("customIri");
             virtualPropertiesGrid.addComponentColumn(binding -> {
 
@@ -690,13 +691,13 @@ class DetailsView
 //    	start.get
 //    }
 
-    public static FacetPath allocate(TreeData<FacetPath> treeData, FacetPath parent, Node predicate, boolean isForward, Integer targetComponent) {
+    public static FacetPath allocate(TreeData<FacetPath> treeData, FacetPath parent, Node predicate, boolean isForward, Node targetComponent) {
         List<FacetPath> children = treeData.getChildren(parent);
 
         // Collect all taken aliases
         Set<String> usedAliases = children.stream()
                 .map(item -> item.getFileName().toSegment())
-                .filter(step -> step.getNode().equals(predicate) && step.isForward() == isForward && step.getTargetComponent() == targetComponent)
+                .filter(step -> step.getNode().equals(predicate) && step.isForward() == isForward && Objects.equals(step.getTargetComponent(), targetComponent))
                 .map(FacetStep::getAlias)
                 .collect(Collectors.toSet());
 

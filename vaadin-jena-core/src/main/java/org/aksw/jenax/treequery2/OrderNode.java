@@ -1,13 +1,14 @@
 package org.aksw.jenax.treequery2;
 
+import org.aksw.jenax.treequery2.old.NodeQueryOld;
 import org.apache.jena.graph.Node;
 
 public interface OrderNode
-    extends QueryNode
+    extends NodeQueryOld
 {
     // OrderNode fwd(Node property);
     // OrderNode bwd(Node property);
 
-    QueryNode asc();
-    QueryNode desc();
+    NodeQueryOld asc();
+    NodeQueryOld desc();
 }

@@ -20,7 +20,6 @@ import org.aksw.jenax.arq.util.node.PathUtils;
 import org.aksw.jenax.arq.util.triple.TripleUtils;
 import org.aksw.jenax.path.core.PathPP;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
-import org.aksw.vaadin.app.demo.view.edit.resource.DataRetriever.ResourceInfo;
 import org.aksw.vaadin.common.bind.VaadinBindUtils;
 import org.aksw.vaadin.component.rdf_term_editor.RdfTermEditor;
 import org.apache.jena.graph.Node;
