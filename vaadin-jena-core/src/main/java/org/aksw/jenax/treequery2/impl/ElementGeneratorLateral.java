@@ -13,6 +13,7 @@ import org.aksw.commons.util.list.ListUtils;
 import org.aksw.facete.v3.api.FacetPathMapping;
 import org.aksw.facete.v3.api.TreeData;
 import org.aksw.facete.v4.impl.ElementGenerator;
+import org.aksw.facete.v4.impl.ElementGeneratorWorker;
 import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jena_sparql_api.rx.entity.engine.EntityQueryRx;
 import org.aksw.jena_sparql_api.rx.entity.model.EntityBaseQuery;
@@ -117,7 +118,7 @@ public class ElementGeneratorLateral {
         FacetPathMapping fpm = ifn::apply;
         ElementGenerator eltGen = new ElementGenerator(fpm, HashMultimap.create(), FacetPath.newAbsolutePath());
 
-        ElementGenerator.Worker worker = eltGen.createWorker();
+        ElementGeneratorWorker worker = eltGen.createWorker();
 
         // Traverser.forTree(treeData::getChildren).depthFirstPreOrder(treeData.getRootItems()).forEach(eltGen::addPath);
         Element result = createElementOld(worker, rootVar, current);
@@ -132,7 +133,7 @@ public class ElementGeneratorLateral {
      * @param current
      * @return
      */
-    public  Element createElementOld(ElementGenerator.Worker worker, Var parentVar, NodeQueryOld current) {
+    public  Element createElementOld(ElementGeneratorWorker worker, Var parentVar, NodeQueryOld current) {
         FacetPath path = current.getPath();
         FacetStep step = ListUtils.lastOrNull(path.getSegments());
 
@@ -143,8 +144,8 @@ public class ElementGeneratorLateral {
         if (step != null) {
             // Node p = step.getNode();
             // Create the element for this node
-            targetVar = worker.getElementGenerator().getPathMapping().allocate(path);
-            Var predicateVar = worker.getElementGenerator().getPathMapping().allocate(path.resolveSibling(FacetStep.of(step.getNode(), step.getDirection(), step.getAlias(), FacetStep.PREDICATE)));
+            targetVar = worker.getPathMapping().allocate(path);
+            Var predicateVar = worker.getPathMapping().allocate(path.resolveSibling(FacetStep.of(step.getNode(), step.getDirection(), step.getAlias(), FacetStep.PREDICATE)));
 
             nodeElement = worker.createElementForLastStep(parentVar, targetVar, path); // createElement(worker, targetVar, child);
 
@@ -232,6 +233,9 @@ public class ElementGeneratorLateral {
             Long offset = current.offset();
             // int sortDirection = current.get
             List<SortCondition> sortConditions = current.getSortConditions();
+
+            FacetConstraints<?> constraints = current.getFacetConstraints();
+
 
             if (limit != null || offset != null || !sortConditions.isEmpty()) {
                 Query subQuery = new Query();
@@ -428,8 +432,9 @@ public class ElementGeneratorLateral {
           nq
           .fwd("urn:p1_1")
               .bwd("urn:p2_1").limit(10l).sortAsc().sortNone()
+                  .constraints().fwd(RDFS.label).enterConstraints().eq(RDFS.seeAlso).activate().leaveConstraints()
           .getRoot()
-              .fwd("urn:1_2").limit(30l) //.orderBy().fwd(RDFS.comment.asNode()).asc();
+              .fwd("urn:1_2").limit(30l).sortAsc(); //.orderBy().fwd(RDFS.comment.asNode()).asc();
           ;
 
         Element elt = new ElementGeneratorLateral().createElement(nq.relationQuery());

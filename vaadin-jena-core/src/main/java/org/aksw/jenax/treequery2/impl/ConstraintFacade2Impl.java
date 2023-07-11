@@ -1,4 +1,4 @@
-package org.aksw.facete.v4.impl;
+package org.aksw.jenax.treequery2.impl;
 
 import java.util.Collection;
 
@@ -6,23 +6,21 @@ import org.aksw.facete.v3.api.ConstraintApiImpl;
 import org.aksw.facete.v3.api.ConstraintControl;
 import org.aksw.facete.v3.api.ConstraintFacade;
 import org.aksw.facete.v3.api.FacetConstraintCore;
-import org.aksw.facete.v3.api.FacetNode;
 import org.aksw.facete.v3.api.HLFacetConstraint;
-import org.aksw.jenax.arq.util.expr.NodeValueUtils;
+import org.aksw.facete.v4.impl.HLFacetConstraintImpl;
 import org.aksw.jenax.arq.util.node.ComparableNodeValue;
 import org.apache.jena.graph.Node;
-import org.apache.jena.sparql.expr.E_Equals;
 import org.apache.jena.sparql.expr.Expr;
 
 import com.google.common.collect.Range;
 
-public class ConstraintFacadeImpl<T>
+public class ConstraintFacade2Impl<T>
     implements ConstraintFacade<T>
 {
     protected T parent;
-    protected ConstraintApiImpl constraintApi;
+    protected ConstraintApi2Impl<T> constraintApi;
 
-    public ConstraintFacadeImpl(T parent, ConstraintApiImpl constraintApi) {
+    public ConstraintFacade2Impl(T parent, ConstraintApi2Impl<T> constraintApi) {
         super();
         this.parent = parent;
         this.constraintApi = constraintApi;
@@ -33,13 +31,13 @@ public class ConstraintFacadeImpl<T>
         // constraintApi.listConstraints(facetNode.node);
         // TODO Only list the constraints for the parent facet node
 
-//        Resource modelRoot = parent.query().modelRoot();
-//        Set<FacetConstraintCore> set =
-//                new ConvertingSet<>(
-//                        new SetFromPropertyValues<>(modelRoot, Vocab.constraint, FacetConstraint.class),
-//                        Converter.from(x -> (FacetConstraintCore)x, y -> (FacetConstraint)y));
+    //    Resource modelRoot = parent.query().modelRoot();
+    //    Set<FacetConstraintCore> set =
+    //            new ConvertingSet<>(
+    //                    new SetFromPropertyValues<>(modelRoot, Vocab.constraint, FacetConstraint.class),
+    //                    Converter.from(x -> (FacetConstraintCore)x, y -> (FacetConstraint)y));
 
-//        return set;
+    //    return set;
 
         throw new UnsupportedOperationException();
     }
@@ -51,19 +49,19 @@ public class ConstraintFacadeImpl<T>
 
     @Override
     public HLFacetConstraint<? extends ConstraintFacade<T>> eq(Node node) {
-        ConstraintControl fc = (ConstraintControl)constraintApi.eq(node);
+        FacetConstraintCore fc = constraintApi.eq(node);
         return new HLFacetConstraintImpl<>(this, fc);
     }
 
     @Override
     public HLFacetConstraint<? extends ConstraintFacade<T>> exists() {
-        ConstraintControl cc = (ConstraintControl)constraintApi.exists();
+        FacetConstraintCore cc = constraintApi.exists();
         return new HLFacetConstraintImpl<>(this, cc);
     }
 
     @Override
     public HLFacetConstraint<? extends ConstraintFacade<T>> absent() {
-        ConstraintControl cc = (ConstraintControl)constraintApi.absent();
+        FacetConstraintCore cc = constraintApi.absent();
         return new HLFacetConstraintImpl<>(this, cc);
     }
 
@@ -99,7 +97,7 @@ public class ConstraintFacadeImpl<T>
 
     @Override
     public HLFacetConstraint<? extends ConstraintFacade<T>> regex(String pattern, String flags) {
-        ConstraintControl cc = (ConstraintControl)constraintApi.regex(pattern, flags);
+        FacetConstraintCore cc = constraintApi.regex(pattern, flags);
         return new HLFacetConstraintImpl<>(this, cc);
     }
 

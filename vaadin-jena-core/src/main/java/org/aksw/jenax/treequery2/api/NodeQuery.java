@@ -87,6 +87,9 @@ public interface NodeQuery
 //
 //	}
 
+    // FIXME Use a proper interface for the constraints
+    ConstraintNode<NodeQuery> constraints();
+
     RelationQuery relationQuery();
     Var var();
     FacetStep reachingStep();

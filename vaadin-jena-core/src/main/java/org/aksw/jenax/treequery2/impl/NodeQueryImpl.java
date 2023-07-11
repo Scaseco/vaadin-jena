@@ -12,6 +12,7 @@ import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.relation.api.Relation;
+import org.aksw.jenax.treequery2.api.ConstraintNode;
 import org.aksw.jenax.treequery2.api.NodeQuery;
 import org.aksw.jenax.treequery2.api.QueryContext;
 import org.aksw.jenax.treequery2.api.RelationQuery;
@@ -35,14 +36,27 @@ public class NodeQueryImpl
     protected FacetStep reachingStep;
 
     protected Map<FacetStep, RelationQuery> children = new LinkedHashMap<>();
-
     protected Map<FacetStep, NodeQuery> subPaths = new LinkedHashMap<>();
+
+    protected ConstraintNode<NodeQuery> constraintRoot;
 
     public NodeQueryImpl(RelationQueryImpl relationQuery, Var var, FacetStep reachingStep) {
         super();
         this.relationQuery = relationQuery;
         this.var = var;
         this.reachingStep = reachingStep;
+
+        this.constraintRoot = new ConstraintNodeImpl(this, FacetPath.newAbsolutePath());
+    }
+
+//    public RootedFacetTraversable<NodeQuery> facets() {
+//        return constraintTraversable;
+//    }
+
+    @Override
+    public ConstraintNode<NodeQuery> constraints() {
+        // ConstraintApi2Impl<ConstraintNode<NodeQuery>> result = relationQuery.facetConstraints.getFacade(constraintTraversable);
+        return constraintRoot;
     }
 
     @Override
@@ -150,7 +164,7 @@ public class NodeQueryImpl
                 usedVars.addAll(relation.getVarsMentioned());
 
                 Map<Var, Node> varToComponent = FacetRelationUtils.createVarToComponentMap(relation);
-                return new RelationQueryImpl(this, () -> relation, relationStep, relationQuery.getContext(), varToComponent);
+                return new RelationQueryImpl(scopeName, this, () -> relation, relationStep, relationQuery.getContext(), varToComponent);
             });
 
             // tmp.va

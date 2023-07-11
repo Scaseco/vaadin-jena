@@ -12,10 +12,12 @@ import org.aksw.facete.v4.impl.PropertyResolverImpl;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.relation.api.Relation;
+import org.aksw.jenax.treequery2.api.ConstraintNode;
 import org.aksw.jenax.treequery2.api.HasSlice;
 import org.aksw.jenax.treequery2.api.NodeQuery;
 import org.aksw.jenax.treequery2.api.QueryContext;
 import org.aksw.jenax.treequery2.api.RelationQuery;
+import org.aksw.jenax.treequery2.api.RootedFacetTraversable;
 import org.aksw.jenax.treequery2.old.NodeQueryOld;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.SortCondition;
@@ -24,6 +26,9 @@ import org.apache.jena.sparql.core.Var;
 public class RelationQueryImpl
     implements RelationQuery
 {
+    /** A name given to this relation */
+    protected String scopeBaseName;
+
     /**
      * Supplier for the underlying relation.
      * May by a constant supplier or a dynamic one which e.g. resolves an IRI
@@ -33,20 +38,21 @@ public class RelationQueryImpl
 
     protected QueryContext queryContext;
     protected NodeQuery parent;
-    // protected FacetStep step;
-    // protected NodeQuery parent;
+
     protected Long offset;
     protected Long limit;
 
-    /** A mapping of which variable was reached by what step */
-    // protected Map<Var, FacetStep> varToReachingStep;
-
     /** A mapping of which variable corresponds to which component of a facet step */
     protected FacetStep reachingStep;
+
+    /** Variables can be declared as SOURCE, TARGET, PREDICATE and GRAPH */
     protected Map<Var, Node> varToComponent;
 
-    // protected Map<// Var, RootnODE>
+    // protected FacetConstraints constraints;
+    // protected FacetConstraints<RootedFacetTraversable<NodeQuery>> facetConstraints;
+    protected FacetConstraints<ConstraintNode<NodeQuery>> facetConstraints;
 
+    // protected Map<// Var, RootnODE>
     // protected Map<FacetStep, NodeQuery> children = new LinkedHashMap<>();
     // protected Map<Var, NodeQuery> children = new LinkedHashMap<>();
     // protected Map<FacetStep, NodeQuery> children = new LinkedHashMap<>();
@@ -67,13 +73,16 @@ public class RelationQueryImpl
 //        this(parent, () -> relation, queryContext);
 //    }
 
-    public RelationQueryImpl(NodeQuery parent, Supplier<Relation> relationSupplier, FacetStep reachingStep, QueryContext queryContext, Map<Var, Node> varToComponent) {
+    public RelationQueryImpl(String scopeBaseName, NodeQuery parent, Supplier<Relation> relationSupplier, FacetStep reachingStep, QueryContext queryContext, Map<Var, Node> varToComponent) {
         super();
+        this.scopeBaseName = scopeBaseName;
         this.parent = parent;
         this.relationSupplier = relationSupplier;
         this.queryContext = queryContext;
         this.reachingStep = reachingStep;
         this.varToComponent = varToComponent;
+
+        this.facetConstraints = new FacetConstraints<>();
     }
 
     @Override
@@ -89,6 +98,11 @@ public class RelationQueryImpl
     @Override
     public List<SortCondition> getSortConditions() {
         return sortConditions;
+    }
+
+    /** */
+    public FacetConstraints<ConstraintNode<NodeQuery>> constraints() {
+        return facetConstraints;
     }
 
 //    @Override
@@ -128,7 +142,7 @@ public class RelationQueryImpl
     }
 
     /**
-     * The path to this relation
+     * The path to this relation (a facet path with the last segment having component type TUPLE)
      */
     @Override
     public FacetPath getPath() {

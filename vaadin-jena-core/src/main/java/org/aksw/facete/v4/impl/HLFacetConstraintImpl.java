@@ -13,9 +13,9 @@ public class HLFacetConstraintImpl<B>
     implements HLFacetConstraint<B>
 {
     protected B parent;
-    protected ConstraintControl constraint;
+    protected FacetConstraintCore constraint;
 
-    public HLFacetConstraintImpl(B parent, ConstraintControl constraint) {
+    public HLFacetConstraintImpl(B parent, FacetConstraintCore constraint) {
         super();
         this.parent = parent;
         this.constraint = constraint;

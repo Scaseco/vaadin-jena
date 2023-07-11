@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 import org.aksw.facete.v4.impl.PropertyResolverImpl;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.sparql.relation.api.Relation;
+import org.aksw.jenax.treequery2.impl.FacetConstraints;
 import org.aksw.jenax.treequery2.impl.Partition;
 import org.aksw.jenax.treequery2.impl.QueryContextImpl;
 import org.aksw.jenax.treequery2.impl.RelationQueryImpl;
@@ -60,6 +61,9 @@ public interface RelationQuery
      */
     Partition partition();
 
+    /** Get the constraints that were placed on this relation */
+    FacetConstraints<ConstraintNode<NodeQuery>> getFacetConstraints();
+
     /**
      * Declare this relation to be partitioned by the given paths.
      */
@@ -101,7 +105,8 @@ public interface RelationQuery
 //    }
 
     public static RelationQuery of(Supplier<Relation> relation, QueryContext queryContext) {
-        return new RelationQueryImpl(null, relation, null, queryContext, new HashMap<>());
+        String scopeBaseName = queryContext.getScopeNameGenerator().next();
+        return new RelationQueryImpl(scopeBaseName, null, relation, null, queryContext, new HashMap<>());
     }
 
 }

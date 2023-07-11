@@ -133,7 +133,7 @@ public class FacetNodeImpl
     @Override
     public ConstraintFacade<? extends FacetNode> enterConstraints() {
         ConstraintApiImpl constraints = facetedQuery.relationQuery.constraints.getFacade(node);
-        return new ConstraintFacadeImpl<FacetNode>(this, this, constraints);
+        return new ConstraintFacadeImpl<FacetNode>(this, constraints);
     }
 
 //    public FacetedRelationQuery createValueQuery2(boolean applySelfConstraints) {
