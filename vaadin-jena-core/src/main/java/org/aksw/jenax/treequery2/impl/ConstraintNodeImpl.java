@@ -19,8 +19,14 @@ public class ConstraintNodeImpl
     }
 
     @Override
+    public ConstraintNode<NodeQuery> getParent() {
+        FacetPath parentPath = facetPath.getParent();
+        return parentPath == null ? null : new ConstraintNodeImpl(root, parentPath);
+    }
+
+    @Override
     public ConstraintNodeImpl getOrCreateChild(FacetStep step) {
-        FacetPath newPath = path.resolve(step);
+        FacetPath newPath = facetPath.resolve(step);
         return new ConstraintNodeImpl(root, newPath);
     }
 

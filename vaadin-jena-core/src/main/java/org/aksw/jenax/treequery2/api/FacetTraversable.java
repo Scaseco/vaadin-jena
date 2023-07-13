@@ -1,6 +1,10 @@
 package org.aksw.jenax.treequery2.api;
 
+import org.aksw.commons.collections.trees.TreeUtils;
+import org.aksw.jenax.path.core.FacetPath;
+import org.aksw.jenax.path.core.FacetPathOps;
 import org.aksw.jenax.path.core.FacetStep;
+import org.aksw.jenax.path.core.HasFacetPath;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.Resource;
 
@@ -9,7 +13,9 @@ import org.apache.jena.rdf.model.Resource;
  *
  * @param <T>
  */
-public interface FacetTraversable<T extends FacetTraversable<T>> {
+public interface FacetTraversable<T extends FacetTraversable<T>>
+    extends HasFacetPath
+{
     default T fwd(String property) {
         return getOrCreateChild(FacetStep.fwd(property));
     }
@@ -37,4 +43,29 @@ public interface FacetTraversable<T extends FacetTraversable<T>> {
     /** Returns null if there is no child reachable with the given step. */
     // RootNode getChild(FacetStep step);
     T getOrCreateChild(FacetStep step);
+
+    T getParent();
+
+    default T getRootNode() {
+        return TreeUtils.getRoot((T)this, FacetTraversable::getParent);
+    }
+
+    default T resolve(FacetPath facetPath) {
+        return FacetTraversable.resolve((T)this, facetPath);
+    }
+
+    public static <T extends FacetTraversable<T>> T resolve(T node, FacetPath facetPath) {
+        T tmp = facetPath.isAbsolute() ? node.getRootNode() : node;
+        for (FacetStep step : facetPath.getSegments()) {
+            if (FacetPathOps.PARENT.equals(step)) {
+                tmp = tmp.getParent();
+            } else if (FacetPathOps.SELF.equals(step)) {
+                // Nothing to do
+            } else {
+                tmp = tmp.getOrCreateChild(step);
+            }
+        }
+        return tmp;
+    }
+
 }

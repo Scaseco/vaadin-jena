@@ -6,14 +6,13 @@ import java.util.Map;
 import org.aksw.facete.v3.api.NodeFacetPath;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
-import org.aksw.jenax.path.core.HasFacetPath;
 import org.aksw.jenax.treequery2.impl.OrderNodeImpl;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.Query;
 import org.apache.jena.sparql.core.Var;
 
 public interface NodeQuery
-    extends FacetTraversable<NodeQuery>, HasSlice, HasFacetPath
+    extends FacetTraversable<NodeQuery>, HasSlice
     // extends NodeQuery
 {
     default Node asJenaNode() {

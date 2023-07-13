@@ -1,13 +1,13 @@
 package org.aksw.jenax.treequery2.api;
 
-public interface OrderNode
-    extends FacetTraversable<OrderNode>
+public interface OrderNode<R>
+    extends RootedFacetTraversable<R, OrderNode<R>>
 {
     /**
      * Return the NodeQuery which is the root of this traversal
      */
-    NodeQuery getStartNode();
+    // R getStartNode();
 
-    NodeQuery asc();
-    NodeQuery desc();
+    R asc();
+    R desc();
 }

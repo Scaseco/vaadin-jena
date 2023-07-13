@@ -17,7 +17,6 @@ import org.aksw.jenax.treequery2.api.HasSlice;
 import org.aksw.jenax.treequery2.api.NodeQuery;
 import org.aksw.jenax.treequery2.api.QueryContext;
 import org.aksw.jenax.treequery2.api.RelationQuery;
-import org.aksw.jenax.treequery2.api.RootedFacetTraversable;
 import org.aksw.jenax.treequery2.old.NodeQueryOld;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.SortCondition;
@@ -35,6 +34,9 @@ public class RelationQueryImpl
      * against a {@link PropertyResolverImpl}.
      */
     protected Supplier<Relation> relationSupplier;
+
+    // XXX We can store a materialized version of the relation here that can be rebuild on demand
+    // XXX We can also store a mapping of the variables of the original relation and their scoped versions
 
     protected QueryContext queryContext;
     protected NodeQuery parent;
@@ -86,6 +88,11 @@ public class RelationQueryImpl
     }
 
     @Override
+    public String getScopeBaseName() {
+        return scopeBaseName;
+    }
+
+    @Override
     public NodeQuery getParentNode() {
         return parent;
     }
@@ -101,7 +108,8 @@ public class RelationQueryImpl
     }
 
     /** */
-    public FacetConstraints<ConstraintNode<NodeQuery>> constraints() {
+    @Override
+    public FacetConstraints<ConstraintNode<NodeQuery>> getFacetConstraints() {
         return facetConstraints;
     }
 

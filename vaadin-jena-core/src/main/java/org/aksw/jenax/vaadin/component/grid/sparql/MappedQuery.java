@@ -3,7 +3,7 @@ package org.aksw.jenax.vaadin.component.grid.sparql;
 import java.util.Map;
 
 import org.aksw.facete.v3.api.TreeData;
-import org.aksw.jenax.path.core.FacetPath;
+import org.aksw.jenax.treequery2.api.ScopedFacetPath;
 import org.apache.jena.query.Query;
 import org.apache.jena.sparql.core.Var;
 
@@ -18,25 +18,25 @@ public class MappedQuery {
     protected Query query;
 
     /** These are the paths that have a corresponding variable in the query's projection */
-    protected BiMap<Var, FacetPath> varToPath;
-    protected TreeData<FacetPath> tree;
+    protected BiMap<Var, ScopedFacetPath> varToPath;
+    protected TreeData<ScopedFacetPath> tree;
 
-    public MappedQuery(TreeData<FacetPath> tree, Query query, BiMap<Var, FacetPath> varToPath) {
+    public MappedQuery(TreeData<ScopedFacetPath> tree, Query query, BiMap<Var, ScopedFacetPath> varToPath) {
         super();
         this.tree = tree;
         this.query = query;
         this.varToPath = varToPath;
     }
 
-    public TreeData<FacetPath> getTree() {
+    public TreeData<ScopedFacetPath> getTree() {
         return tree;
     }
 
-    public Map<Var, FacetPath> getVarToPath() {
+    public Map<Var, ScopedFacetPath> getVarToPath() {
         return varToPath;
     }
 
-    public Map<FacetPath, Var> getPathToVar() {
+    public Map<ScopedFacetPath, Var> getPathToVar() {
         return varToPath.inverse();
     }
 

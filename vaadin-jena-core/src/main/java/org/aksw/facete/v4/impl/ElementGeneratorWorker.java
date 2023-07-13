@@ -1,28 +1,33 @@
 package org.aksw.facete.v4.impl;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.aksw.facete.v3.api.FacetPathMapping;
-import org.aksw.facete.v3.api.NodeFacetPath;
 import org.aksw.facete.v3.api.TreeData;
 import org.aksw.facete.v3.api.TreeDataMap;
 import org.aksw.jena_sparql_api.data_query.impl.FacetedQueryGenerator;
 import org.aksw.jenax.arq.util.expr.ExprUtils;
+import org.aksw.jenax.arq.util.node.NodeCustom;
 import org.aksw.jenax.arq.util.node.NodeUtils;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
+import org.aksw.jenax.sparql.relation.api.Relation;
+import org.aksw.jenax.treequery2.api.FacetPathMapping;
+import org.aksw.jenax.treequery2.api.ScopedFacetPath;
+import org.aksw.jenax.treequery2.api.VarScope;
+import org.aksw.jenax.treequery2.impl.FacetPathMappingImpl;
 import org.apache.jena.graph.Node;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.E_LogicalNot;
@@ -36,44 +41,61 @@ import org.apache.jena.sparql.syntax.ElementBind;
 import org.apache.jena.sparql.syntax.ElementFilter;
 import org.apache.jena.sparql.syntax.ElementGroup;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.SetMultimap;
 
 /**
- * This class should supersede {@link FacetedQueryGenerator}
+ * 
+ * 
+ * This class should supersede {@link FacetedQueryGenerator}.
  */
 public class ElementGeneratorWorker {
-    protected SetMultimap<FacetPath, Expr> localConstraintIndex;
+	
+	// protected Map<VarScope, TreeData<FacetPath>> facetTree;
+	
+    protected Map<VarScope, ElementGeneratorContext> scopeToContext = new HashMap<>();
     protected FacetPathMapping pathMapping;
-    protected PropertyResolverImpl propertyResolver;
+    protected PropertyResolver propertyResolver;
 
     /** Mapping of element paths (FacetPaths with the component set to the TUPLE constant) */
     // protected Map<FacetPath, ElementAcc> eltPathToAcc = new LinkedHashMap<>();
     // ElementAcc rootEltAcc = ElementAcc.newRoot(); // null; //new ElementAcc();
-    protected TreeData<FacetPath> facetTree;
+//    protected TreeData<FacetPath> facetTree;
+//
+//    /** The FacetPaths on this tree are purely element ids (they reference relations rather than components) */
+//    protected Set<FacetPath> mandatoryElementIds = new HashSet<>();
+//    protected TreeDataMap<FacetPath, ElementAcc> facetPathToAcc = new TreeDataMap<>();
+//    protected Map<FacetPath, Var> pathToVar = new HashMap<>();
 
-    /** The FacetPaths on this tree are purely element ids (they reference relations rather than components) */
-    protected Set<FacetPath> mandatoryElementIds = new HashSet<>();
-    protected TreeDataMap<FacetPath, ElementAcc> facetPathToAcc = new TreeDataMap<>();
-    protected Map<FacetPath, Var> pathToVar = new HashMap<>();
+    public ElementGeneratorWorker(FacetPathMapping pathMapping, PropertyResolver propertyResolver) {
+    	this(null, null, pathMapping, propertyResolver);
+    }
 
-    public ElementGeneratorWorker(TreeData<FacetPath> facetTree, SetMultimap<FacetPath, Expr> localConstraintIndex, FacetPathMapping pathMapping, PropertyResolverImpl propertyResolver) {
-        this.facetTree = facetTree;
-        this.localConstraintIndex = localConstraintIndex;
-        this.mandatoryElementIds.add(FacetPath.newAbsolutePath());
+    public ElementGeneratorWorker(TreeData<ScopedFacetPath> facetTree, SetMultimap<ScopedFacetPath, Expr> constraintIndex, FacetPathMapping pathMapping, PropertyResolver propertyResolver) {
         this.pathMapping = pathMapping;
-        this.propertyResolver = propertyResolver;
+        this.propertyResolver = propertyResolver;        
+    }
 
-        for (Expr expr : new ArrayList<>(localConstraintIndex.values())) {
+    public void setConstraintIndex(SetMultimap<ScopedFacetPath, Expr> constraintIndex) {
+        for (Expr expr : new ArrayList<>(constraintIndex.values())) {
             analysePathModality(expr);
         }
     }
-
+    
     public FacetPathMapping getPathMapping() {
         return pathMapping;
     }
 
-    public PropertyResolverImpl getPropertyResolver() {
+    public PropertyResolver getPropertyResolver() {
         return propertyResolver;
+    }
+    
+    public BiMap<ScopedFacetPath, Var> getPathToVar() {
+    	BiMap<ScopedFacetPath, Var> result = scopeToContext.values().stream().flatMap(cxt -> cxt.getPathToVar().entrySet().stream()
+    			.map(e -> new SimpleEntry<>(ScopedFacetPath.of(cxt.scope, e.getKey()), e.getValue())))    	
+    			.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (u, v) -> u, HashBiMap::create));
+    	return result;
     }
 
     /**
@@ -82,11 +104,11 @@ public class ElementGeneratorWorker {
      */
     public void analysePathModality(Expr expr) {
         //public void addExpr(Expr expr) {
-        Set<FacetPath> paths = NodeFacetPath.mentionedPaths(expr);
+        Set<ScopedFacetPath> paths = NodeCustom.mentionedValues(expr);
 
         boolean isMandatory = !FacetedQueryGenerator.isAbsent(expr);
 
-        for (FacetPath path : paths) {
+        for (ScopedFacetPath path : paths) {
             // addPath(path);
             // constraintIndex.put(path, expr);
 
@@ -97,13 +119,35 @@ public class ElementGeneratorWorker {
     }
 
     /** Mark a path as mandatory. This makes all parents also mandatory. */
-    public void declareMandatoryPath(FacetPath path) {
+    public void declareMandatoryPath(ScopedFacetPath scopedPath) {
+        ElementGeneratorContext cxt = getOrCreateContext(scopedPath.getScope());
+        declareMandatoryPath(cxt, scopedPath.getFacetPath());
+    }
+
+
+//    public ScopedFacetPath toElementId(ScopedFacetPath sfp) {
+//        return sfp.transformPath(FacetPathUtils::toElementId);
+//    }
+
+//    protected ElementGeneratorContext getOrCreateContext(ScopedFacetPath path) {
+//        VarScope scope = path.getScope();
+//        
+//    }
+
+    public ElementGeneratorContext getOrCreateContext(VarScope scope) {
+        ElementGeneratorContext result = scopeToContext.computeIfAbsent(scope, sc -> {
+            return new ElementGeneratorContext(sc);
+        });
+        return result;
+    }
+
+    public void declareMandatoryPath(ElementGeneratorContext cxt, FacetPath path) {
         FacetPath current = path;
+        Set<FacetPath> mandatoryElementIds = cxt.mandatoryElementIds;
         while (current != null) {
             FacetPath eltId = FacetPathUtils.toElementId(current);
             if (!mandatoryElementIds.contains(eltId)) {
                 mandatoryElementIds.add(eltId);
-
                 current = current.getParent();
             } else {
                 break;
@@ -114,20 +158,24 @@ public class ElementGeneratorWorker {
     /**
      * Create the element for the last facet step of a facet path (without recursion)
      */
-    public ElementAcc allocateEltAcc(Var parentVar, Var targetVar, FacetPath path) {
+    public ElementAcc allocateEltAcc(Var parentVar, Var targetVar, ScopedFacetPath scopedPath) {
+        ElementGeneratorContext cxt = getOrCreateContext(scopedPath.getScope());
+        return allocateEltAcc(cxt, parentVar, targetVar, scopedPath.getFacetPath());
+    }
 
+    public ElementAcc allocateEltAcc(ElementGeneratorContext cxt, Var parentVar, Var targetVar, FacetPath path) {
         // FIXME Naively adding optionl elements does not work when facet paths are mapped to BIND elements
         // In the example below, ?bar will be unbound:
         // BIND("foo" AS ?foo) OPTIONAL { BIND(?foo AS ?bar) }
 
         FacetPath eid = FacetPathUtils.toElementId(path);
         // ElementGroup container = new ElementGroup();
-        boolean isMandatory = mandatoryElementIds.contains(eid);
+        boolean isMandatory = cxt.mandatoryElementIds.contains(eid);
 
         Element coreElt = null;
         Node secondaryNode;
         if (!path.getSegments().isEmpty()) {
-            coreElt = createElementForLastStep(parentVar, targetVar, path);
+            coreElt = createElementForLastStep(cxt, parentVar, targetVar, path);
 
             //container.addElement(coreElt);
         } else {
@@ -145,7 +193,7 @@ public class ElementGeneratorWorker {
         return new ElementAcc(coreElt, combiner);
     }
 
-    public Element createElementForLastStep(Var parentVar, Var targetVar, FacetPath path) {
+    public Element createElementForLastStep(ElementGeneratorContext cxt, Var parentVar, Var targetVar, FacetPath path) {
         Element coreElt;
         FacetStep step = path.getFileName().toSegment();
 
@@ -159,13 +207,23 @@ public class ElementGeneratorWorker {
             Node toggledComponent = FacetStep.isTarget(c) ? FacetStep.PREDICATE : FacetStep.TARGET;
             FacetStep s = step.copyStep(toggledComponent);
         // FacetStep toggledTarget = step.toggleTarget();
-            secondaryNode = pathMapping.allocate(path.resolveSibling(s));
+            FacetPath predicatePath = path.resolveSibling(s);
+            //secondaryNode = FacetPathMappingImpl.resolveVar(pathMapping, cxt.scope.getScopeName(), targetVar, path).asVar(); // pathMapping.allocate(path.resolveSibling(s));
+            secondaryNode = FacetPathMappingImpl.resolveVar(pathMapping, cxt.scope.getScopeName(), cxt.scope.getStartVar(), predicatePath).asVar();
+            // secondaryNode = path.transformPath(fp -> fp.resolveSibling(s)).toScopedVar(pathMapping).asVar();
         } else {
             secondaryNode = predicateNode;
         }
 
         if (FacetStep.isTarget(c)) {
-            coreElt = propertyResolver.resolve(parentVar, secondaryNode, targetVar, isFwd);
+            // coreElt = propertyResolver.resolve(parentVar, secondaryNode, targetVar, isFwd);
+        	Relation rel = propertyResolver.resolve(secondaryNode);
+            
+        	// FIXME Adapt the relation w.r.t parentVar, targetVar and direction
+        	
+        	coreElt = rel.getElement();
+            
+            
             // coreElt = ElementUtils.createElementTriple(parentVar, secondaryNode, targetVar, isFwd);
         } else {
             coreElt = ElementUtils.createElementTriple(parentVar, targetVar, secondaryNode, isFwd);
@@ -174,31 +232,37 @@ public class ElementGeneratorWorker {
     }
 
     public void allocateElements(Expr expr) {
-        Collection<FacetPath> paths = NodeFacetPath.mentionedPaths(expr);
-        for(FacetPath path : paths) {
+        Collection<ScopedFacetPath> paths = NodeCustom.mentionedValues(expr);
+        for(ScopedFacetPath path : paths) {
             allocateElement(path);
         }
     }
 
-    public Var allocateElement(FacetPath path) {
+    public Var allocateElement(ScopedFacetPath path) {
+        ElementGeneratorContext cxt = getOrCreateContext(path.getScope());
+        return allocateElement(cxt, path.getFacetPath());
+    }
+
+    public Var allocateElement(ElementGeneratorContext cxt, FacetPath path) {
         FacetPath parentPath = path.getParent();
         FacetPath eltId = FacetPathUtils.toElementId(path);
 
-        ElementAcc elementAcc = facetPathToAcc.get(eltId);
+        ElementAcc elementAcc = cxt.facetPathToAcc.get(eltId);
         Var targetVar;
         if (elementAcc == null) {
             Var parentVar;
-            targetVar = pathToVar.computeIfAbsent(path, pathMapping::allocate);
+            // targetVar = pathToVar.computeIfAbsent(path, pathMapping::allocate);
+            targetVar = FacetPathMappingImpl.resolveVar(pathMapping, cxt.scope, path).asVar(); // path.toScopedVar(pathMapping).asVar();
 
             if (parentPath != null) {
-                parentVar = allocateElement(parentPath);
+                parentVar = allocateElement(cxt, parentPath);
             } else {
                 parentVar = targetVar;
             }
 
-            elementAcc = allocateEltAcc(parentVar, targetVar, path);
-            facetPathToAcc.addItem(eltId.getParent(), eltId);
-            facetPathToAcc.put(eltId, elementAcc);
+            elementAcc = allocateEltAcc(cxt, parentVar, targetVar, path);
+            cxt.facetPathToAcc.addItem(eltId.getParent(), eltId);
+            cxt.facetPathToAcc.put(eltId, elementAcc);
 
             // Create the ElementAcc for the path if it hasn't happened yet
 //                Iterable<FacetPath> children = getChildren.apply(path);
@@ -213,7 +277,9 @@ public class ElementGeneratorWorker {
 //                    ElementUtils.copyElements(parentAcc, elementAcc.getResultElement());
 //                }
         } else {
-            targetVar = pathToVar.computeIfAbsent(path, pathMapping::allocate);
+            // targetVar = cxt.pathToVar.computeIfAbsent(path, pathMapping::allocate);
+            targetVar = cxt.pathToVar.computeIfAbsent(path, p ->
+                FacetPathMappingImpl.resolveVar(pathMapping, cxt.scope, p).asVar());
         }
 
         return targetVar;
@@ -229,7 +295,8 @@ public class ElementGeneratorWorker {
      * @param getChildren
      */
     public void accumulate(
-            TreeDataMap<FacetPath, ElementAcc> facetPathToAcc,
+            ElementGeneratorContext cxt,
+            // TreeDataMap<FacetPath, ElementAcc> facetPathToAcc,
             ElementGroup globalAcc,
             Var parentVar,
             FacetPath path, // TODO This should be the FacetNode and there might be subqueries
@@ -243,18 +310,19 @@ public class ElementGeneratorWorker {
         FacetPath parentEltId = parentPath == null ? null : FacetPathUtils.toElementId(parentPath);
         FacetPath eltId = FacetPathUtils.toElementId(path);
 
-        Var targetVar = pathMapping.allocate(path);
+        // Var targetVar = pathMapping.allocate(path);
+        Var targetVar = FacetPathMappingImpl.resolveVar(pathMapping, cxt.scope, path).asVar();
 
-        pathToVar.put(path, targetVar);
+        cxt.pathToVar.put(path, targetVar);
 
-        ElementAcc elementAcc = facetPathToAcc.get(eltId);
+        ElementAcc elementAcc = cxt.facetPathToAcc.get(eltId);
         if (elementAcc == null) {
-            elementAcc = allocateEltAcc(parentVar, targetVar, path);
+            elementAcc = allocateEltAcc(cxt, parentVar, targetVar, path);
             // The element may exist if eltId is the empty path
-            if (!facetPathToAcc.contains(eltId)) {
-                facetPathToAcc.addItem(parentEltId, eltId);
+            if (!cxt.facetPathToAcc.contains(eltId)) {
+                cxt.facetPathToAcc.addItem(parentEltId, eltId);
             }
-            facetPathToAcc.put(eltId, elementAcc);
+            cxt.facetPathToAcc.put(eltId, elementAcc);
         }
 
         // Create the ElementAcc for the path if it hasn't happened yet
@@ -262,7 +330,7 @@ public class ElementGeneratorWorker {
         if (children != null && children.iterator().hasNext()) {
             for (FacetPath subPath : children) {
                 // If there is no accumulator for the child then visit it
-                accumulate(facetPathToAcc, globalAcc, targetVar, subPath, getChildren);
+                accumulate(cxt, globalAcc, targetVar, subPath, getChildren);
             }
         }
 
@@ -271,43 +339,51 @@ public class ElementGeneratorWorker {
 //            }
 
         // Create FILTER elements
-        Set<Expr> exprs = localConstraintIndex.get(path);
+        Set<Expr> exprs = cxt.localConstraintIndex.get(path);
         createElementsForExprs2(globalAcc, exprs, false);
     }
 
-
     public MappedElement createElement() {
-        FacetPath rootPath = FacetPath.newAbsolutePath();
-        Var rootVar = pathMapping.allocate(rootPath);
-        // ElementGroup group = new ElementGroup();
-
-
-        // TreeDataMap<FacetPath, ElementAcc> tree;
-        ElementGroup filterGroup = new ElementGroup();
-
-        // baseConcept.getElements().forEach(group::addElement);
-        for (FacetPath path : facetTree.getRootItems()) {
-            accumulate(facetPathToAcc, filterGroup, rootVar, path, facetTree::getChildren);
-//                accumulate(facetPathToAcc, filterGroup, null, null, facetTree::getChildren);
-            // ElementUtils.toElementList(elt).forEach(group::addElement);
-            // group.addElement(elt);
-        }
-
-        Element elt = collect(facetPathToAcc, rootPath);
-        elt = ElementUtils.flatten(elt);
-
-        //ElementUtils.copyElements(group, filterGroup);
-
-        // Add filters for the constraints
-        // Element elt = group.size() == 1 ? group.get(0) : group;
-
-        return new MappedElement(facetPathToAcc, pathToVar, elt);
+    	// TODO Collect all elements from all contexts
+    	return null;
     }
+
+//    public MappedElement createElement(ElementGeneratorContext cxt) {
+//        FacetPath rootPath = FacetPath.newAbsolutePath();
+//        // Var rootVar = pathMapping.allocate(rootPath);
+//        Var rootVar = cxt.scope.getStartVar(); // FacetPathMappingImpl.resolveVar(pathMapping, cxt.scope, path).asVar();
+//
+//        // ElementGroup group = new ElementGroup();
+//
+//
+//        // TreeDataMap<FacetPath, ElementAcc> tree;
+//        ElementGroup filterGroup = new ElementGroup();
+//
+//        // baseConcept.getElements().forEach(group::addElement);
+//        for (FacetPath path : cxt.facetTree.getRootItems()) {
+//            accumulate(cxt, filterGroup, rootVar, path, cxt.facetTree::getChildren);
+////                accumulate(facetPathToAcc, filterGroup, null, null, facetTree::getChildren);
+//            // ElementUtils.toElementList(elt).forEach(group::addElement);
+//            // group.addElement(elt);
+//        }
+//
+//        Element elt = collect(cxt.facetPathToAcc, rootPath);
+//        elt = ElementUtils.flatten(elt);
+//
+//        //ElementUtils.copyElements(group, filterGroup);
+//
+//        // Add filters for the constraints
+//        // Element elt = group.size() == 1 ? group.get(0) : group;
+//
+//        return new MappedElement(cxt.facetPathToAcc, cxt.pathToVar, elt);
+//    }
 
 
     public void createElementsForExprs2(ElementGroup globalAcc, Collection<Expr> baseExprs, boolean negate) {
 
-        NodeTransform resolveFacetPaths = NodeFacetPath.createNodeTransform(pathMapping);
+        // NodeTransform resolveFacetPaths = NodeFacetPath.createNodeTransform(pathMapping);
+        NodeTransform resolveFacetPaths = NodeCustom.createNodeTransform(this::resolve);
+
 //          //NodeTransform xform = NodeTransformLib2.wrapWithNullAsIdentity();
   //
   //
@@ -355,11 +431,17 @@ public class ElementGeneratorWorker {
     }
 
 
+    public Var resolve(ScopedFacetPath sfp) {
+        return FacetPathMappingImpl.resolveVar(pathMapping, sfp).asVar();
+    }
+
     // Does not seem to be used (yet) - Process all paths referenced by the given expressions
     public void createElementsForExprs(Collection<Expr> baseExprs, boolean negate) {
 
         Set<Expr> seenExprs = new LinkedHashSet<>();
-        NodeTransform resolveFacetPaths = NodeFacetPath.createNodeTransform(pathMapping);
+
+
+        NodeTransform resolveFacetPaths = NodeCustom.createNodeTransform(this::resolve);
     //        //NodeTransform xform = NodeTransformLib2.wrapWithNullAsIdentity();
     //
     //

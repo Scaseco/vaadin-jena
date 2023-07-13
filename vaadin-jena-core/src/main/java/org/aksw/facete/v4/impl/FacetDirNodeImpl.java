@@ -7,8 +7,10 @@ import org.aksw.facete.v3.api.FacetMultiNode;
 import org.aksw.facete.v3.api.FacetNode;
 import org.aksw.facete.v3.api.FacetValueCount;
 import org.aksw.facete.v3.api.FacetedDataQuery;
+import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.sparql.relation.api.BinaryRelation;
 import org.aksw.jenax.sparql.relation.api.TernaryRelation;
+import org.aksw.jenax.treequery2.api.ScopedFacetPath;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
@@ -61,7 +63,8 @@ public class FacetDirNodeImpl
 //        parent().step(direction).via(NodeUtils.ANY_IRI, FacetStep.TARGET).one().enterConstraints().exists().activate();
         // ElementGenerator.createQuery(parent.facetedQuery.relationQuery, x -> true);
         ElementGenerator eltGen = ElementGenerator.configure(parent.facetedQuery);
-        TernaryRelation relation = eltGen.createRelationFacetValue(null, parent.node.getFacetPath(), org.aksw.commons.util.direction.Direction.ofFwd(direction.isForward()), null, null, false, false);
+        ScopedFacetPath sfp = ScopedFacetPath.of(Vars.s, parent.node.getFacetPath());
+        TernaryRelation relation = eltGen.createRelationFacetValue(null, sfp, org.aksw.commons.util.direction.Direction.ofFwd(direction.isForward()), null, null, false, false);
         System.out.println(relation);
         // Map<String, BinaryRelation> map = eltGen.createMapFacetsAndValues(parent.node.getFacetPath(), org.aksw.commons.util.direction.Direction.ofFwd(direction.isForward()), false, false, false);
 

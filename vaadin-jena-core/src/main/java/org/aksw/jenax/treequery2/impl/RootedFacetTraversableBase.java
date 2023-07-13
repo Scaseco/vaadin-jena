@@ -9,17 +9,28 @@ public abstract class RootedFacetTraversableBase<R, T extends RootedFacetTravers
 {
     /** Roots are compared using reference equality! */
     protected R root;
-    protected FacetPath path;
+    protected FacetPath facetPath;
 
     public RootedFacetTraversableBase(R root, FacetPath path) {
         super();
         this.root = root;
-        this.path = path;
+        this.facetPath = path;
     }
+
+//    @Override
+//    public T getParent() {
+//        FacetPath parentPath = facetPath.getParent();
+//        return parentPath == null ? null : new Roo
+//    }
 
     @Override
     public R getRoot() {
         return root;
+    }
+
+    @Override
+    public FacetPath getFacetPath() {
+        return facetPath;
     }
 
 //    @Override
@@ -34,7 +45,7 @@ public abstract class RootedFacetTraversableBase<R, T extends RootedFacetTravers
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(root, path);
+        return Objects.hashCode(root, facetPath);
     }
 
     @Override
@@ -42,7 +53,7 @@ public abstract class RootedFacetTraversableBase<R, T extends RootedFacetTravers
         boolean result = false;
         if (obj instanceof RootedFacetTraversableBase) {
             RootedFacetTraversableBase<?, ?> o = (RootedFacetTraversableBase<?, ?>)obj;
-            result = o.root == root && o.path.equals(path);
+            result = o.root == root && o.facetPath.equals(facetPath);
         }
         return result;
     }

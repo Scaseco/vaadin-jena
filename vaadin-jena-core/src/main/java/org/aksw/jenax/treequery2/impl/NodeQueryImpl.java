@@ -49,6 +49,10 @@ public class NodeQueryImpl
         this.constraintRoot = new ConstraintNodeImpl(this, FacetPath.newAbsolutePath());
     }
 
+    @Override
+    public NodeQuery getParent() {
+        return relationQuery == null ? null : relationQuery.parent;
+    }
 //    public RootedFacetTraversable<NodeQuery> facets() {
 //        return constraintTraversable;
 //    }

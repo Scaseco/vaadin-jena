@@ -8,14 +8,13 @@ import org.aksw.facete.v3.api.FacetNode;
 import org.aksw.facete.v3.api.FacetedDataQuery;
 import org.aksw.facete.v3.api.FacetedQuery;
 import org.aksw.facete.v3.api.TreeQueryNode;
-import org.aksw.facete.v3.bgp.api.BgpNode;
-import org.aksw.facete.v3.bgp.utils.PathAccessorImpl;
 import org.aksw.facete.v3.impl.FacetedDataQueryImpl;
-import org.aksw.jena_sparql_api.data_query.impl.FacetedQueryGenerator;
+import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.relation.api.BinaryRelation;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
+import org.aksw.jenax.treequery2.api.ScopedFacetPath;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdfconnection.SparqlQueryConnection;
@@ -143,7 +142,9 @@ public class FacetNodeImpl
 
     public FacetedDataQuery<RDFNode> createValueQuery(boolean applySelfConstraints) {
         ElementGenerator eltGen = ElementGenerator.configure(facetedQuery);
-        UnaryRelation relation = eltGen.getAvailableValuesAt(node.getFacetPath(), applySelfConstraints);
+        
+        ScopedFacetPath sfp = ScopedFacetPath.of(Vars.s, node.getFacetPath());
+        UnaryRelation relation = eltGen.getAvailableValuesAt(sfp, applySelfConstraints);
 
         SparqlQueryConnection conn = facetedQuery.connection();
         FacetedDataQuery<RDFNode> result = new FacetedDataQueryImpl<>(

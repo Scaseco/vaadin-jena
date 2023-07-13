@@ -25,6 +25,7 @@ import org.aksw.jenax.arq.util.expr.ExprUtils;
 import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.sparql.relation.api.Relation;
+import org.aksw.jenax.treequery2.api.ScopedFacetPath;
 import org.aksw.jenax.vaadin.label.LabelMgr;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
@@ -112,7 +113,8 @@ public class SparqlGrid {
         List<Entry<Column<?>, FacetPath>> pathToColumn = new ArrayList<>();
 
         for (Var var : vars) {
-            FacetPath path = mappedQuery.getVarToPath().get(var);
+            ScopedFacetPath scopedPath = mappedQuery.getVarToPath().get(var);
+            FacetPath path = scopedPath.getFacetPath();
 
             Column<Binding> column = grid.addComponentColumn(binding -> {
                 Node node = binding.get(var);

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.aksw.facete.v3.api.TreeDataMap;
-import org.aksw.jenax.path.core.FacetPath;
+import org.aksw.jenax.treequery2.api.ScopedFacetPath;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.syntax.Element;
 
@@ -14,19 +14,19 @@ public class MappedElement {
     // protected Map<FacetPath, ElementAcc> eltPathToAcc = new LinkedHashMap<>();
     // protected ElementAcc elementAcc = new ElementAcc(null, getElement(), null);
 
-    protected Map<FacetPath, Var> pathToVar = new HashMap<>();
-    protected TreeDataMap<FacetPath, ElementAcc> eltPathToAcc;
+    protected Map<ScopedFacetPath, Var> pathToVar = new HashMap<>();
+    protected TreeDataMap<ScopedFacetPath, ElementAcc> eltPathToAcc;
 
     protected Element element;
 
-    public MappedElement(TreeDataMap<FacetPath, ElementAcc> eltPathToAcc, Map<FacetPath, Var> pathToVar, Element element) {
+    public MappedElement(TreeDataMap<ScopedFacetPath, ElementAcc> eltPathToAcc, Map<ScopedFacetPath, Var> pathToVar, Element element) {
         super();
         this.eltPathToAcc = eltPathToAcc;
         this.pathToVar = pathToVar;
         this.element = element;
     }
 
-    public TreeDataMap<FacetPath, ElementAcc> getEltPathToAcc() {
+    public TreeDataMap<ScopedFacetPath, ElementAcc> getEltPathToAcc() {
         return eltPathToAcc;
     }
 
@@ -34,7 +34,7 @@ public class MappedElement {
         return element;
     }
 
-    public Var getVar(FacetPath facetPath) {
+    public Var getVar(ScopedFacetPath facetPath) {
         return pathToVar.get(facetPath);
     }
 }

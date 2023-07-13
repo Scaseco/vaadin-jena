@@ -24,6 +24,9 @@ public interface RelationQuery
      */
     NodeQuery getParentNode();
 
+    /** A name to use for prefixing variables of this node's relation */
+    String getScopeBaseName();
+
 
     /** Unlink this RelationQuery from its parent.
      *  Returns this.
