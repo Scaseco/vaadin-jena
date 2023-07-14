@@ -345,38 +345,53 @@ public class ElementGeneratorWorker {
 
     public MappedElement createElement() {
     	// TODO Collect all elements from all contexts
-    	return null;
+        ElementGroup filterGroup = new ElementGroup();
+    	// ElementGroup elt = new ElementGroup();
+    	
+        MappedElement result = new MappedElement();
+    	for (ElementGeneratorContext cxt : scopeToContext.values()) {
+    		MappedElement part = createElement(cxt, filterGroup);
+    		result.putAll(part);
+    	}
+    	return result;
+        // return new MappedElement(cxt.facetPathToAcc, cxt.pathToVar, elt);
     }
 
-//    public MappedElement createElement(ElementGeneratorContext cxt) {
-//        FacetPath rootPath = FacetPath.newAbsolutePath();
-//        // Var rootVar = pathMapping.allocate(rootPath);
-//        Var rootVar = cxt.scope.getStartVar(); // FacetPathMappingImpl.resolveVar(pathMapping, cxt.scope, path).asVar();
-//
-//        // ElementGroup group = new ElementGroup();
-//
-//
-//        // TreeDataMap<FacetPath, ElementAcc> tree;
-//        ElementGroup filterGroup = new ElementGroup();
-//
-//        // baseConcept.getElements().forEach(group::addElement);
-//        for (FacetPath path : cxt.facetTree.getRootItems()) {
-//            accumulate(cxt, filterGroup, rootVar, path, cxt.facetTree::getChildren);
-////                accumulate(facetPathToAcc, filterGroup, null, null, facetTree::getChildren);
-//            // ElementUtils.toElementList(elt).forEach(group::addElement);
-//            // group.addElement(elt);
-//        }
-//
-//        Element elt = collect(cxt.facetPathToAcc, rootPath);
-//        elt = ElementUtils.flatten(elt);
-//
-//        //ElementUtils.copyElements(group, filterGroup);
-//
-//        // Add filters for the constraints
-//        // Element elt = group.size() == 1 ? group.get(0) : group;
-//
-//        return new MappedElement(cxt.facetPathToAcc, cxt.pathToVar, elt);
-//    }
+    public MappedElement createElement(ElementGeneratorContext cxt, ElementGroup filterGroup) {
+        FacetPath rootPath = FacetPath.newAbsolutePath();
+        // Var rootVar = pathMapping.allocate(rootPath);
+        Var rootVar = cxt.scope.getStartVar(); // FacetPathMappingImpl.resolveVar(pathMapping, cxt.scope, path).asVar();
+
+        // ElementGroup group = new ElementGroup();
+
+
+        // TreeDataMap<FacetPath, ElementAcc> tree;
+        // ElementGroup filterGroup = new ElementGroup();
+
+        // baseConcept.getElements().forEach(group::addElement);
+        for (FacetPath path : cxt.facetTree.getRootItems()) {
+            accumulate(cxt, filterGroup, rootVar, path, cxt.facetTree::getChildren);
+//                accumulate(facetPathToAcc, filterGroup, null, null, facetTree::getChildren);
+            // ElementUtils.toElementList(elt).forEach(group::addElement);
+            // group.addElement(elt);
+        }
+
+        Element elt = collect(cxt.facetPathToAcc, rootPath);
+        elt = ElementUtils.flatten(elt);
+
+        
+        TreeDataMap<ScopedFacetPath, ElementAcc> facetPathToAcc = cxt.facetPathToAcc.mapKeys(facetPath -> ScopedFacetPath.of(cxt.getScope(), facetPath));
+        BiMap<ScopedFacetPath, Var> pathToVar = cxt.pathToVar.entrySet().stream()
+        		.map(e -> new SimpleEntry<>(ScopedFacetPath.of(cxt.getScope(), e.getKey()), e.getValue()))
+        		.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (u, v) -> u, HashBiMap::create));
+        
+        //ElementUtils.copyElements(group, filterGroup);
+
+        // Add filters for the constraints
+        // Element elt = group.size() == 1 ? group.get(0) : group;
+
+        return new MappedElement(facetPathToAcc, pathToVar, elt);
+    }
 
 
     public void createElementsForExprs2(ElementGroup globalAcc, Collection<Expr> baseExprs, boolean negate) {

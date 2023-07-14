@@ -51,6 +51,9 @@ public class ElementGeneratorContext {
     	return this;
     }
     
+    public VarScope getScope() {
+		return scope;
+	}
     
     public void addPath(FacetPath facetPath) {
         facetTree.putItem(facetPath, FacetPath::getParent);
