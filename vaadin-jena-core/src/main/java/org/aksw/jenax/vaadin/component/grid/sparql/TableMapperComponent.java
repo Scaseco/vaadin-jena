@@ -494,7 +494,7 @@ class DetailsView
             Button addInstanceBtn = new Button(VaadinIcon.PLUS_CIRCLE_O.create());
             addInstanceBtn.addClickListener(ev -> {
                 // Allocate the next alias in the tree data
-                FacetPath newPath = allocate(treeDataProvider.getTreeData(), predicateRecord.activePath, predicateRecord.predicate.asNode(), predicateRecord.isForward, null);
+                FacetPath newPath = allocate(treeDataProvider.getTreeData(), predicateRecord.activePath, predicateRecord.predicate.asNode(), predicateRecord.isForward, FacetStep.TARGET);
 
                 treeDataProvider.getTreeData().addItem(predicateRecord.activePath, newPath);
                 treeDataProvider.refreshAll();

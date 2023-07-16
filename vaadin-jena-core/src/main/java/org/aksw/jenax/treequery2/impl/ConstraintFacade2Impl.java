@@ -2,8 +2,6 @@ package org.aksw.jenax.treequery2.impl;
 
 import java.util.Collection;
 
-import org.aksw.facete.v3.api.ConstraintApiImpl;
-import org.aksw.facete.v3.api.ConstraintControl;
 import org.aksw.facete.v3.api.ConstraintFacade;
 import org.aksw.facete.v3.api.FacetConstraintCore;
 import org.aksw.facete.v3.api.HLFacetConstraint;
@@ -14,6 +12,9 @@ import org.apache.jena.sparql.expr.Expr;
 
 import com.google.common.collect.Range;
 
+/**
+ * API to access the constraints at the target node reached by a traversal.
+ */
 public class ConstraintFacade2Impl<T>
     implements ConstraintFacade<T>
 {

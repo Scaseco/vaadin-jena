@@ -9,7 +9,10 @@ import org.apache.jena.sparql.core.Var;
 public interface QueryContext {
     Set<Var> getUsedVars();
 
+    @Deprecated // Probably no longer needed?
     Generator<String> getScopeNameGenerator();
+    
+    FacetPathMapping getPathMapping(); 
 
     PropertyResolver getPropertyResolver();
 }

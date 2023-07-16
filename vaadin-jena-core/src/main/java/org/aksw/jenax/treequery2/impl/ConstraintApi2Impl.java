@@ -15,6 +15,9 @@ import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.expr.ExprLib;
 import org.apache.jena.sparql.expr.NodeValue;
 
+/**
+ * A specific expression
+ */
 public class ConstraintApi2Impl<T>
 //implements FacetConstraintCore
 {

@@ -19,6 +19,7 @@ import org.aksw.facete.v3.api.TreeDataMap;
 import org.aksw.jena_sparql_api.data_query.impl.FacetedQueryGenerator;
 import org.aksw.jenax.arq.util.expr.ExprUtils;
 import org.aksw.jenax.arq.util.node.NodeCustom;
+import org.aksw.jenax.arq.util.node.NodeTransformLib2;
 import org.aksw.jenax.arq.util.node.NodeUtils;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.path.core.FacetPath;
@@ -184,8 +185,10 @@ public class ElementGeneratorWorker {
             // container.addElement(baseElement);
         }
 
+        boolean isEmptyGroup = coreElt instanceof ElementGroup && ((ElementGroup)coreElt).isEmpty();
+        
         // Element root = isMandatory || coreElt instanceof ElementBind ? container : new ElementOptional(container);
-        BiFunction<Element, List<Element>, Element> combiner =  isMandatory || coreElt instanceof ElementBind
+        BiFunction<Element, List<Element>, Element> combiner =  isMandatory || coreElt instanceof ElementBind || isEmptyGroup
                 ? ElementAcc::collectIntoGroup
                 : ElementAcc::collectIntoOptionalGroup;
 
@@ -214,16 +217,36 @@ public class ElementGeneratorWorker {
         } else {
             secondaryNode = predicateNode;
         }
+        
+        // Relation rename:
+        // target(s) have given names
+        // source(s) have given names
+        // all further variables in the scope of the source(s)
 
         if (FacetStep.isTarget(c)) {
             // coreElt = propertyResolver.resolve(parentVar, secondaryNode, targetVar, isFwd);
         	Relation rel = propertyResolver.resolve(secondaryNode);
             
         	// FIXME Adapt the relation w.r.t parentVar, targetVar and direction
+        	// RelationUtils.rename(
+        	String scopeName = cxt.getScope().getScopeName();
+        	Map<Var, Var> varRename = new HashMap<>();
+        	List<Var> vars = rel.getVars();
+        	int n = vars.size();
         	
-        	coreElt = rel.getElement();
-            
-            
+        	int start = 1;
+        	int end = n - 1;
+        	List<Var> intermediateVars = start >= end ? Collections.emptyList() : vars.subList(start, end);
+
+        	varRename.put(vars.get(n - 1), targetVar);
+        	varRename.put(vars.get(0), parentVar);
+        	
+        	for (Var v : intermediateVars) {
+            	Var scopedVar = FacetPathMappingImpl.resolveVar(pathMapping, scopeName, targetVar, path).asVar();
+            	varRename.put(v, scopedVar);
+        	}
+        	Relation finalRel = rel.applyNodeTransform(NodeTransformLib2.wrapWithNullAsIdentity(varRename::get));        	
+        	coreElt = finalRel.getElement();
             // coreElt = ElementUtils.createElementTriple(parentVar, secondaryNode, targetVar, isFwd);
         } else {
             coreElt = ElementUtils.createElementTriple(parentVar, targetVar, secondaryNode, isFwd);
@@ -363,8 +386,6 @@ public class ElementGeneratorWorker {
         Var rootVar = cxt.scope.getStartVar(); // FacetPathMappingImpl.resolveVar(pathMapping, cxt.scope, path).asVar();
 
         // ElementGroup group = new ElementGroup();
-
-
         // TreeDataMap<FacetPath, ElementAcc> tree;
         // ElementGroup filterGroup = new ElementGroup();
 

@@ -1,7 +1,7 @@
 package org.aksw.facete.v4.impl;
 
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,10 +24,10 @@ public class ElementGeneratorContext {
     /** The FacetPaths on this tree are purely element ids (they reference relations rather than components) */
     protected Set<FacetPath> mandatoryElementIds = new HashSet<>();
     protected TreeDataMap<FacetPath, ElementAcc> facetPathToAcc = new TreeDataMap<>();
-    protected Map<FacetPath, Var> pathToVar = new HashMap<>();
+    protected Map<FacetPath, Var> pathToVar = new LinkedHashMap<>();
 
     public ElementGeneratorContext(Var rootVar, TreeData<FacetPath> facetTree, SetMultimap<FacetPath, Expr> localConstraintIndex) {
-        this(new VarScope("", rootVar), facetTree, localConstraintIndex);
+        this(VarScope.of("", rootVar), facetTree, localConstraintIndex);
     }
 
     public ElementGeneratorContext(VarScope scope) {

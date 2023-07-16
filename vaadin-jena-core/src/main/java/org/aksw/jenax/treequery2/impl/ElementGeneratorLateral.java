@@ -5,18 +5,15 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.aksw.commons.collections.generator.Generator;
-import org.aksw.commons.collections.generator.GeneratorFromFunction;
 import org.aksw.commons.util.direction.Direction;
-import org.aksw.commons.util.list.ListUtils;
 import org.aksw.facete.v3.api.FacetPathMapping;
 import org.aksw.facete.v3.api.TreeData;
-import org.aksw.facete.v4.impl.ElementGenerator;
 import org.aksw.facete.v4.impl.ElementGeneratorWorker;
-import org.aksw.facete.v4.impl.PropertyResolverImpl;
+import org.aksw.facete.v4.impl.PropertyResolver;
 import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jena_sparql_api.rx.entity.engine.EntityQueryRx;
 import org.aksw.jena_sparql_api.rx.entity.model.EntityBaseQuery;
@@ -24,6 +21,7 @@ import org.aksw.jena_sparql_api.rx.entity.model.EntityQueryImpl;
 import org.aksw.jena_sparql_api.rx.entity.model.EntityTemplateImpl;
 import org.aksw.jena_sparql_api.schema.ShUtils;
 import org.aksw.jenax.arq.connection.core.QueryExecutionFactories;
+import org.aksw.jenax.arq.util.node.NodeCustom;
 import org.aksw.jenax.arq.util.node.NodeUtils;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.arq.util.var.Vars;
@@ -35,10 +33,8 @@ import org.aksw.jenax.sparql.path.PathUtils;
 import org.aksw.jenax.treequery2.api.ConstraintNode;
 import org.aksw.jenax.treequery2.api.NodeQuery;
 import org.aksw.jenax.treequery2.api.RelationQuery;
-import org.aksw.jenax.treequery2.api.ScopeNode;
+import org.aksw.jenax.treequery2.api.ScopedFacetPath;
 import org.aksw.jenax.treequery2.api.ScopedVar;
-import org.aksw.jenax.treequery2.old.NodeQueryOld;
-import org.aksw.jenax.vaadin.component.grid.sparql.DynamicInjectiveFunction;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.DatasetFactory;
@@ -54,6 +50,7 @@ import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.expr.ExprVar;
 import org.apache.jena.sparql.expr.NodeValue;
+import org.apache.jena.sparql.graph.NodeTransform;
 import org.apache.jena.sparql.modify.request.QuadAcc;
 import org.apache.jena.sparql.path.P_Path0;
 import org.apache.jena.sparql.path.Path;
@@ -71,7 +68,6 @@ import org.topbraid.shacl.model.SHFactory;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 
 
@@ -242,21 +238,39 @@ public class ElementGeneratorLateral {
             // int sortDirection = current.get
             List<SortCondition> sortConditions = current.getSortConditions();
 
-            FacetConstraints<ConstraintNode<NodeQuery>> constraints = current.getFacetConstraints();
-            // constraints.
+            // Handle constraints
+            // The transformation from ConstraintNode<NodeQuery> to ScopedFacetPath is not type safe and thus ugly 
+            FacetConstraints<ConstraintNode<NodeQuery>> constraints = current.getFacetConstraints();            
+            Collection<Expr> rawExprs = constraints.getExprs();
 
-            TreeData<FacetPath> facetTree = new TreeData<>(); // Empty tree because we rely on the constraints
-            // constraints.ge
-            PropertyResolverImpl propertyResolver = (PropertyResolverImpl)current.getContext().getPropertyResolver();
+            NodeTransform constraintTransform = NodeCustom.mapValue((ConstraintNode<NodeQuery> cn) -> ConstraintNode.toScopedFacetPath(cn));            
+            Collection<Expr> exprs = rawExprs.stream()
+            		.map(e -> e.applyNodeTransform(constraintTransform))
+            		.collect(Collectors.toList());
+            
+            SetMultimap<ScopedFacetPath, Expr> constraintIndex = FacetConstraints.createConstraintIndex(exprs);
 
-            SetMultimap<ConstraintNode<NodeQuery>, Expr> constraintIndex = FacetConstraints.createConstraintIndex(constraints);
+            // TreeData<FacetPath> facetTree = new TreeData<>(); // Empty tree because we rely on the constraints
+            PropertyResolver propertyResolver = current.getContext().getPropertyResolver();
 
-            String parentScopeNode = Optional.ofNullable(current.getParentNode())
-                    .map(NodeQuery::relationQuery).map(RelationQuery::getScopeBaseName).orElse(null);
+//            String parentScopeNode = Optional.ofNullable(current.getParentNode())
+//                    .map(NodeQuery::relationQuery).map(RelationQuery::getScopeBaseName).orElse(null);
+//
+//            ScopeNode scopeNode = new ScopeNode(current.getScopeBaseName(), current.target().var());
+            org.aksw.jenax.treequery2.api.FacetPathMapping pathMapping = current.getContext().getPathMapping(); // new FacetPathMappingImpl();
 
-            ScopeNode scopeNode = new ScopeNode(current.getScopeBaseName(), current.target().var());
-            org.aksw.jenax.treequery2.api.FacetPathMapping pathMapping = new FacetPathMappingImpl();
+            ElementGeneratorWorker eltWorker = new ElementGeneratorWorker(pathMapping, propertyResolver);
+            if (!exprs.isEmpty()) {
+            	System.out.println("Constraints: " + exprs);
+            }
 
+            eltWorker.setConstraintIndex(constraintIndex);            
+            Element constraintElt = eltWorker.createElement().getElement();
+        	System.out.println("Elt: " + constraintElt);
+
+            
+            // ElementGenerator eltGen = new ElementGenerator(pathMapping, constraintIndex, null);
+            
             // new ElementGeneratorWorker(facetTree, constraintIndex, scopeNode, propertyResolver);
 
             if (limit != null || offset != null || !sortConditions.isEmpty()) {

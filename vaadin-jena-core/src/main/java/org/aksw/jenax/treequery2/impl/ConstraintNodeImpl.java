@@ -32,8 +32,8 @@ public class ConstraintNodeImpl
 
     @Override
     public ConstraintFacade<ConstraintNode<NodeQuery>> enterConstraints() {
-        RelationQueryImpl rq = (RelationQueryImpl)root.relationQuery();
-        ConstraintApi2Impl<ConstraintNode<NodeQuery>> constraintView = new ConstraintApi2Impl<>(rq.facetConstraints, this);
-        return new ConstraintFacade2Impl<ConstraintNode<NodeQuery>>(this, constraintView);
-    }
+    	FacetConstraints<ConstraintNode<NodeQuery>> facetConstraints = root.relationQuery().getFacetConstraints();    	
+        ConstraintApi2Impl<ConstraintNode<NodeQuery>> constraintView = new ConstraintApi2Impl<>(facetConstraints, this);
+        return new ConstraintFacade2Impl<>(this, constraintView);
+    }    
 }

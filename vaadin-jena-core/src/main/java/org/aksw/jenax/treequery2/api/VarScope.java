@@ -8,14 +8,18 @@ public class VarScope {
     protected String scopeName;
     protected Var startVar;
 
-    public VarScope(String scopeName, Var startVar) {
+    protected VarScope(String scopeName, Var startVar) {
         super();
         this.scopeName = scopeName;
         this.startVar = startVar;
     }
     
     public static VarScope of(Var rootVar) {
-    	return new VarScope("", rootVar);
+    	return of("", rootVar);
+    }
+
+    public static VarScope of(String scopeName, Var rootVar) {
+    	return new VarScope(scopeName, rootVar);
     }
 
     public String getScopeName() {
