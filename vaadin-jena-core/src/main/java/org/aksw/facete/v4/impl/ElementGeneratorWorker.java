@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +56,7 @@ public class ElementGeneratorWorker {
 	
 	// protected Map<VarScope, TreeData<FacetPath>> facetTree;
 	
-    protected Map<VarScope, ElementGeneratorContext> scopeToContext = new HashMap<>();
+    protected Map<VarScope, ElementGeneratorContext> scopeToContext = new LinkedHashMap<>();
     protected FacetPathMapping pathMapping;
     protected PropertyResolver propertyResolver;
 
@@ -74,14 +75,25 @@ public class ElementGeneratorWorker {
     }
 
     public ElementGeneratorWorker(TreeData<ScopedFacetPath> facetTree, SetMultimap<ScopedFacetPath, Expr> constraintIndex, FacetPathMapping pathMapping, PropertyResolver propertyResolver) {
-        this.pathMapping = pathMapping;
-        this.propertyResolver = propertyResolver;        
+    	this.pathMapping = pathMapping;
+        this.propertyResolver = propertyResolver;
+        setFacetTree(facetTree);
+        setConstraintIndex(constraintIndex);
     }
 
     public void setConstraintIndex(SetMultimap<ScopedFacetPath, Expr> constraintIndex) {
         for (Expr expr : new ArrayList<>(constraintIndex.values())) {
             analysePathModality(expr);
         }
+    }
+    
+    public void setFacetTree(TreeData<ScopedFacetPath> facetTree) {
+    	for (ScopedFacetPath rootPath : facetTree.getRootItems()) {
+    		VarScope scope = rootPath.getScope();
+    		ElementGeneratorContext cxt = getOrCreateContext(scope);
+    		TreeData<FacetPath> tree = facetTree.map(ScopedFacetPath::getFacetPath);
+    		cxt.setFacetTree(tree);
+    	}
     }
     
     public FacetPathMapping getPathMapping() {
@@ -539,20 +551,23 @@ public class ElementGeneratorWorker {
      */
     public static Element collect(TreeDataMap<FacetPath, ElementAcc> tree, FacetPath currentPath) {
         ElementAcc eltAcc = tree.get(currentPath);
-        Element elt = eltAcc.getElement();
-
-        // Create the ElementAcc for the path if it hasn't happened yet
-        Iterable<FacetPath> children = tree.getChildren(currentPath);
-        List<Element> childElts = new ArrayList<>();
-        if (children != null && children.iterator().hasNext()) {
-            for (FacetPath childPath : children) {
-                Element childElt = collect(tree, childPath);
-                // If there is no accumulator for the child then visit it
-                childElts.add(childElt);
-            }
+        Element result;
+        if (eltAcc != null) {
+	        Element elt = eltAcc.getElement();
+	        // Create the ElementAcc for the path if it hasn't happened yet
+	        Iterable<FacetPath> children = tree.getChildren(currentPath);
+	        List<Element> childElts = new ArrayList<>();
+	        if (children != null && children.iterator().hasNext()) {
+	            for (FacetPath childPath : children) {
+	                Element childElt = collect(tree, childPath);
+	                // If there is no accumulator for the child then visit it
+	                childElts.add(childElt);
+	            }
+	        }
+	        result = eltAcc.getFactory().apply(elt, childElts);
+        } else {
+        	result = new ElementGroup();
         }
-
-        Element result = eltAcc.getFactory().apply(elt, childElts);
         return result;
     }
 

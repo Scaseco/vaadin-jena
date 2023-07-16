@@ -13,6 +13,7 @@ import org.aksw.commons.util.direction.Direction;
 import org.aksw.facete.v3.api.FacetPathMapping;
 import org.aksw.facete.v3.api.TreeData;
 import org.aksw.facete.v4.impl.ElementGeneratorWorker;
+import org.aksw.facete.v4.impl.MappedElement;
 import org.aksw.facete.v4.impl.PropertyResolver;
 import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jena_sparql_api.rx.entity.engine.EntityQueryRx;
@@ -250,6 +251,7 @@ public class ElementGeneratorLateral {
             
             SetMultimap<ScopedFacetPath, Expr> constraintIndex = FacetConstraints.createConstraintIndex(exprs);
 
+            
             // TreeData<FacetPath> facetTree = new TreeData<>(); // Empty tree because we rely on the constraints
             PropertyResolver propertyResolver = current.getContext().getPropertyResolver();
 
@@ -259,18 +261,32 @@ public class ElementGeneratorLateral {
 //            ScopeNode scopeNode = new ScopeNode(current.getScopeBaseName(), current.target().var());
             org.aksw.jenax.treequery2.api.FacetPathMapping pathMapping = current.getContext().getPathMapping(); // new FacetPathMappingImpl();
 
-            ElementGeneratorWorker eltWorker = new ElementGeneratorWorker(pathMapping, propertyResolver);
+            TreeData<ScopedFacetPath> treeData = new TreeData<>(); 
+            for (ScopedFacetPath key : constraintIndex.keySet()) {
+            	treeData.putItem(key, ScopedFacetPath::getParent);
+            }
+
             if (!exprs.isEmpty()) {
             	System.out.println("Constraints: " + exprs);
             }
 
-            eltWorker.setConstraintIndex(constraintIndex);            
-            Element constraintElt = eltWorker.createElement().getElement();
-        	System.out.println("Elt: " + constraintElt);
+            ElementGeneratorWorker eltWorker = new ElementGeneratorWorker(treeData, constraintIndex, pathMapping, propertyResolver);
 
+
+            // eltWorker.setConstraintIndex(constraintIndex); 
             
-            // ElementGenerator eltGen = new ElementGenerator(pathMapping, constraintIndex, null);
+            // TODO The constraint index is not processed into a facet tree here yet
+            // TODO Why do we get an NPE with the root path and an empty tree?
+            // (in principle: trees are rooted in null, so the empty root path maps to null; but what's the clean
+            // way to fix this?)
             
+            MappedElement constraintEltAcc = eltWorker.createElement();
+            Element constraintElt = constraintEltAcc.getElement();
+        	System.out.println("Elt: " + constraintElt);
+        	
+        	nodeElement = ElementUtils.mergeElements(nodeElement, constraintElt);
+           
+            // ElementGenerator eltGen = new ElementGenerator(pathMapping, constraintIndex, null);            
             // new ElementGeneratorWorker(facetTree, constraintIndex, scopeNode, propertyResolver);
 
             if (limit != null || offset != null || !sortConditions.isEmpty()) {
