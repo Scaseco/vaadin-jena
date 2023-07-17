@@ -30,7 +30,9 @@ import org.aksw.jenax.sparql.relation.api.BinaryRelation;
 import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.sparql.relation.api.TernaryRelation;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
+import org.aksw.jenax.treequery2.api.ConstraintNode;
 import org.aksw.jenax.treequery2.api.FacetPathMapping;
+import org.aksw.jenax.treequery2.api.NodeQuery;
 import org.aksw.jenax.treequery2.api.ScopedFacetPath;
 import org.aksw.jenax.treequery2.api.VarScope;
 import org.aksw.jenax.treequery2.impl.FacetPathMappingImpl;
@@ -44,6 +46,7 @@ import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.expr.ExprList;
 import org.apache.jena.sparql.expr.ExprVar;
 import org.apache.jena.sparql.expr.NodeValue;
+import org.apache.jena.sparql.graph.NodeTransform;
 import org.apache.jena.sparql.graph.NodeTransformLib;
 import org.apache.jena.sparql.syntax.Element;
 import org.apache.jena.sparql.syntax.ElementBind;
@@ -51,6 +54,8 @@ import org.apache.jena.sparql.syntax.ElementFilter;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.graph.Traverser;
 
@@ -178,6 +183,32 @@ public class ElementGenerator {
       return null;
   }
 
+    
+    public static SetMultimap<VarScope, Expr> createUnscopedConstraintExprs(Collection<Expr> scopedExprs) {
+    	SetMultimap<VarScope, Expr> result = HashMultimap.create();
+    	for (Expr expr : scopedExprs) {
+    		Set<ScopedFacetPath> sfps = NodeCustom.mentionedValues(expr);
+    		Multimap<VarScope, FacetPath> index = sfps.stream().collect(
+			        Multimaps.toMultimap(ScopedFacetPath::getScope, ScopedFacetPath::getFacetPath, HashMultimap::create));
+    		
+    		if (index.keySet().isEmpty()) {
+    			System.err.println("WARN: Constraint without path reference found " + expr);
+    		}
+    		
+    		if (index.keySet().size() > 1) {
+    			throw new UnsupportedOperationException("Expressions with different scopes in facet paths currently not supported");
+    		}
+
+    		VarScope scope = index.keySet().iterator().next();
+    		
+    		
+    		Expr e = expr.applyNodeTransform(NodeCustom.mapValue(ScopedFacetPath::getFacetPath));
+    		result.put(scope, e);
+    	}
+    	
+    	return result;
+    }
+
     public static SetMultimap<ScopedFacetPath, Expr> createConstraintIndex(FacetConstraints constraints,
             TreeData<ScopedFacetPath> treeData) {
         Collection<Expr> exprs = constraints.getExprs();
@@ -243,6 +274,8 @@ public class ElementGenerator {
 
 
             Collection<Expr> exprs = constraints.getExprs();
+            // TODO Transform the set of exprs to ScopedFacetPaths
+            
             SetMultimap<FacetPath, Expr> constraintIndex = HashMultimap.create();
             for (Expr expr : exprs) {
                 Set<FacetPath> paths = NodeFacetPath.mentionedPaths(expr);
@@ -286,6 +319,27 @@ public class ElementGenerator {
 
 
 
+    public Collection<Expr> transformAddScope(Collection<Expr> exprs, VarScope scope) {
+        NodeTransform constraintTransform = NodeCustom.mapValue((FacetPath fp) -> ScopedFacetPath.of(scope, fp));
+        Collection<Expr> result = exprs.stream()
+      	    .map(e -> e.applyNodeTransform(constraintTransform))
+      	    .collect(Collectors.toList());
+        return result;
+    }
+
+    /** Expressions based on NodeCustom<FacetPath> */
+//    public SetMultimap<ScopedFacetPath, Expr> createConstraintIndex(Collection<Expr> rawExprs, VarScope scope) {
+//        NodeTransform constraintTransform = NodeCustom.mapValue((FacetPath fp) -> ScopedFacetPath.of(scope, fp));
+//        Collection<Expr> exprs = rawExprs.stream()
+//        		.map(e -> e.applyNodeTransform(constraintTransform))
+//        		.collect(Collectors.toList());
+//        
+//        SetMultimap<ScopedFacetPath, Expr> result = org.aksw.jenax.treequery2.impl.FacetConstraints.createConstraintIndex(exprs);
+//        return result;
+//
+//    }
+    
+
     public static MappedQuery createQuery(UnaryRelation baseConcept, TreeData<FacetPath> rawTreeData, SetMultimap<FacetPath, Expr> constraintIndex, Predicate<FacetPath> isProjected) {
 
 //        Generator<Var> varGen = GeneratorFromFunction.createInt().map(i -> Var.alloc("vv" + i));
@@ -294,6 +348,9 @@ public class ElementGenerator {
         VarScope scope = VarScope.of(rootVar);
         
         TreeData<ScopedFacetPath> treeData = rawTreeData.map(facetPath -> ScopedFacetPath.of(rootVar, facetPath));
+        
+        
+        
         
         // rawTreeData.g
         

@@ -1,6 +1,7 @@
 package org.aksw.jenax.treequery2.impl;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import org.aksw.facete.v4.impl.FacetPathUtils;
 import org.aksw.jenax.path.core.FacetPath;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
@@ -27,10 +29,13 @@ import com.google.common.io.BaseEncoding;
 public class FacetPathMappingImpl
     implements FacetPathMapping
 {
+	public static final BaseEncoding DEFAULT_ENCODING = BaseEncoding.base32().omitPadding();
+	public static final HashFunction DEFAULT_HASH_FUNCTION = Hashing.murmur3_32_fixed();
+	
     private static final Logger logger = LoggerFactory.getLogger(FacetPathMappingImpl.class);
 
     /** So far allocated mappings */
-    protected BiMap<FacetPath, String> pathToName = HashBiMap.create();
+    protected BiMap<FacetPath, HashCode> pathToHashCode = HashBiMap.create();
 
     protected HashFunction hashing;
     protected BaseEncoding encoding;
@@ -40,7 +45,7 @@ public class FacetPathMappingImpl
      * and BaseEncoding.base32().omitPadding().
      */
     public FacetPathMappingImpl() {
-        this(Hashing.murmur3_32_fixed(), BaseEncoding.base32().omitPadding());
+        this(DEFAULT_HASH_FUNCTION, DEFAULT_ENCODING);
     }
 
     public FacetPathMappingImpl(HashFunction hashing, BaseEncoding encoding) {
@@ -49,35 +54,66 @@ public class FacetPathMappingImpl
         this.encoding = encoding;
     }
 
-    public BiMap<FacetPath, String> getPathToName() {
-        return pathToName;
+    public BiMap<FacetPath, HashCode> getPathToName() {
+        return pathToHashCode;
     }
 
+    public BaseEncoding getEncoding() {
+		return encoding;
+	}
+    
+    public HashFunction getHashing() {
+		return hashing;
+	}
+    
     // XXX We could always allocate names for all intermediate paths
 //    public String allocate(FacetPath path, FacetStep step) {
 //
 //    }
 
+    public byte[] increment(byte[] arr) {
+    	byte[] result = Arrays.copyOf(arr, arr.length);
+    	for (int i = arr.length - 1; i >= 0; --i) {
+    		byte before = result[i];
+    		byte after = result[i] += 1;
+    		if (after > before) {
+    			break;
+    		}
+    	}
+    	return result;
+    }
+    
     @Override
     public String allocate(FacetPath rawFacetPath) {
         FacetPath facetPath = FacetPathUtils.toElementId(rawFacetPath);
-        String result = pathToName.computeIfAbsent(facetPath, fp -> {
-            byte[] bytes = hashing.hashString(facetPath.toString(), StandardCharsets.UTF_8).asBytes();
-            String r = encoding.encode(bytes).toLowerCase();
-            BiMap<String, FacetPath> nameToPath = pathToName.inverse();
-            for (int i = 0; ; ++i) {
-                String test = i == 0 ? r : r + i;
-                FacetPath clashPath = nameToPath.get(test);
+        HashCode hc = pathToHashCode.computeIfAbsent(facetPath, fp -> {
+        	HashCode hashCode = hashing.hashString(facetPath.toString(), StandardCharsets.UTF_8);
+            BiMap<HashCode, FacetPath> nameToPath = pathToHashCode.inverse();
+            while (true) {
+                FacetPath clashPath = nameToPath.get(hashCode);
                 if (clashPath == null) {
-                    r = test;
                     break;
                 } else {
                     // log level debug?
-                    logger.info("Mitigated hash clash: Hash " + test + " clashed for [" + fp + "] and [" + clashPath + "]");
+                    logger.info("Mitigated hash clash: Hash " + hashCodeToString(hashCode) + " clashed for [" + fp + "] and [" + clashPath + "]");
                 }
+                hashCode = HashCode.fromBytes(increment(hashCode.asBytes()));;
             }
-            return r;
+            return hashCode;
         });
+        String result = hashCodeToString(hc);
+        return result;
+    }
+
+    public static String toString(HashCode hashCode) {
+        byte[] bytes = hashCode.asBytes();
+        String result = DEFAULT_ENCODING.encode(bytes).toLowerCase();
+        return result;
+    }
+    
+    public String hashCodeToString(HashCode hashCode) {
+        byte[] bytes = hashCode.asBytes();
+        String result = encoding.encode(bytes).toLowerCase();
         return result;
     }
 
@@ -102,8 +138,8 @@ public class FacetPathMappingImpl
             if (FacetStep.isSource(component)) {
                 result = resolveVar(facetPathMapping, baseScopeName, rootVar, parentPath);
             } else {
-                String pathScopeName = facetPathMapping.allocate(facetPath);
-                result = ScopedVar.of(baseScopeName, pathScopeName, (Var)component);
+                String pathScope = facetPathMapping.allocate(facetPath);
+                result = ScopedVar.of(baseScopeName, pathScope, (Var)component);
             }
         }
         return result;

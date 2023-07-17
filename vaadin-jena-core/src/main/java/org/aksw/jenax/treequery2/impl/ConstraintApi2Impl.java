@@ -28,7 +28,7 @@ public class ConstraintApi2Impl<T>
         super();
         this.model = model;
         // this.node = node;
-        this.exprVar = ExprLib.nodeToExpr(NodeCustom.create(node));
+        this.exprVar = ExprLib.nodeToExpr(NodeCustom.of(node));
     }
 
     public FacetConstraintCore createConstraint(Expr expr) {

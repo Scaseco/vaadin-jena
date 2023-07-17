@@ -29,6 +29,7 @@ import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.treequery2.api.FacetPathMapping;
 import org.aksw.jenax.treequery2.api.ScopedFacetPath;
 import org.aksw.jenax.treequery2.api.VarScope;
+import org.aksw.jenax.treequery2.impl.FacetConstraints;
 import org.aksw.jenax.treequery2.impl.FacetPathMappingImpl;
 import org.apache.jena.graph.Node;
 import org.apache.jena.sparql.core.Var;
@@ -45,6 +46,7 @@ import org.apache.jena.sparql.syntax.ElementGroup;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 
 /**
@@ -59,6 +61,7 @@ public class ElementGeneratorWorker {
     protected Map<VarScope, ElementGeneratorContext> scopeToContext = new LinkedHashMap<>();
     protected FacetPathMapping pathMapping;
     protected PropertyResolver propertyResolver;
+    // protected SetMultimap<ScopedFacetPath, Expr> constraintIndex;
 
     /** Mapping of element paths (FacetPaths with the component set to the TUPLE constant) */
     // protected Map<FacetPath, ElementAcc> eltPathToAcc = new LinkedHashMap<>();
@@ -71,17 +74,26 @@ public class ElementGeneratorWorker {
 //    protected Map<FacetPath, Var> pathToVar = new HashMap<>();
 
     public ElementGeneratorWorker(FacetPathMapping pathMapping, PropertyResolver propertyResolver) {
-    	this(null, null, pathMapping, propertyResolver);
+    	this(new TreeData<>(), HashMultimap.create(), pathMapping, propertyResolver);
     }
 
     public ElementGeneratorWorker(TreeData<ScopedFacetPath> facetTree, SetMultimap<ScopedFacetPath, Expr> constraintIndex, FacetPathMapping pathMapping, PropertyResolver propertyResolver) {
     	this.pathMapping = pathMapping;
         this.propertyResolver = propertyResolver;
+        // this.constraintIndex = constraintIndex;
         setFacetTree(facetTree);
         setConstraintIndex(constraintIndex);
     }
 
     public void setConstraintIndex(SetMultimap<ScopedFacetPath, Expr> constraintIndex) {
+    	SetMultimap<VarScope, Expr> localIndices = ElementGenerator.createUnscopedConstraintExprs(constraintIndex.values());
+    	
+    	for (Entry<VarScope, Collection<Expr>> e : localIndices.asMap().entrySet()) {
+    		ElementGeneratorContext cxt = getOrCreateContext(e.getKey());
+    		SetMultimap<FacetPath, Expr> localConstraintIndex = FacetConstraints.createConstraintIndex(e.getValue());
+    		cxt.setConstraintIndex(localConstraintIndex);
+    	}
+    	
         for (Expr expr : new ArrayList<>(constraintIndex.values())) {
             analysePathModality(expr);
         }
@@ -329,7 +341,7 @@ public class ElementGeneratorWorker {
      * @param path
      * @param getChildren
      */
-    public void accumulate(
+    public void accumulateElements(
             ElementGeneratorContext cxt,
             // TreeDataMap<FacetPath, ElementAcc> facetPathToAcc,
             ElementGroup globalAcc,
@@ -365,7 +377,7 @@ public class ElementGeneratorWorker {
         if (children != null && children.iterator().hasNext()) {
             for (FacetPath subPath : children) {
                 // If there is no accumulator for the child then visit it
-                accumulate(cxt, globalAcc, targetVar, subPath, getChildren);
+                accumulateElements(cxt, globalAcc, targetVar, subPath, getChildren);
             }
         }
 
@@ -373,11 +385,11 @@ public class ElementGeneratorWorker {
 //                ElementUtils.copyElements(parentAcc, elementAcc.getResultElement());
 //            }
 
-        // Create FILTER elements
+        // Create FILTER elements        
         Set<Expr> exprs = cxt.localConstraintIndex.get(path);
-        createElementsForExprs2(globalAcc, exprs, false);
+        createElementsForExprs2(cxt, globalAcc, exprs, false);
     }
-
+    
     public MappedElement createElement() {
     	// TODO Collect all elements from all contexts
         ElementGroup filterGroup = new ElementGroup();
@@ -402,12 +414,16 @@ public class ElementGeneratorWorker {
         // ElementGroup filterGroup = new ElementGroup();
 
         // baseConcept.getElements().forEach(group::addElement);
+        // Accumulate elements
         for (FacetPath path : cxt.facetTree.getRootItems()) {
-            accumulate(cxt, filterGroup, rootVar, path, cxt.facetTree::getChildren);
+            accumulateElements(cxt, filterGroup, rootVar, path, cxt.facetTree::getChildren);
 //                accumulate(facetPathToAcc, filterGroup, null, null, facetTree::getChildren);
             // ElementUtils.toElementList(elt).forEach(group::addElement);
             // group.addElement(elt);
         }
+        
+                // this.constraintInde
+        
 
         Element elt = collect(cxt.facetPathToAcc, rootPath);
         elt = ElementUtils.flatten(elt);
@@ -427,29 +443,22 @@ public class ElementGeneratorWorker {
     }
 
 
-    public void createElementsForExprs2(ElementGroup globalAcc, Collection<Expr> baseExprs, boolean negate) {
+    public void createElementsForExprs2(ElementGeneratorContext cxt, ElementGroup globalAcc, Collection<Expr> baseExprs, boolean negate) {
+        
+    	NodeTransform resolveFacetPaths = NodeCustom.createNodeTransform((FacetPath fp) -> {
+    		return resolve(ScopedFacetPath.of(cxt.getScope(), fp));
+    	}); //this::resolve);
 
-        // NodeTransform resolveFacetPaths = NodeFacetPath.createNodeTransform(pathMapping);
-        NodeTransform resolveFacetPaths = NodeCustom.createNodeTransform(this::resolve);
+        Set<Element> result = new LinkedHashSet<>();
+        Set<Expr> resolvedExprs = new LinkedHashSet<>();
 
-//          //NodeTransform xform = NodeTransformLib2.wrapWithNullAsIdentity();
-  //
-  //
-//              Expr finalExpr = NodeTransformLib.transform(subst, expr);
-//              ElementFilter eltFilter = new ElementFilter(finalExpr);
-//              group.addElement(eltFilter);
-//          }
+        // Sort base exprs - absent ones last
+        List<Expr> tmp = baseExprs.stream()
+                .map(e -> FacetedQueryGenerator.isAbsent(e) ? FacetedQueryGenerator.internalRewriteAbsent(e) : e)
+                .collect(Collectors.toList());
 
-      Set<Element> result = new LinkedHashSet<>();
-      Set<Expr> resolvedExprs = new LinkedHashSet<>();
-
-      // Sort base exprs - absent ones last
-      List<Expr> tmp = baseExprs.stream()
-              .map(e -> FacetedQueryGenerator.isAbsent(e) ? FacetedQueryGenerator.internalRewriteAbsent(e) : e)
-              .collect(Collectors.toList());
-
-      List<Expr> exprs = new ArrayList<>(tmp);
-      Collections.sort(exprs, FacetedQueryGenerator::compareAbsent);
+        List<Expr> exprs = new ArrayList<>(tmp);
+        Collections.sort(exprs, FacetedQueryGenerator::compareAbsent);
         // Resolve the expression
         for(Expr expr : exprs) {
 

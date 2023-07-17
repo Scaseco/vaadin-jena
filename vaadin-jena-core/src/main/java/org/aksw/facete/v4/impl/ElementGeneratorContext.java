@@ -24,6 +24,8 @@ public class ElementGeneratorContext {
     /** The FacetPaths on this tree are purely element ids (they reference relations rather than components) */
     protected Set<FacetPath> mandatoryElementIds = new HashSet<>();
     protected TreeDataMap<FacetPath, ElementAcc> facetPathToAcc = new TreeDataMap<>();
+    
+    // XXX Actually we don't need this map because is duplicates information from the PathMapping
     protected Map<FacetPath, Var> pathToVar = new LinkedHashMap<>();
 
     public ElementGeneratorContext(Var rootVar, TreeData<FacetPath> facetTree, SetMultimap<FacetPath, Expr> localConstraintIndex) {

@@ -3,8 +3,10 @@ package org.aksw.jenax.treequery2.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -36,6 +38,7 @@ import org.aksw.jenax.treequery2.api.NodeQuery;
 import org.aksw.jenax.treequery2.api.RelationQuery;
 import org.aksw.jenax.treequery2.api.ScopedFacetPath;
 import org.aksw.jenax.treequery2.api.ScopedVar;
+import org.aksw.jenax.treequery2.api.VarScope;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.DatasetFactory;
@@ -69,6 +72,9 @@ import org.topbraid.shacl.model.SHFactory;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 
 
@@ -216,8 +222,18 @@ public class ElementGeneratorLateral {
 //        return result;
 //    }
 
-
-
+    // public static SetMultimap<ScopedFacetPath, Expr> createConstraintIndex(RelationQuery relationQuery) {
+    public static Set<Expr> createScopedConstraintExprs(RelationQuery relationQuery) {
+        FacetConstraints<ConstraintNode<NodeQuery>> constraints = relationQuery.getFacetConstraints();            
+        Collection<Expr> rawExprs = constraints.getExprs();
+        NodeTransform constraintTransform = NodeCustom.mapValue((ConstraintNode<NodeQuery> cn) -> ConstraintNode.toScopedFacetPath(cn));            
+        Set<Expr> result = rawExprs.stream()
+        		.map(e -> e.applyNodeTransform(constraintTransform))
+        		.collect(Collectors.toCollection(LinkedHashSet::new));
+        // SetMultimap<ScopedFacetPath, Expr> result = FacetConstraints.createConstraintIndex(exprs);
+        return result;
+    }
+    
     public  Element createElement(RelationQuery current) {
         // FacetPath path = current.getPath();
         // FacetStep step = ListUtils.lastOrNull(path.getSegments());
@@ -240,16 +256,8 @@ public class ElementGeneratorLateral {
             List<SortCondition> sortConditions = current.getSortConditions();
 
             // Handle constraints
-            // The transformation from ConstraintNode<NodeQuery> to ScopedFacetPath is not type safe and thus ugly 
-            FacetConstraints<ConstraintNode<NodeQuery>> constraints = current.getFacetConstraints();            
-            Collection<Expr> rawExprs = constraints.getExprs();
-
-            NodeTransform constraintTransform = NodeCustom.mapValue((ConstraintNode<NodeQuery> cn) -> ConstraintNode.toScopedFacetPath(cn));            
-            Collection<Expr> exprs = rawExprs.stream()
-            		.map(e -> e.applyNodeTransform(constraintTransform))
-            		.collect(Collectors.toList());
-            
-            SetMultimap<ScopedFacetPath, Expr> constraintIndex = FacetConstraints.createConstraintIndex(exprs);
+            Set<Expr> constraintExprs = createScopedConstraintExprs(current);
+            SetMultimap<ScopedFacetPath, Expr> constraintIndex = FacetConstraints.createConstraintIndex(constraintExprs);
 
             
             // TreeData<FacetPath> facetTree = new TreeData<>(); // Empty tree because we rely on the constraints
@@ -266,8 +274,8 @@ public class ElementGeneratorLateral {
             	treeData.putItem(key, ScopedFacetPath::getParent);
             }
 
-            if (!exprs.isEmpty()) {
-            	System.out.println("Constraints: " + exprs);
+            if (!constraintIndex.isEmpty()) {
+            	System.out.println("Constraints: " + constraintIndex);
             }
 
             ElementGeneratorWorker eltWorker = new ElementGeneratorWorker(treeData, constraintIndex, pathMapping, propertyResolver);
@@ -508,8 +516,9 @@ public class ElementGeneratorLateral {
 
           nq
           .fwd("urn:p1_1")
-              .bwd("urn:p2_1").limit(10l).sortAsc().sortNone()
-                  .constraints().fwd(RDFS.label).enterConstraints().eq(RDFS.seeAlso).activate().leaveConstraints()
+              .bwd("urn:test").limit(15l).sortAsc().sortNone()
+                  // .constraints().fwd(NodeUtils.ANY_IRI)
+              	.constraints().fwd("urn:constraint").enterConstraints().eq(RDFS.seeAlso).activate().leaveConstraints()
           .getRoot()
               .fwd("urn:1_2").limit(30l).sortAsc(); //.orderBy().fwd(RDFS.comment.asNode()).asc();
           ;
