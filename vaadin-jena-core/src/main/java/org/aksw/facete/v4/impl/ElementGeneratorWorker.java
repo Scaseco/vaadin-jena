@@ -387,7 +387,9 @@ public class ElementGeneratorWorker {
 
         // Create FILTER elements        
         Set<Expr> exprs = cxt.localConstraintIndex.get(path);
-        createElementsForExprs2(cxt, globalAcc, exprs, false);
+        if (!exprs.isEmpty()) { // Wrapped in 'if' for debugging
+        	createElementsForExprs2(cxt, globalAcc, exprs, false);
+        }
     }
     
     public MappedElement createElement() {
@@ -427,6 +429,7 @@ public class ElementGeneratorWorker {
 
         Element elt = collect(cxt.facetPathToAcc, rootPath);
         elt = ElementUtils.flatten(elt);
+        elt = ElementUtils.mergeElements(elt, filterGroup);
 
         
         TreeDataMap<ScopedFacetPath, ElementAcc> facetPathToAcc = cxt.facetPathToAcc.mapKeys(facetPath -> ScopedFacetPath.of(cxt.getScope(), facetPath));
@@ -434,7 +437,7 @@ public class ElementGeneratorWorker {
         		.map(e -> new SimpleEntry<>(ScopedFacetPath.of(cxt.getScope(), e.getKey()), e.getValue()))
         		.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (u, v) -> u, HashBiMap::create));
         
-        //ElementUtils.copyElements(group, filterGroup);
+        // ElementUtils.copyElements(group, filterGroup);
 
         // Add filters for the constraints
         // Element elt = group.size() == 1 ? group.get(0) : group;
