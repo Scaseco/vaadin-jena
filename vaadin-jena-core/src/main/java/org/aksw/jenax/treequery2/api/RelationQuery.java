@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 
 import org.aksw.facete.v4.impl.PropertyResolverImpl;
 import org.aksw.jenax.path.core.FacetPath;
+import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.treequery2.impl.FacetConstraints;
 import org.aksw.jenax.treequery2.impl.Partition;
@@ -27,6 +28,7 @@ public interface RelationQuery
     /** A name to use for prefixing variables of this node's relation */
     String getScopeBaseName();
 
+    FacetStep getReachingStep();
 
     /** Unlink this RelationQuery from its parent.
      *  Returns this.

@@ -86,10 +86,9 @@ public class NodeQueryImpl
     @Override
     public int getSortDirection() {
         Expr ev = new ExprVar(var);
-        int result = sortConditions.stream().filter(sc -> sc.getExpression().equals(ev)).map(SortCondition::getDirection).findFirst().orElse(Query.ORDER_UNKNOW);
+        int result = relationQuery.getSortConditions().stream().filter(sc -> sc.getExpression().equals(ev)).map(SortCondition::getDirection).findFirst().orElse(Query.ORDER_UNKNOW);
         return result;
     }
-
 
     @Override
     public Map<FacetStep, RelationQuery> children() {
@@ -119,7 +118,6 @@ public class NodeQueryImpl
         NodeQuery result;
         if (facetPath.isAbsolute()) {
             FacetPath relativePath = FacetPath.newAbsolutePath().relativize(facetPath);
-
             RelationQuery rootRelation = relationQuery.root();
             result = rootRelation.target().resolve(relativePath);
         } else {
@@ -128,21 +126,7 @@ public class NodeQueryImpl
             } else {
                 FacetPath startPath = facetPath.subpath(0, 1);
                 FacetStep step = startPath.toSegment();
-
                 NodeQuery rn = getOrCreateChild(step);
-
-//                // FacetStep step = Iterables.getFirst(facetPath.getSegments(), null);
-//                // Set component to tuple
-//                FacetStep relationStep = FacetStep.of(step.getNode(), step.getDirection(), step.getAlias(), FacetStep.TUPLE);
-//                RelationQueryImpl tmp = (RelationQueryImpl)children.computeIfAbsent(relationStep, fs -> {
-//                    Relation relation = relationQuery().getContext().getPropertyResolver().resolve(fs.getNode());
-//                    Map<Var, Node> varToComponent = createVarToComponentMap(relation);
-//                    return new RelationQueryImpl(this, () -> relation, relationStep, relationQuery.getContext(), varToComponent);
-//                });
-//                // We need to get the target node
-//                Var tgtVar = resolveComponent(step.getTargetComponent(), tmp.getRelation());
-//                RootNode rn = new RootNodeImpl(tmp, tgtVar, step);
-
                 FacetPath remainingPath = startPath.relativize(facetPath);
                 result = rn.resolve(remainingPath);
             }
@@ -153,7 +137,6 @@ public class NodeQueryImpl
     @Override
     public NodeQuery getOrCreateChild(FacetStep step) {
         NodeQuery result = subPaths.computeIfAbsent(step, ss -> {
-
             FacetStep relationStep = FacetStep.of(step.getNode(), step.getDirection(), step.getAlias(), FacetStep.TUPLE);
             RelationQueryImpl tmp = (RelationQueryImpl)children.computeIfAbsent(relationStep, fs -> {
                 Relation baseRelation = relationQuery().getContext().getPropertyResolver().resolve(fs.getNode());
@@ -171,7 +154,6 @@ public class NodeQueryImpl
                 return new RelationQueryImpl(scopeName, this, () -> relation, relationStep, relationQuery.getContext(), varToComponent);
             });
 
-            // tmp.va
             // We need to get the target node
             Var tgtVar = FacetRelationUtils.resolveComponent(step.getTargetComponent(), tmp.getRelation());
             NodeQuery r = tmp.nodeFor(tgtVar);

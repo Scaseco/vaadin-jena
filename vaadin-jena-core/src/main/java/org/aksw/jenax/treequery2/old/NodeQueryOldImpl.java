@@ -18,6 +18,9 @@ public class NodeQueryOldImpl
     extends NodeQueryBase
     implements NodeQueryOld
 {
+    protected List<SortCondition> sortConditions = new ArrayList<>();
+    protected Map<FacetStep, NodeQueryOld> children = new LinkedHashMap<>();
+
     protected FacetStep step;
     protected NodeQueryOld parent;
     protected Long offset;

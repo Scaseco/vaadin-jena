@@ -218,6 +218,11 @@ public class RelationQueryImpl
     }
 
     @Override
+    public FacetStep getReachingStep() {
+    	return reachingStep;
+    }
+    
+    @Override
     public NodeQuery source() {
         return resolveComponent(FacetStep.SOURCE);
     }

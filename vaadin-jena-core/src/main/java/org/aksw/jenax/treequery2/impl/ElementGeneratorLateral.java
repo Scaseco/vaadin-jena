@@ -33,12 +33,12 @@ import org.aksw.jenax.model.shacl.domain.ShPropertyShape;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.path.PathUtils;
+import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.treequery2.api.ConstraintNode;
 import org.aksw.jenax.treequery2.api.NodeQuery;
 import org.aksw.jenax.treequery2.api.RelationQuery;
 import org.aksw.jenax.treequery2.api.ScopedFacetPath;
 import org.aksw.jenax.treequery2.api.ScopedVar;
-import org.aksw.jenax.treequery2.api.VarScope;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.DatasetFactory;
@@ -52,6 +52,7 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.Expr;
+import org.apache.jena.sparql.expr.ExprLib;
 import org.apache.jena.sparql.expr.ExprVar;
 import org.apache.jena.sparql.expr.NodeValue;
 import org.apache.jena.sparql.graph.NodeTransform;
@@ -72,9 +73,6 @@ import org.topbraid.shacl.model.SHFactory;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 
 
@@ -224,17 +222,21 @@ public class ElementGeneratorLateral {
 
     // public static SetMultimap<ScopedFacetPath, Expr> createConstraintIndex(RelationQuery relationQuery) {
     public static Set<Expr> createScopedConstraintExprs(RelationQuery relationQuery) {
-        FacetConstraints<ConstraintNode<NodeQuery>> constraints = relationQuery.getFacetConstraints();            
+        FacetConstraints<ConstraintNode<NodeQuery>> constraints = relationQuery.getFacetConstraints();
         Collection<Expr> rawExprs = constraints.getExprs();
-        NodeTransform constraintTransform = NodeCustom.mapValue((ConstraintNode<NodeQuery> cn) -> ConstraintNode.toScopedFacetPath(cn));            
+        NodeTransform constraintTransform = NodeCustom.mapValue((ConstraintNode<NodeQuery> cn) -> ConstraintNode.toScopedFacetPath(cn));
         Set<Expr> result = rawExprs.stream()
-        		.map(e -> e.applyNodeTransform(constraintTransform))
-        		.collect(Collectors.toCollection(LinkedHashSet::new));
+                .map(e -> e.applyNodeTransform(constraintTransform))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
         // SetMultimap<ScopedFacetPath, Expr> result = FacetConstraints.createConstraintIndex(exprs);
         return result;
     }
-    
-    public  Element createElement(RelationQuery current) {
+
+    public Element createElement(RelationQuery current) {
+        return createElement(current, null);
+    }
+
+    public Element createElement(RelationQuery current, FacetStep reachingStep) {
         // FacetPath path = current.getPath();
         // FacetStep step = ListUtils.lastOrNull(path.getSegments());
 
@@ -248,99 +250,110 @@ public class ElementGeneratorLateral {
             // Node p = step.getNode();
             // Create the element for this node
 
-            nodeElement = current.getRelation().getElement();
+        Relation relation = current.getRelation();
+        nodeElement = relation.getElement();
 
-            Long limit = current.limit();
-            Long offset = current.offset();
-            // int sortDirection = current.get
-            List<SortCondition> sortConditions = current.getSortConditions();
+        Long limit = current.limit();
+        Long offset = current.offset();
+        // int sortDirection = current.get
+        List<SortCondition> sortConditions = current.getSortConditions();
 
-            // Handle constraints
-            Set<Expr> constraintExprs = createScopedConstraintExprs(current);
-            SetMultimap<ScopedFacetPath, Expr> constraintIndex = FacetConstraints.createConstraintIndex(constraintExprs);
+        // Handle constraints
+        Set<Expr> constraintExprs = createScopedConstraintExprs(current);
+        SetMultimap<ScopedFacetPath, Expr> constraintIndex = FacetConstraints.createConstraintIndex(constraintExprs);
 
-            
-            // TreeData<FacetPath> facetTree = new TreeData<>(); // Empty tree because we rely on the constraints
-            PropertyResolver propertyResolver = current.getContext().getPropertyResolver();
+
+        // TreeData<FacetPath> facetTree = new TreeData<>(); // Empty tree because we rely on the constraints
+        PropertyResolver propertyResolver = current.getContext().getPropertyResolver();
 
 //            String parentScopeNode = Optional.ofNullable(current.getParentNode())
 //                    .map(NodeQuery::relationQuery).map(RelationQuery::getScopeBaseName).orElse(null);
 //
 //            ScopeNode scopeNode = new ScopeNode(current.getScopeBaseName(), current.target().var());
-            org.aksw.jenax.treequery2.api.FacetPathMapping pathMapping = current.getContext().getPathMapping(); // new FacetPathMappingImpl();
+        org.aksw.jenax.treequery2.api.FacetPathMapping pathMapping = current.getContext().getPathMapping(); // new FacetPathMappingImpl();
 
-            TreeData<ScopedFacetPath> treeData = new TreeData<>(); 
-            for (ScopedFacetPath key : constraintIndex.keySet()) {
-            	treeData.putItem(key, ScopedFacetPath::getParent);
-            }
+        TreeData<ScopedFacetPath> treeData = new TreeData<>();
+        for (ScopedFacetPath key : constraintIndex.keySet()) {
+            treeData.putItem(key, ScopedFacetPath::getParent);
+        }
 
-            if (!constraintIndex.isEmpty()) {
-            	System.out.println("Constraints: " + constraintIndex);
-            }
+        if (!constraintIndex.isEmpty()) {
+            System.out.println("Constraints: " + constraintIndex);
+        }
 
-            ElementGeneratorWorker eltWorker = new ElementGeneratorWorker(treeData, constraintIndex, pathMapping, propertyResolver);
+        ElementGeneratorWorker eltWorker = new ElementGeneratorWorker(treeData, constraintIndex, pathMapping, propertyResolver);
 
 
-            // eltWorker.setConstraintIndex(constraintIndex); 
-            
-            // TODO The constraint index is not processed into a facet tree here yet
-            // TODO Why do we get an NPE with the root path and an empty tree?
-            // (in principle: trees are rooted in null, so the empty root path maps to null; but what's the clean
-            // way to fix this?)
-            
-            MappedElement constraintEltAcc = eltWorker.createElement();
-            Element constraintElt = constraintEltAcc.getElement();
-        	System.out.println("Elt: " + constraintElt);
-        	
-        	nodeElement = ElementUtils.mergeElements(nodeElement, constraintElt);
-           
-            // ElementGenerator eltGen = new ElementGenerator(pathMapping, constraintIndex, null);            
-            // new ElementGeneratorWorker(facetTree, constraintIndex, scopeNode, propertyResolver);
+        // eltWorker.setConstraintIndex(constraintIndex);
 
-            if (limit != null || offset != null || !sortConditions.isEmpty()) {
-                Query subQuery = new Query();
-                subQuery.setQuerySelectType();
-                subQuery.addProjectVars(Arrays.asList(parentVar, targetVar));
-                subQuery.setLimit(limit == null ? Query.NOLIMIT : limit);
-                subQuery.setOffset(offset == null ? Query.NOLIMIT : offset);
-                subQuery.setQueryPattern(nodeElement);
+        // TODO The constraint index is not processed into a facet tree here yet
+        // TODO Why do we get an NPE with the root path and an empty tree?
+        // (in principle: trees are rooted in null, so the empty root path maps to null; but what's the clean
+        // way to fix this?)
 
-                // FIXME In general we need to resolve path references!
-                sortConditions.forEach(subQuery::addOrderBy);
+        MappedElement constraintEltAcc = eltWorker.createElement();
+        Element constraintElt = constraintEltAcc.getElement();
+        System.out.println("Elt: " + constraintElt);
 
-                nodeElement = new ElementSubQuery(subQuery);
-            }
+        nodeElement = ElementUtils.mergeElements(nodeElement, constraintElt);
 
-            boolean applyCache = false;
-            if (applyCache) {
-                nodeElement = new ElementService("bulk+10:cache:", nodeElement);
-            }
+        // ElementGenerator eltGen = new ElementGenerator(pathMapping, constraintIndex, null);
+        // new ElementGeneratorWorker(facetTree, constraintIndex, scopeNode, propertyResolver);
+
+        if (limit != null || offset != null || !sortConditions.isEmpty()) {
+            Query subQuery = new Query();
+            subQuery.setQuerySelectType();
+            subQuery.addProjectVars(Arrays.asList(parentVar, targetVar));
+            subQuery.setLimit(limit == null ? Query.NOLIMIT : limit);
+            subQuery.setOffset(offset == null ? Query.NOLIMIT : offset);
+            subQuery.setQueryPattern(nodeElement);
+
+            // FIXME In general we need to resolve path references!
+            sortConditions.forEach(subQuery::addOrderBy);
+
+            nodeElement = new ElementSubQuery(subQuery);
+        }
+
+        boolean applyCache = false;
+        if (applyCache) {
+            nodeElement = new ElementService("bulk+10:cache:", nodeElement);
+        }
+
+        if (reachingStep != null) {
 
             Var s = current.source().var();
-            Var p = current.target().var();
+            Node p;
             Var o = current.target().var();
+
+            if (relation.getVars().size() == 2) {
+                System.out.println("Relation: " + relation);
+                // FacetStep facetStep = current.getParentNode().reachingStep();
+                // FacetStep facetStep = current.getReachingStep();
+                // FacetPath facetPath = current.getParentNode().getFacetPath();
+                // FacetStep facetStep = facetPath.getFileName().toSegment();
+                p = reachingStep.getNode();
+            } else {
+                p = current.target().var();
+            }
 
             // If there is limit, slice, filter or order then create an appropriate sub-query
             // Bind the parent variable to '?s'
-            ElementBind bindS = new ElementBind(Vars.s, new ExprVar(s));
-
-            // Bind the predicate to ?p
-            ElementBind bindP = new ElementBind(Vars.p, NodeValue.makeString(p.getName()));
-
-            // Bind element's target to ?o
-            ElementBind bindO = new ElementBind(Vars.o, new ExprVar(targetVar));
 
             ElementGroup bindSpoGroup = new ElementGroup();
+            ElementBind bindS = new ElementBind(Vars.x, new ExprVar(s));
             bindSpoGroup.addElement(bindS);
+
+            // Bind the predicate to ?p
+            ElementBind bindP = new ElementBind(Vars.y, ExprLib.nodeToExpr(p));
             bindSpoGroup.addElement(bindP);
+
+            // Bind element's target to ?o
+            ElementBind bindO = new ElementBind(Vars.z, new ExprVar(targetVar));
             bindSpoGroup.addElement(bindO);
-
-
-            // AggBuilder.map
-
 
             // Add the bindSpoGroup as the first union member
             unionMembers.add(bindSpoGroup);
+        }
 //        } else {
 //            nodeElement = new ElementGroup();
 //            targetVar = parentVar;
@@ -350,19 +363,21 @@ public class ElementGeneratorLateral {
         Collection<NodeQuery> children = current.roots();
         for (NodeQuery child : children) {
             for (RelationQuery subRq : child.children().values()) {
-                Element elt = createElement(subRq);
+                FacetStep stepToChild = subRq.getReachingStep();
+                Element elt = createElement(subRq, stepToChild);
                 unionMembers.add(elt);
             }
         }
-        Element union = ElementUtils.unionIfNeeded(unionMembers);
-
-        // Create the lateral group for this node
-        ElementLateral lateralUnion = new ElementLateral(union);
 
         // Create the group for this node
         ElementGroup group = new ElementGroup();
         ElementUtils.copyElements(group, nodeElement);
-        ElementUtils.copyElements(group, lateralUnion);
+        if (!unionMembers.isEmpty()) {
+            Element union = ElementUtils.unionIfNeeded(unionMembers);
+            // Create the lateral group for this node
+            ElementLateral lateralUnion = new ElementLateral(union);
+            ElementUtils.copyElements(group, lateralUnion);
+        }
         Element result = ElementUtils.flatten(group);
         return result;
     }
@@ -514,24 +529,32 @@ public class ElementGeneratorLateral {
         Var rootVar = Var.alloc("root");
         NodeQuery nq = rq.roots().get(0);
 
-          nq
+        nq
           .fwd("urn:p1_1")
               .bwd("urn:test").limit(15l).sortAsc().sortNone()
+                  // .orderBy().fwd("urn:orderProperty").asc() // Not yet supported
                   // .constraints().fwd(NodeUtils.ANY_IRI)
-              	.constraints().fwd("urn:constraint").enterConstraints().eq(RDFS.seeAlso).activate().leaveConstraints()
-          .getRoot()
+                  .constraints().fwd("urn:constraint").enterConstraints().eq(RDFS.seeAlso).activate().leaveConstraints().getRoot()
+              .getRoot()
               .fwd("urn:1_2").limit(30l).sortAsc(); //.orderBy().fwd(RDFS.comment.asNode()).asc();
           ;
+
 
           org.aksw.jenax.treequery2.api.FacetPathMapping fpm = new FacetPathMappingImpl();
 System.out.println(fpm.allocate(nq
           .fwd("urn:p1_1")
               .bwd("urn:p2_1").getFacetPath()));
 
-        Element elt = new ElementGeneratorLateral().createElement(nq.relationQuery());
+        // RelationQuery rrq = nq.relationQuery();
+        // NodeQuery target = nq.fwd("urn:1_2");
+        NodeQuery target = nq;
+        // NodeQuery target = nq.fwd("urn:1_2");
+
+        RelationQuery rrq = target.relationQuery();
+        Element elt = new ElementGeneratorLateral().createElement(rrq);
 
         Query query = new Query();
-        query.setConstructTemplate(new Template(new QuadAcc(Arrays.asList(Quad.create(rootVar, Vars.s, Vars.p, Vars.o)))));
+        query.setConstructTemplate(new Template(new QuadAcc(Arrays.asList(Quad.create(rootVar, Vars.x, Vars.y, Vars.z)))));
         query.setQueryConstructType();
         query.setQueryPattern(elt);
 

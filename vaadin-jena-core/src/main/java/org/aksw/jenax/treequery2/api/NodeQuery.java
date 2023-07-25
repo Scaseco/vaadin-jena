@@ -125,7 +125,7 @@ public interface NodeQuery
         return this;
     }
 
-    default OrderNode orderBy() {
+    default OrderNode<NodeQuery> orderBy() {
         return new OrderNodeImpl(this);
     }
 }
