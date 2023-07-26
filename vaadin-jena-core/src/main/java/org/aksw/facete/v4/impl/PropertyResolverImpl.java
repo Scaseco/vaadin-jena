@@ -80,7 +80,7 @@ public class PropertyResolverImpl
 
     public static void loadShacl() {
         SHFactory.ensureInited();
-        Model shaclModel = RDFDataMgr.loadModel("/home/raven/Projects/Eclipse/rmltk-parent/r2rml-resource-shacl/src/main/resources/r2rml.core.shacl.ttl");
+        Model shaclModel = RDFDataMgr.loadModel("test.r2rml.core.shacl.ttl");
         // List<ShNodeShape> nodeShapes = shaclModel.listResourcesWithProperty(SH.property).mapWith(r -> r.as(ShNodeShape.class)).toList();
         EntityClassifier entityClassifier = new EntityClassifier(Vars.s);
 
