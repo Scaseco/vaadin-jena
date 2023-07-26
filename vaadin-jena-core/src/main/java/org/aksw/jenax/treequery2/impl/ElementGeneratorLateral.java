@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.aksw.commons.collections.generator.Generator;
@@ -23,17 +24,24 @@ import org.aksw.jena_sparql_api.rx.entity.model.EntityBaseQuery;
 import org.aksw.jena_sparql_api.rx.entity.model.EntityQueryImpl;
 import org.aksw.jena_sparql_api.rx.entity.model.EntityTemplateImpl;
 import org.aksw.jena_sparql_api.schema.ShUtils;
+import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderNodeQuery;
 import org.aksw.jenax.arq.connection.core.QueryExecutionFactories;
+import org.aksw.jenax.arq.connection.link.RDFLinkDecorizer;
+import org.aksw.jenax.arq.datasource.RdfDataSourceWithBnodeRewrite;
+import org.aksw.jenax.arq.datasource.RdfDataSources;
 import org.aksw.jenax.arq.util.node.NodeCustom;
 import org.aksw.jenax.arq.util.node.NodeUtils;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.arq.util.var.Vars;
+import org.aksw.jenax.connection.datasource.RdfDataSource;
+import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.model.shacl.domain.ShNodeShape;
 import org.aksw.jenax.model.shacl.domain.ShPropertyShape;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.path.PathUtils;
 import org.aksw.jenax.sparql.relation.api.Relation;
+import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.treequery2.api.ConstraintNode;
 import org.aksw.jenax.treequery2.api.NodeQuery;
 import org.aksw.jenax.treequery2.api.RelationQuery;
@@ -46,15 +54,16 @@ import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.SortCondition;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.expr.ExprLib;
 import org.apache.jena.sparql.expr.ExprVar;
-import org.apache.jena.sparql.expr.NodeValue;
 import org.apache.jena.sparql.graph.NodeTransform;
 import org.apache.jena.sparql.modify.request.QuadAcc;
 import org.apache.jena.sparql.path.P_Path0;
@@ -74,12 +83,39 @@ import org.topbraid.shacl.model.SHFactory;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.SetMultimap;
+import com.vaadin.flow.data.provider.DataProvider;
 
 
 public class ElementGeneratorLateral {
 
     static { JenaSystem.init(); }
     // protected PropertyResolver propertyResolver;
+
+
+    public static Element toElement(RelationQuery current) {
+        return new ElementGeneratorLateral().createElement(current, null);
+    }
+
+    public static Query toQuery(NodeQuery nodeQuery) {
+        return toQuery(nodeQuery.relationQuery());
+    }
+
+    public static Query toQuery(RelationQuery relationQuery) {
+        Element elt = toElement(relationQuery);
+        List<NodeQuery> roots = relationQuery.roots();
+//        if (rootVars.size() != 1) {
+//        	throw new RuntimeException("Only a single designated root variable expected");
+//        }
+        // Convention: First variable is always the root
+        Var rootVar = roots.get(0).var();
+
+        Query query = new Query();
+        query.setConstructTemplate(new Template(new QuadAcc(Arrays.asList(Quad.create(rootVar, Vars.x, Vars.y, Vars.z)))));
+        query.setQueryConstructType();
+        query.setQueryPattern(elt);
+
+        return query;
+    }
 
     /**
      * SELECT (?key1 ... ?keyN)    ?s ?p ?o
@@ -498,7 +534,7 @@ public class ElementGeneratorLateral {
 //        NodeQuery nq = NodeQueryImpl.newRoot();
 
 
-        RelationQuery rq = RelationQuery.of(ConceptUtils.createSubjectConcept());
+        RelationQuery rq = RelationQuery.of(Vars.s); // RelationQuery.of(ConceptUtils.createSubjectConcept());
         System.out.println("Roots:" +  rq.roots());
         NodeQuery tgtNode = rq.target().resolve(FacetPath.newAbsolutePath().resolve(FacetStep.fwd(RDF.type.asNode())).resolve(FacetStep.fwd(RDFS.label.asNode())));
 
@@ -558,7 +594,26 @@ System.out.println(fpm.allocate(nq
         query.setQueryConstructType();
         query.setQueryPattern(elt);
 
-
         System.out.println(query);
+
+
+        RdfDataSource rdfDataSourceRaw = () -> RDFConnection.connect("http://localhost:8642/sparql");
+        RdfDataSource rdfDataSource = RdfDataSourceWithBnodeRewrite.wrapWithAutoBnodeProfileDetection(rdfDataSourceRaw);
+        QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(rdfDataSource);
+
+        Supplier<UnaryRelation> conceptSupplier = () -> ConceptUtils.createSubjectConcept();
+        DataProvider<RDFNode, String> dataProvider = new DataProviderNodeQuery(qef, conceptSupplier, nq);
+
+        List<RDFNode> list = dataProvider.fetch(new com.vaadin.flow.data.provider.Query<>()).collect(Collectors.toList());
+        for (RDFNode item : list) {
+            System.out.println(item);
+            RDFDataMgr.write(System.out, item.getModel(), RDFFormat.TURTLE_PRETTY);
+        }
+
+
+//        org.apache.jena.query.Query sparqlQuery = ElementGeneratorLateral.toQuery(target);
+//        LookupService<Node, DatasetOneNg> lookupService = new LookupServiceSparqlConstructQuads(qef, sparqlQuery);
+//        Map<Node, DatasetOneNg> map = lookupService.defaultForAbsentKeys(n -> null).fetchMap(Arrays.asList("http://foo", "http://bar").stream().map(NodeFactory::createURI).collect(Collectors.toList()));
+//        System.out.println("Result: " + map);
     }
 }

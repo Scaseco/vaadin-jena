@@ -1,7 +1,10 @@
 package org.aksw.jenax.vaadin.label;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.aksw.commons.rx.lookup.LookupService;
@@ -70,13 +73,22 @@ public class VaadinLabelMgr<R, L>
         return forHasText(this, component, resource);
     }
 
+    // <X> void register(X component, Set<R> resources, BiConsumer<? super X, Map<R, L>> callback);
+    public static <R, L, X extends HasText> X forHasText(LabelService<R, L> labelMgr, X component, Set<R> resources, Function<Map<R, L>, L> toText) {
+        labelMgr.register(component, resources, (c, lmap) -> {
+            L label = toText.apply(lmap);
+            String text = Objects.toString(label);
+            c.setText(text);
+        });
+        return component;
+    }
+
     public static <R, L, X extends HasText> X forHasText(LabelService<R, L> labelMgr, X component, R resource) {
         labelMgr.register(component, resource, (c, lmap) -> {
             L label = lmap.get(resource);
             String text = Objects.toString(label);
             c.setText(text);
         });
-
         return component;
     }
 }

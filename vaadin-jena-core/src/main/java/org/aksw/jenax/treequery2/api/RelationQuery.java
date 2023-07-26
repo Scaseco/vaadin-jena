@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.aksw.facete.v4.impl.PropertyResolverImpl;
+import org.aksw.jena_sparql_api.concepts.Concept;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.relation.api.Relation;
@@ -15,6 +16,7 @@ import org.aksw.jenax.treequery2.impl.RelationQueryImpl;
 import org.aksw.jenax.treequery2.old.NodeQueryOld;
 import org.apache.jena.query.SortCondition;
 import org.apache.jena.sparql.core.Var;
+import org.apache.jena.sparql.syntax.ElementGroup;
 
 public interface RelationQuery
     extends HasSlice
@@ -96,6 +98,11 @@ public interface RelationQuery
 
     /** Obtain a {@link NodeQuery} for one of the variables of the relation returned by {@link #getRelation()}. */
     NodeQuery nodeFor(Var var);
+
+    /** Create a new relation query with an empty graph pattern. Further elements connect to the given startVar. */
+    public static RelationQuery of(Var startVar) {
+        return of(() -> new Concept(new ElementGroup(), startVar));
+    }
 
     public static RelationQuery of(Relation relation) {
         return of(() -> relation);

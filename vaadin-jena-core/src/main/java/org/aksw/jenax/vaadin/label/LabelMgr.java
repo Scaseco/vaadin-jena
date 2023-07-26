@@ -17,7 +17,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.aksw.commons.rx.lookup.LookupService;
-import org.locationtech.jts.awt.PointShapeFactory.X;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +27,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.Sets;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.server.VaadinSession;
 
 
 /**
@@ -270,11 +268,11 @@ public class LabelMgr<R, L>
      * do we need a context for the label?
      * function<Resource, Context, label>
      */
-    public static <C, T, R, L> void register(
-            C component, T obj,
-            Function<? super T, Set<X>> decomposer,
-            BiFunction<T, Map<R, L>, L> composer) {
-    }
+//    public static <C, T, R, L> void register(
+//            C component, T obj,
+//            Function<? super T, Set<R>> decomposer,
+//            BiFunction<T, Map<R, L>, L> composer) {
+//    }
 
 
     /** Convenience method for a single resource. */

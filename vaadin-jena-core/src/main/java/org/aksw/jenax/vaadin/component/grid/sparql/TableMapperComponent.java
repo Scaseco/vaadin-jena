@@ -617,7 +617,7 @@ class DetailsView
                 addInstanceBtn.addClickListener(ev -> {
                     if (activePath != null) {
                         // Allocate the next alias in the tree data
-                        FacetPath newPath = allocate(treeDataProvider.getTreeData(), activePath, iriNode, true, null);
+                        FacetPath newPath = allocate(treeDataProvider.getTreeData(), activePath, iriNode, true, FacetStep.TARGET);
 
                         treeDataProvider.getTreeData().addItem(activePath, newPath);
                         treeDataProvider.refreshAll();
