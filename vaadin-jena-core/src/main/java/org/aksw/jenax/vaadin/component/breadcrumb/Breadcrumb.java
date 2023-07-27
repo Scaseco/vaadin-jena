@@ -103,14 +103,16 @@ public class Breadcrumb<T>
 //            }));
             registrations.add(span.addClickListener(ev -> {
                 pathModel.set(item);
-                fireEvent(new BreadcrumbEvent(this, false, item));
+                fireEvent(new BreadcrumbEvent<>(this, false, item));
             }));
             add(span);
         }
     }
 
-    public Registration addPathListener(ComponentEventListener<BreadcrumbEvent> listener) {
-        return addListener(BreadcrumbEvent.class, listener);
+    public Registration addPathListener(ComponentEventListener<BreadcrumbEvent<T>> listener) {
+        // ComponentEventListener<BreadcrumbEvent<?>> tmp = ev -> listener.onComponentEvent((BreadcrumbEvent<T>)ev);
+        ComponentEventListener wrapper = ev -> listener.onComponentEvent((BreadcrumbEvent<T>)ev);
+        return addListener(BreadcrumbEvent.class, wrapper);
     }
 
     public static LabelAssembler<FacetStep, Node, String> labelAssemblerForFacetPath() {
