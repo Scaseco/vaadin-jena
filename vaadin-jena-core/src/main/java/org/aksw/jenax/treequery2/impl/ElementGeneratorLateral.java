@@ -25,6 +25,7 @@ import org.aksw.jena_sparql_api.rx.entity.model.EntityQueryImpl;
 import org.aksw.jena_sparql_api.rx.entity.model.EntityTemplateImpl;
 import org.aksw.jena_sparql_api.schema.ShUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderNodeQuery;
+import org.aksw.jena_sparql_api.vaadin.data.provider.DataRetriever;
 import org.aksw.jenax.arq.connection.core.QueryExecutionFactories;
 import org.aksw.jenax.arq.connection.link.RDFLinkDecorizer;
 import org.aksw.jenax.arq.datasource.RdfDataSourceWithBnodeRewrite;
@@ -602,7 +603,8 @@ System.out.println(fpm.allocate(nq
         QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(rdfDataSource);
 
         Supplier<UnaryRelation> conceptSupplier = () -> ConceptUtils.createSubjectConcept();
-        DataProvider<RDFNode, String> dataProvider = new DataProviderNodeQuery(qef, conceptSupplier, nq);
+        DataRetriever retriever = null;
+        DataProvider<RDFNode, String> dataProvider = new DataProviderNodeQuery(qef, conceptSupplier, retriever);
 
         List<RDFNode> list = dataProvider.fetch(new com.vaadin.flow.data.provider.Query<>()).collect(Collectors.toList());
         for (RDFNode item : list) {

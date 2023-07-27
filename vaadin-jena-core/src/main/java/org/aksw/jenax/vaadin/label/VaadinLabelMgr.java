@@ -91,4 +91,14 @@ public class VaadinLabelMgr<R, L>
         });
         return component;
     }
+
+    /** Note: changes to the set of resources extracted from the item are not reflected. */
+    public static <T, R, L, X extends HasText> X forHasText(LabelService<R, L> labelMgr, X component, T item, LabelAssembler<T, R, L> labelAssembler) {
+        Set<R> resources = labelAssembler.extractResources(item);
+        labelMgr.register(component, resources, (c, lmap) -> {
+            String text = labelAssembler.toString(item, lmap);
+            c.setText(text);
+        });
+        return component;
+    }
 }

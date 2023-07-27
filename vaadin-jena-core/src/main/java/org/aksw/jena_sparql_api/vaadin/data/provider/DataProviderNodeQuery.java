@@ -1,6 +1,5 @@
 package org.aksw.jena_sparql_api.vaadin.data.provider;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -19,12 +18,10 @@ import org.aksw.jenax.arq.dataset.impl.ResourceInDatasetImpl;
 import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.sparql.query.rx.SparqlRx;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
-import org.aksw.jenax.treequery2.api.NodeQuery;
 import org.aksw.jenax.treequery2.impl.ElementGeneratorLateral;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.sparql.core.Quad;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,19 +40,25 @@ public class DataProviderNodeQuery
     // This feels like a hack - it might be better to have the distinct flag part of the relation but this needs more thought
     protected boolean alwaysDistinct = false;
 
-    protected Supplier<UnaryRelation> conceptSupplier;
-
-    protected NodeQuery nodeQuery;
+    /** The query execution factory on which to run the queries */
     protected QueryExecutionFactoryQuery qef;
 
-    // public int predefinedSize = -1;
+    /** The supplier for the specification of the initial set of RDF terms */
+    protected Supplier<UnaryRelation> conceptSupplier;
 
-    public DataProviderNodeQuery(QueryExecutionFactoryQuery qef, Supplier<UnaryRelation> conceptSupplier,
-            NodeQuery nodeQuery) {
+    /** A classifier to determine what data to fetch */
+    // protected MapService<Concept, Node, Set<Node>> classifierService;
+
+    protected DataRetriever retriever;
+
+    // protected NodeQuery nodeQuery;
+
+
+    public DataProviderNodeQuery(QueryExecutionFactoryQuery qef, Supplier<UnaryRelation> conceptSupplier, DataRetriever retriever) {
         super();
         this.qef = qef;
         this.conceptSupplier = conceptSupplier;
-        this.nodeQuery = nodeQuery;
+        this.retriever = retriever;
     }
 
     @Override
@@ -65,7 +68,7 @@ public class DataProviderNodeQuery
         // new ListServiceConcept()
 
 
-        org.apache.jena.query.Query sparqlQuery = ElementGeneratorLateral.toQuery(nodeQuery);
+        org.apache.jena.query.Query sparqlQuery = null; // ElementGeneratorLateral.toQuery(nodeQuery);
 //        Quad templateQuad = sparqlQuery.getConstructTemplate().getQuads().get(0);
 //        sparqlQuery.setQuerySelectType();
 //        sparqlQuery.addProjectVars(Arrays.asList(templateQuad.getGraph(), templateQuad.getSubject(), templateQuad.getPredicate(), templateQuad.getObject()));
@@ -75,10 +78,20 @@ public class DataProviderNodeQuery
         entityQuery.setOffset(query.getOffset());
         entityQuery.setLimit(query.getLimit());
 
+        // Retrieve the set of nodes
         List<Node> nodes = ServiceUtils.fetchList(qef.createQueryExecution(entityQuery), concept.getVar());
+
+        // Pass the nodes through the classifier
+        // EntityClassifier.
+
+
+
+
         // logger.info
         System.err.println("NodeQuery: " + sparqlQuery);
         System.err.println("GOT NODES: " + nodes);
+
+        retriever.retrieve(null);
 
         LookupService<Node, DatasetOneNg> lookupService = new LookupServiceSparqlConstructQuads(qef, sparqlQuery);
         Map<Node, DatasetOneNg> map = lookupService.fetchMap(nodes);
@@ -89,7 +102,9 @@ public class DataProviderNodeQuery
 
     @Override
     protected int sizeInBackEnd(Query<RDFNode, String> query) {
-        org.apache.jena.query.Query sparqlQuery = ElementGeneratorLateral.toQuery(nodeQuery);
+        UnaryRelation concept = conceptSupplier.get();
+        org.apache.jena.query.Query sparqlQuery = concept.asQuery();
+        // org.apache.jena.query.Query sparqlQuery = ElementGeneratorLateral.toQuery(nodeQuery);
         Range<Long> range = SparqlRx.fetchCountQuery(qef, sparqlQuery, null, null).blockingGet();
         CountInfo countInfo = RangeUtils.toCountInfo(range);
         int result = Ints.saturatedCast(countInfo.getCount());

@@ -10,7 +10,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -21,9 +20,6 @@ import org.aksw.commons.collection.observable.ObservableValue;
 import org.aksw.commons.collection.observable.ObservableValueImpl;
 import org.aksw.commons.collection.observable.Registration;
 import org.aksw.commons.collections.PolaritySet;
-import org.aksw.commons.util.page.Page;
-import org.aksw.commons.util.page.Paginator;
-import org.aksw.commons.util.page.PaginatorImpl;
 import org.aksw.jena_sparql_api.collection.observable.GraphChange;
 import org.aksw.jena_sparql_api.common.DefaultPrefixes;
 import org.aksw.jena_sparql_api.concepts.BinaryRelationImpl;
@@ -41,11 +37,13 @@ import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.connection.query.QueryExecutionFactoryDataset;
 import org.aksw.jenax.dataaccess.LabelUtils;
+import org.aksw.jenax.path.core.PathOpsPP;
 import org.aksw.jenax.path.core.PathPP;
 import org.aksw.jenax.sparql.path.SimplePath;
 import org.aksw.jenax.sparql.relation.api.BinaryRelation;
 import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
+import org.aksw.jenax.vaadin.component.breadcrumb.Breadcrumb;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
 import org.aksw.vaadin.common.component.util.ConfirmDialogUtils;
 import org.aksw.vaadin.common.component.util.NotificationUtils;
@@ -256,7 +254,7 @@ public class ResourceEditor
         resourceGridFilterRow = resourceGrid.appendHeaderRow();
 
 
-        Breadcrumb breadcrumb = new Breadcrumb(labelService);
+        Breadcrumb<P_Path0> breadcrumb = new Breadcrumb<>(PathOpsPP.get().newRoot(), labelService, Breadcrumb.labelAssemblerForPath0());
 //        breadcrumb.getModel().set(PathOpsPP.get().newRoot()
 //                .resolve(new P_Link(RDF.Nodes.type))
 //                .resolve(new P_Link(RDFS.Nodes.label))$
@@ -386,7 +384,7 @@ public class ResourceEditor
 
 
         breadcrumb.addPathListener(ev -> {
-            PathPP pp = ev.getPath();
+            org.aksw.commons.path.core.Path<P_Path0> pp = ev.getPath();
             BinaryRelation rel = pathToRelation(pp);
             UnaryRelation newRel =
                     rel.prependOn(rel.getSourceVar()).with(resourceRelation)
@@ -452,7 +450,7 @@ public class ResourceEditor
 
     }
 
-    public static BinaryRelation pathToRelation(PathPP path) {
+    public static BinaryRelation pathToRelation(org.aksw.commons.path.core.Path<P_Path0> path) {
         List<P_Path0> segments = path.getSegments();
         BinaryRelation e;
         if (segments.isEmpty()) {

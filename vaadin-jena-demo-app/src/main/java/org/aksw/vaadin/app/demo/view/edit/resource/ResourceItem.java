@@ -61,11 +61,11 @@ public class ResourceItem
     protected Map<Path, Component> pathToComponentCache = new LinkedHashMap<>();
 
 
-    protected ObservableValue<PathPP> breadcrumb;
+    protected ObservableValue<org.aksw.commons.path.core.Path<P_Path0>> breadcrumb;
 
     public ResourceItem(ResourceInfo state, GraphChange graphEditorModel,
             ObservableValue<List<Path>> visibleProperties,
-            ObservableValue<PathPP> breadcrumb,
+            ObservableValue<org.aksw.commons.path.core.Path<P_Path0>> breadcrumb,
             VaadinLabelMgr<Node, String> labelService) {
         addClassName("card");
 
@@ -162,8 +162,8 @@ public class ResourceItem
 
         ContextMenu contextMenu = new ContextMenu(pHeading);
         contextMenu.addItem("Navigate to " + p, ev -> {
-            PathPP pp = breadcrumb.get();
-            PathPP newPP = pp.resolve(step);
+            org.aksw.commons.path.core.Path<P_Path0> pp = breadcrumb.get();
+            org.aksw.commons.path.core.Path<P_Path0> newPP = pp.resolve(step);
             breadcrumb.set(newPP);
         });
 

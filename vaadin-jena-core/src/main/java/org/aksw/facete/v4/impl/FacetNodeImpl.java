@@ -115,7 +115,7 @@ public class FacetNodeImpl
     }
 
     @Override
-    public Integer targetComponent() {
+    public Node targetComponent() {
         throw new UnsupportedOperationException("use reachingStep()");
     }
 
@@ -142,7 +142,7 @@ public class FacetNodeImpl
 
     public FacetedDataQuery<RDFNode> createValueQuery(boolean applySelfConstraints) {
         ElementGenerator eltGen = ElementGenerator.configure(facetedQuery);
-        
+
         ScopedFacetPath sfp = ScopedFacetPath.of(Vars.s, node.getFacetPath());
         UnaryRelation relation = eltGen.getAvailableValuesAt(sfp, applySelfConstraints);
 
