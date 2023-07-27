@@ -55,10 +55,45 @@ public class PropertyResolverImpl
 
     @Override
     public Relation resolve(Node property) {
-        Relation result;
+        Relation result = null;
         if (NodeUtils.ANY_IRI.equals(property)) {
             result = new TernaryRelationImpl(ElementUtils.createElementTriple(Vars.s, Vars.p, Vars.o), Vars.s, Vars.p, Vars.o);
-        } else {
+        }
+
+        if (result == null) {
+            BinaryRelation relation = null;
+            Model model = virtualProperties.getDefaultModel();
+            RDFNode rdfNode = model.asRDFNode(property);
+            if (rdfNode != null && rdfNode.isResource()) {
+                Resource r = rdfNode.asResource();
+                String definition = Optional.ofNullable(r.getProperty(virtualPropertyDefinition)).map(Statement::getString).orElse(null);
+                if (definition != null) {
+                    Query query = QueryFactory.create(definition);
+                    relation = RelationUtils.fromQuery(query).toBinaryRelation();
+
+//                if (relation == null) {
+//                    relation = userDefinedProperties.get(str);
+//                }
+
+                    result = relation.toBinaryRelation();
+//                        Map<Node, Node> remap = new HashMap<>();
+//                        remap.put(br.getSourceVar(), parentVar);
+//                        remap.put(br.getTargetVar(), targetVar);
+//                        br = br.applyNodeTransform(NodeTransformLib2.wrapWithNullAsIdentity(remap::get));
+//                        result = br.getElement();
+//
+//                        result = ElementUtils.flatten(result);
+
+                    Element elt = result.getElement();
+                    if (elt instanceof ElementSubQuery) {
+                        elt = ((ElementSubQuery)result).getQuery().getQueryPattern();
+                        result = new BinaryRelationImpl(elt, relation.getSourceVar(), relation.getTargetVar());
+                    }
+                }
+            }
+        }
+
+        if (result == null) {
             result = BinaryRelationImpl.create(property);
         }
         return result;
