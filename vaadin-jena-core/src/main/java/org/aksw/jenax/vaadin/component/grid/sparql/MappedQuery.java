@@ -32,7 +32,7 @@ public class MappedQuery {
         return tree;
     }
 
-    public Map<Var, ScopedFacetPath> getVarToPath() {
+    public BiMap<Var, ScopedFacetPath> getVarToPath() {
         return varToPath;
     }
 

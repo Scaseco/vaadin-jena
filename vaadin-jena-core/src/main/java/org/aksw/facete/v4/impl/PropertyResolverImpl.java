@@ -43,7 +43,6 @@ import org.topbraid.shacl.model.SHFactory;
 public class PropertyResolverImpl
     implements PropertyResolver
 {
-
     // FIXME This must be made configurable
     public static final Dataset virtualProperties = RDFDataMgr.loadDataset("virtual-properties.ttl");
     public static final Property virtualPropertyDefinition = ResourceFactory.createProperty("https://w3id.org/aksw/norse#sparqlElement");
@@ -58,6 +57,17 @@ public class PropertyResolverImpl
         Relation result = null;
         if (NodeUtils.ANY_IRI.equals(property)) {
             result = new TernaryRelationImpl(ElementUtils.createElementTriple(Vars.s, Vars.p, Vars.o), Vars.s, Vars.p, Vars.o);
+        }
+
+        if (result == null && property.isURI()) {
+            String str = property.getURI();
+
+            String fnPrefix = "fn:";
+            if (str.startsWith(fnPrefix)) {
+                String fnIri = str.substring(fnPrefix.length());
+                Element elt = new ElementBind(Vars.o, new E_Function(fnIri, new ExprList(new ExprVar(Vars.s))));
+                result = new BinaryRelationImpl(elt, Vars.s, Vars.o);
+            }
         }
 
         if (result == null) {

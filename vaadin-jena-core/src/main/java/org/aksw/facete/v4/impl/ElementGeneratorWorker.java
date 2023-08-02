@@ -47,17 +47,18 @@ import org.apache.jena.sparql.syntax.ElementGroup;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
 
 /**
- * 
- * 
+ *
+ *
  * This class should supersede {@link FacetedQueryGenerator}.
  */
 public class ElementGeneratorWorker {
-	
-	// protected Map<VarScope, TreeData<FacetPath>> facetTree;
-	
+
+    // protected Map<VarScope, TreeData<FacetPath>> facetTree;
+
     protected Map<VarScope, ElementGeneratorContext> scopeToContext = new LinkedHashMap<>();
     protected FacetPathMapping pathMapping;
     protected PropertyResolver propertyResolver;
@@ -74,11 +75,11 @@ public class ElementGeneratorWorker {
 //    protected Map<FacetPath, Var> pathToVar = new HashMap<>();
 
     public ElementGeneratorWorker(FacetPathMapping pathMapping, PropertyResolver propertyResolver) {
-    	this(new TreeData<>(), HashMultimap.create(), pathMapping, propertyResolver);
+        this(new TreeData<>(), HashMultimap.create(), pathMapping, propertyResolver);
     }
 
     public ElementGeneratorWorker(TreeData<ScopedFacetPath> facetTree, SetMultimap<ScopedFacetPath, Expr> constraintIndex, FacetPathMapping pathMapping, PropertyResolver propertyResolver) {
-    	this.pathMapping = pathMapping;
+        this.pathMapping = pathMapping;
         this.propertyResolver = propertyResolver;
         // this.constraintIndex = constraintIndex;
         setFacetTree(facetTree);
@@ -86,28 +87,28 @@ public class ElementGeneratorWorker {
     }
 
     public void setConstraintIndex(SetMultimap<ScopedFacetPath, Expr> constraintIndex) {
-    	SetMultimap<VarScope, Expr> localIndices = ElementGenerator.createUnscopedConstraintExprs(constraintIndex.values());
-    	
-    	for (Entry<VarScope, Collection<Expr>> e : localIndices.asMap().entrySet()) {
-    		ElementGeneratorContext cxt = getOrCreateContext(e.getKey());
-    		SetMultimap<FacetPath, Expr> localConstraintIndex = FacetConstraints.createConstraintIndex(e.getValue());
-    		cxt.setConstraintIndex(localConstraintIndex);
-    	}
-    	
+        SetMultimap<VarScope, Expr> localIndices = ElementGenerator.createUnscopedConstraintExprs(constraintIndex.values());
+
+        for (Entry<VarScope, Collection<Expr>> e : localIndices.asMap().entrySet()) {
+            ElementGeneratorContext cxt = getOrCreateContext(e.getKey());
+            SetMultimap<FacetPath, Expr> localConstraintIndex = FacetConstraints.createConstraintIndex(e.getValue());
+            cxt.setConstraintIndex(localConstraintIndex);
+        }
+
         for (Expr expr : new ArrayList<>(constraintIndex.values())) {
             analysePathModality(expr);
         }
     }
-    
+
     public void setFacetTree(TreeData<ScopedFacetPath> facetTree) {
-    	for (ScopedFacetPath rootPath : facetTree.getRootItems()) {
-    		VarScope scope = rootPath.getScope();
-    		ElementGeneratorContext cxt = getOrCreateContext(scope);
-    		TreeData<FacetPath> tree = facetTree.map(ScopedFacetPath::getFacetPath);
-    		cxt.setFacetTree(tree);
-    	}
+        for (ScopedFacetPath rootPath : facetTree.getRootItems()) {
+            VarScope scope = rootPath.getScope();
+            ElementGeneratorContext cxt = getOrCreateContext(scope);
+            TreeData<FacetPath> tree = facetTree.map(ScopedFacetPath::getFacetPath);
+            cxt.setFacetTree(tree);
+        }
     }
-    
+
     public FacetPathMapping getPathMapping() {
         return pathMapping;
     }
@@ -115,12 +116,12 @@ public class ElementGeneratorWorker {
     public PropertyResolver getPropertyResolver() {
         return propertyResolver;
     }
-    
+
     public BiMap<ScopedFacetPath, Var> getPathToVar() {
-    	BiMap<ScopedFacetPath, Var> result = scopeToContext.values().stream().flatMap(cxt -> cxt.getPathToVar().entrySet().stream()
-    			.map(e -> new SimpleEntry<>(ScopedFacetPath.of(cxt.scope, e.getKey()), e.getValue())))    	
-    			.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (u, v) -> u, HashBiMap::create));
-    	return result;
+        BiMap<ScopedFacetPath, Var> result = scopeToContext.values().stream().flatMap(cxt -> cxt.getPathToVar().entrySet().stream()
+                .map(e -> new SimpleEntry<>(ScopedFacetPath.of(cxt.scope, e.getKey()), e.getValue())))
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue, (u, v) -> u, HashBiMap::create));
+        return result;
     }
 
     /**
@@ -156,7 +157,7 @@ public class ElementGeneratorWorker {
 
 //    protected ElementGeneratorContext getOrCreateContext(ScopedFacetPath path) {
 //        VarScope scope = path.getScope();
-//        
+//
 //    }
 
     public ElementGeneratorContext getOrCreateContext(VarScope scope) {
@@ -210,7 +211,7 @@ public class ElementGeneratorWorker {
         }
 
         boolean isEmptyGroup = coreElt instanceof ElementGroup && ((ElementGroup)coreElt).isEmpty();
-        
+
         // Element root = isMandatory || coreElt instanceof ElementBind ? container : new ElementOptional(container);
         BiFunction<Element, List<Element>, Element> combiner =  isMandatory || coreElt instanceof ElementBind || isEmptyGroup
                 ? ElementAcc::collectIntoGroup
@@ -241,7 +242,7 @@ public class ElementGeneratorWorker {
         } else {
             secondaryNode = predicateNode;
         }
-        
+
         // Relation rename:
         // target(s) have given names
         // source(s) have given names
@@ -249,28 +250,40 @@ public class ElementGeneratorWorker {
 
         if (FacetStep.isTarget(c)) {
             // coreElt = propertyResolver.resolve(parentVar, secondaryNode, targetVar, isFwd);
-        	Relation rel = propertyResolver.resolve(secondaryNode);
-            
-        	// FIXME Adapt the relation w.r.t parentVar, targetVar and direction
-        	// RelationUtils.rename(
-        	String scopeName = cxt.getScope().getScopeName();
-        	Map<Var, Var> varRename = new HashMap<>();
-        	List<Var> vars = rel.getVars();
-        	int n = vars.size();
-        	
-        	int start = 1;
-        	int end = n - 1;
-        	List<Var> intermediateVars = start >= end ? Collections.emptyList() : vars.subList(start, end);
+            Relation rel = propertyResolver.resolve(secondaryNode);
 
-        	varRename.put(vars.get(n - 1), targetVar);
-        	varRename.put(vars.get(0), parentVar);
-        	
-        	for (Var v : intermediateVars) {
-            	Var scopedVar = FacetPathMappingImpl.resolveVar(pathMapping, scopeName, targetVar, path).asVar();
-            	varRename.put(v, scopedVar);
-        	}
-        	Relation finalRel = rel.applyNodeTransform(NodeTransformLib2.wrapWithNullAsIdentity(varRename::get));        	
-        	coreElt = finalRel.getElement();
+            // If the facet step is inverted then swap the first and last variables of the relation
+            if (step.getDirection().isBackward()) {
+                List<Var> swappedVars = new ArrayList<>(rel.getVars());
+                Var first = swappedVars.get(0);
+                int lastIndex = swappedVars.size() - 1;
+                Var last = swappedVars.get(lastIndex);
+                swappedVars.set(0,  last);
+                swappedVars.set(lastIndex, first);
+                rel = rel.project(swappedVars);
+            }
+
+
+            // FIXME Adapt the relation w.r.t parentVar, targetVar and direction
+            // RelationUtils.rename(
+            String scopeName = cxt.getScope().getScopeName();
+            Map<Var, Var> varRename = new HashMap<>();
+            List<Var> vars = rel.getVars();
+            int n = vars.size();
+
+            int start = 1;
+            int end = n - 1;
+            List<Var> intermediateVars = start >= end ? Collections.emptyList() : vars.subList(start, end);
+
+            varRename.put(vars.get(n - 1), targetVar);
+            varRename.put(vars.get(0), parentVar);
+
+            for (Var v : intermediateVars) {
+                Var scopedVar = FacetPathMappingImpl.resolveVar(pathMapping, scopeName, targetVar, path).asVar();
+                varRename.put(v, scopedVar);
+            }
+            Relation finalRel = rel.applyNodeTransform(NodeTransformLib2.wrapWithNullAsIdentity(varRename::get));
+            coreElt = finalRel.getElement();
             // coreElt = ElementUtils.createElementTriple(parentVar, secondaryNode, targetVar, isFwd);
         } else {
             coreElt = ElementUtils.createElementTriple(parentVar, targetVar, secondaryNode, isFwd);
@@ -385,24 +398,24 @@ public class ElementGeneratorWorker {
 //                ElementUtils.copyElements(parentAcc, elementAcc.getResultElement());
 //            }
 
-        // Create FILTER elements        
+        // Create FILTER elements
         Set<Expr> exprs = cxt.localConstraintIndex.get(path);
         if (!exprs.isEmpty()) { // Wrapped in 'if' for debugging
-        	createElementsForExprs2(cxt, globalAcc, exprs, false);
+            createElementsForExprs2(cxt, globalAcc, exprs, false);
         }
     }
-    
+
     public MappedElement createElement() {
-    	// TODO Collect all elements from all contexts
+        // TODO Collect all elements from all contexts
         ElementGroup filterGroup = new ElementGroup();
-    	// ElementGroup elt = new ElementGroup();
-    	
+        // ElementGroup elt = new ElementGroup();
+
         MappedElement result = new MappedElement();
-    	for (ElementGeneratorContext cxt : scopeToContext.values()) {
-    		MappedElement part = createElement(cxt, filterGroup);
-    		result.putAll(part);
-    	}
-    	return result;
+        for (ElementGeneratorContext cxt : scopeToContext.values()) {
+            MappedElement part = createElement(cxt, filterGroup);
+            result.putAll(part);
+        }
+        return result;
         // return new MappedElement(cxt.facetPathToAcc, cxt.pathToVar, elt);
     }
 
@@ -423,20 +436,20 @@ public class ElementGeneratorWorker {
             // ElementUtils.toElementList(elt).forEach(group::addElement);
             // group.addElement(elt);
         }
-        
+
                 // this.constraintInde
-        
+
 
         Element elt = collect(cxt.facetPathToAcc, rootPath);
         elt = ElementUtils.flatten(elt);
         elt = ElementUtils.mergeElements(elt, filterGroup);
 
-        
+
         TreeDataMap<ScopedFacetPath, ElementAcc> facetPathToAcc = cxt.facetPathToAcc.mapKeys(facetPath -> ScopedFacetPath.of(cxt.getScope(), facetPath));
         BiMap<ScopedFacetPath, Var> pathToVar = cxt.pathToVar.entrySet().stream()
-        		.map(e -> new SimpleEntry<>(ScopedFacetPath.of(cxt.getScope(), e.getKey()), e.getValue()))
-        		.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (u, v) -> u, HashBiMap::create));
-        
+                .map(e -> new SimpleEntry<>(ScopedFacetPath.of(cxt.getScope(), e.getKey()), e.getValue()))
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue, (u, v) -> u, HashBiMap::create));
+
         // ElementUtils.copyElements(group, filterGroup);
 
         // Add filters for the constraints
@@ -447,10 +460,10 @@ public class ElementGeneratorWorker {
 
 
     public void createElementsForExprs2(ElementGeneratorContext cxt, ElementGroup globalAcc, Collection<Expr> baseExprs, boolean negate) {
-        
-    	NodeTransform resolveFacetPaths = NodeCustom.createNodeTransform((FacetPath fp) -> {
-    		return resolve(ScopedFacetPath.of(cxt.getScope(), fp));
-    	}); //this::resolve);
+
+        NodeTransform resolveFacetPaths = NodeCustom.createNodeTransform((FacetPath fp) -> {
+            return resolve(ScopedFacetPath.of(cxt.getScope(), fp));
+        }); //this::resolve);
 
         Set<Element> result = new LinkedHashSet<>();
         Set<Expr> resolvedExprs = new LinkedHashSet<>();
@@ -565,20 +578,20 @@ public class ElementGeneratorWorker {
         ElementAcc eltAcc = tree.get(currentPath);
         Element result;
         if (eltAcc != null) {
-	        Element elt = eltAcc.getElement();
-	        // Create the ElementAcc for the path if it hasn't happened yet
-	        Iterable<FacetPath> children = tree.getChildren(currentPath);
-	        List<Element> childElts = new ArrayList<>();
-	        if (children != null && children.iterator().hasNext()) {
-	            for (FacetPath childPath : children) {
-	                Element childElt = collect(tree, childPath);
-	                // If there is no accumulator for the child then visit it
-	                childElts.add(childElt);
-	            }
-	        }
-	        result = eltAcc.getFactory().apply(elt, childElts);
+            Element elt = eltAcc.getElement();
+            // Create the ElementAcc for the path if it hasn't happened yet
+            Iterable<FacetPath> children = tree.getChildren(currentPath);
+            List<Element> childElts = new ArrayList<>();
+            if (children != null && children.iterator().hasNext()) {
+                for (FacetPath childPath : children) {
+                    Element childElt = collect(tree, childPath);
+                    // If there is no accumulator for the child then visit it
+                    childElts.add(childElt);
+                }
+            }
+            result = eltAcc.getFactory().apply(elt, childElts);
         } else {
-        	result = new ElementGroup();
+            result = new ElementGroup();
         }
         return result;
     }

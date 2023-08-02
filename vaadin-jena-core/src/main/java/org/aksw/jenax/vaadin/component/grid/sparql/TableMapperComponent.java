@@ -38,6 +38,7 @@ import org.aksw.jenax.arq.dataset.api.ResourceInDataset;
 import org.aksw.jenax.arq.datasource.RdfDataSourceWithBnodeRewrite;
 import org.aksw.jenax.arq.util.node.NodeUtils;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
+import org.aksw.jenax.arq.util.syntax.QueryGenerationUtils;
 import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
@@ -566,7 +567,7 @@ class DetailsView
                     if (activePath != null) {
                         Node node = NodeFactory.createURI("fn:" + predicateNode.getURI());
                         // Allocate the next alias in the tree data
-                        FacetPath newPath = allocate(treeDataProvider.getTreeData(), activePath, node, true, null);
+                        FacetPath newPath = allocate(treeDataProvider.getTreeData(), activePath, node, true, FacetStep.TARGET);
 
                         treeDataProvider.getTreeData().addItem(activePath, newPath);
                         treeDataProvider.refreshAll();
@@ -1147,6 +1148,9 @@ public class TableMapperComponent
         org.aksw.facete.v3.api.TreeData<FacetPath> treeProjection = TreeDataUtils.toFacete(treeDataProvider.getTreeData());
 
         MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeProjection, constraintIndex, path -> !Boolean.FALSE.equals(pathToVisibility.get(path)));
+
+        mappedQuery = new MappedQuery(mappedQuery.getTree(), QueryGenerationUtils.discardUnbound(mappedQuery.getQuery()), mappedQuery.getVarToPath());
+
 //        Query query =
 //        RelationUtils.createQuery(null);
         // VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);
