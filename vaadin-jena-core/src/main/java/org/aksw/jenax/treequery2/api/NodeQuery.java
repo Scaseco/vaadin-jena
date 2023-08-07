@@ -93,6 +93,7 @@ public interface NodeQuery
     Var var();
     FacetStep reachingStep();
 
+    @Override
     NodeQuery resolve(FacetPath facetPath);
 
     Map<FacetStep, RelationQuery> children();

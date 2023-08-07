@@ -94,6 +94,11 @@ class TreeRelation {
  */
 public class FacetedRelationQuery {
 
+    /**
+     * Controls the result type for this query
+     * and which attributes are in effect.
+     *
+     */
     public enum QueryType {
         COLUMNS,
         TREE
@@ -131,6 +136,8 @@ public class FacetedRelationQuery {
     protected TreeData<TreeQueryNode> treeProjection = new TreeData<>();
     protected List<TreeQueryNode> listProjection = new ArrayList<>();
 
+    protected String scopeName;
+
     /** The set of facet paths which to project. Applies to both tree and list projections. */
     protected Set<TreeQueryNode> isVisible = new LinkedHashSet<>();
 
@@ -140,8 +147,13 @@ public class FacetedRelationQuery {
     }
 
     public FacetedRelationQuery(Supplier<Relation> baseRelation) {
+        this(baseRelation, "");
+    }
+
+    public FacetedRelationQuery(Supplier<Relation> baseRelation, String scopeName) {
         super();
         this.baseRelation = baseRelation;
+        this.scopeName = scopeName;
 
         Generator<Var> varGen = GeneratorFromFunction.createInt().map(i -> Var.alloc("vv" + i));
         DynamicInjectiveFunction<FacetPath, Var> ifn = DynamicInjectiveFunction.of(varGen);
@@ -150,6 +162,10 @@ public class FacetedRelationQuery {
 
         // TODO Use a global path mapping by default
         this.pathMapping = fpm;
+    }
+
+    public String getScopeBaseName() {
+        return scopeName;
     }
 
     public List<FacetNode> getProjection() {
@@ -162,17 +178,24 @@ public class FacetedRelationQuery {
 
     /** Convenience function if there is only a single root variable */
     public FacetedQuery getFacetedQuery() {
+        Relation relation = baseRelation.get();
         Var rootVar = null;
+        if (relation.getVars().size() == 1) {
+            rootVar = relation.getVars().iterator().next();
+        }
+        // Var rootVar = null;
         return getFacetedQuery(rootVar);
     }
 
     public FacetedQuery getFacetedQuery(Var var) {
         // TODO Check whether is part of the base relation
+        // FIXME Do not traverse the given variable! Create a new scoped path that starts at that variable
         FacetedQuery result = varToRoot.computeIfAbsent(var, v -> {
             // FIXME We would have to allocate a fresh var
-            FacetStep step = FacetStep.fwd(INITIAL_VAR, null);
-            TreeQueryNode node = constraints.getTreeQuery().root().getOrCreateChild(step);
-            return new FacetedQueryImpl(this, node);
+            // FacetStep step = FacetStep.fwd(INITIAL_VAR, null);
+            // FacetStep step = FacetStep.fwd(v, null);
+            TreeQueryNode node = constraints.getTreeQuery().root(); //.getOrCreateChild(step);
+            return new FacetedQueryImpl(this, v, node);
         });
         return result;
     }

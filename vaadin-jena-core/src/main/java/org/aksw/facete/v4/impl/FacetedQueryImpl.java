@@ -21,18 +21,33 @@ import com.google.common.cache.CacheBuilder;
 public class FacetedQueryImpl
     implements FacetedQuery
 {
+    protected SparqlQueryConnection conn;
+
     protected FacetedRelationQuery relationQuery;
+    protected Var baseVar;
+
     // protected FacetConstraints constraints;
     protected TreeQueryNode focus;
 
     protected Cache<TreeQueryNode, FacetNode> viewCache = CacheBuilder.newBuilder().maximumSize(1000).build();
 
 
-    public FacetedQueryImpl(FacetedRelationQuery relationQuery, TreeQueryNode focus) {
+//    public static void create() {
+//        FacetedRelationQuery frq = FacetedRelationQuery.of(ConceptUtils.createSubjectConcept());
+//        FacetedQuery fq = frq.getFacetedQuery();
+//        return fq;
+//    }
+
+    public FacetedQueryImpl(FacetedRelationQuery relationQuery, Var baseVar, TreeQueryNode focus) {
         super();
         this.relationQuery = relationQuery;
+        this.baseVar = baseVar;
         // this.constraints = constraints;
         this.focus = focus;
+    }
+
+    public Var getBaseVar() {
+        return baseVar;
     }
 
     public FacetedRelationQuery relationQuery() {
@@ -103,11 +118,12 @@ public class FacetedQueryImpl
 
     @Override
     public FacetedQuery connection(SparqlQueryConnection conn) {
-        throw new UnsupportedOperationException("Execution API is now separate from the faceted query model");
+        this.conn = conn;
+        return this;
     }
 
     @Override
     public SparqlQueryConnection connection() {
-        throw new UnsupportedOperationException("Execution API is now separate from the faceted query model");
+        return conn;
     }
 }

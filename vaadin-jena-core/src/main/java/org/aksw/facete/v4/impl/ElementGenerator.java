@@ -15,6 +15,7 @@ import org.aksw.facete.v3.api.FacetConstraints;
 import org.aksw.facete.v3.api.NodeFacetPath;
 import org.aksw.facete.v3.api.TreeData;
 import org.aksw.facete.v3.api.TreeQueryNode;
+import org.aksw.facete.v3.api.VarScope;
 import org.aksw.jena_sparql_api.concepts.BinaryRelationImpl;
 import org.aksw.jena_sparql_api.concepts.Concept;
 import org.aksw.jena_sparql_api.concepts.RelationUtils;
@@ -34,7 +35,6 @@ import org.aksw.jenax.treequery2.api.ConstraintNode;
 import org.aksw.jenax.treequery2.api.FacetPathMapping;
 import org.aksw.jenax.treequery2.api.NodeQuery;
 import org.aksw.jenax.treequery2.api.ScopedFacetPath;
-import org.aksw.jenax.treequery2.api.VarScope;
 import org.aksw.jenax.treequery2.impl.FacetPathMappingImpl;
 import org.aksw.jenax.vaadin.component.grid.sparql.MappedQuery;
 import org.apache.jena.graph.Node;
@@ -77,7 +77,7 @@ public class ElementGenerator {
     protected SetMultimap<ScopedFacetPath, Expr> constraintIndex;
 
     // protected Map<VarScope, ElementGenerator.Context> scopeToContext = new HashMap<>();
-    
+
 //    static class Context {
 //        /** Mapping of element paths (FacetPaths with the component set to the TUPLE constant) */
 //        protected Map<FacetPath, ElementAcc> eltPathToAcc = new LinkedHashMap<>();
@@ -99,8 +99,8 @@ public class ElementGenerator {
 
 
     public void addPath(ScopedFacetPath facetPath) {
-    	// facetTree.computeIfAbsent(facetPath.getScope(), sc -> new TreeData<>()).putItem(facetPath.getFacetPath(), FacetPath::getParent);
-    	facetTree.putItem(facetPath, ScopedFacetPath::getParent);
+        // facetTree.computeIfAbsent(facetPath.getScope(), sc -> new TreeData<>()).putItem(facetPath.getFacetPath(), FacetPath::getParent);
+        facetTree.putItem(facetPath, ScopedFacetPath::getParent);
     }
 
     public void addExpr(Expr expr) {
@@ -142,9 +142,9 @@ public class ElementGenerator {
 
           FacetNodeImpl focusNode = (FacetNodeImpl)frq.getFacetedQuery().focus();
           TreeQueryNode tq = focusNode.node;
-          
+
           ScopedFacetPath focusPath = ScopedFacetPath.of(rootVar, tq.getFacetPath());
-          
+
           // FacetPath focusPath = ElementGeneratorUtils.cleanPath(tq.getFacetPath());
 
 
@@ -183,30 +183,30 @@ public class ElementGenerator {
       return null;
   }
 
-    
-    public static SetMultimap<VarScope, Expr> createUnscopedConstraintExprs(Collection<Expr> scopedExprs) {
-    	SetMultimap<VarScope, Expr> result = HashMultimap.create();
-    	for (Expr expr : scopedExprs) {
-    		Set<ScopedFacetPath> sfps = NodeCustom.mentionedValues(expr);
-    		Multimap<VarScope, FacetPath> index = sfps.stream().collect(
-			        Multimaps.toMultimap(ScopedFacetPath::getScope, ScopedFacetPath::getFacetPath, HashMultimap::create));
-    		
-    		if (index.keySet().isEmpty()) {
-    			System.err.println("WARN: Constraint without path reference found " + expr);
-    		}
-    		
-    		if (index.keySet().size() > 1) {
-    			throw new UnsupportedOperationException("Expressions with different scopes in facet paths currently not supported");
-    		}
 
-    		VarScope scope = index.keySet().iterator().next();
-    		
-    		
-    		Expr e = expr.applyNodeTransform(NodeCustom.mapValue(ScopedFacetPath::getFacetPath));
-    		result.put(scope, e);
-    	}
-    	
-    	return result;
+    public static SetMultimap<VarScope, Expr> createUnscopedConstraintExprs(Collection<Expr> scopedExprs) {
+        SetMultimap<VarScope, Expr> result = HashMultimap.create();
+        for (Expr expr : scopedExprs) {
+            Set<ScopedFacetPath> sfps = NodeCustom.mentionedValues(expr);
+            Multimap<VarScope, FacetPath> index = sfps.stream().collect(
+                    Multimaps.toMultimap(ScopedFacetPath::getScope, ScopedFacetPath::getFacetPath, HashMultimap::create));
+
+            if (index.keySet().isEmpty()) {
+                System.err.println("WARN: Constraint without path reference found " + expr);
+            }
+
+            if (index.keySet().size() > 1) {
+                throw new UnsupportedOperationException("Expressions with different scopes in facet paths currently not supported");
+            }
+
+            VarScope scope = index.keySet().iterator().next();
+
+
+            Expr e = expr.applyNodeTransform(NodeCustom.mapValue(ScopedFacetPath::getFacetPath));
+            result.put(scope, e);
+        }
+
+        return result;
     }
 
     public static SetMultimap<ScopedFacetPath, Expr> createConstraintIndex(FacetConstraints constraints,
@@ -215,7 +215,7 @@ public class ElementGenerator {
           SetMultimap<ScopedFacetPath, Expr> constraintIndex = HashMultimap.create();
           for (Expr expr : exprs) {
               // Set<FacetPath> paths = NodeFacetPath.mentionedPaths(expr);
-        	  Set<ScopedFacetPath> paths = NodeCustom.mentionedValues(expr);
+              Set<ScopedFacetPath> paths = NodeCustom.mentionedValues(expr);
 
 //              Map<FacetPath, FacetPath> remap = new HashMap<>();
 //              for (FacetPath path : paths) {
@@ -236,7 +236,7 @@ public class ElementGenerator {
               // We would now need a mapping from TreeQueryNode to the effective FacetPath!
 
               // for (FacetPath path : remap.values()) {
-        	  for (ScopedFacetPath cleanPath : paths) {
+              for (ScopedFacetPath cleanPath : paths) {
                   // FacetPath cleanPath = ElementGeneratorUtils.cleanPath(path);
 
                   // Substitute the expression with the cleaned paths
@@ -275,7 +275,7 @@ public class ElementGenerator {
 
             Collection<Expr> exprs = constraints.getExprs();
             // TODO Transform the set of exprs to ScopedFacetPaths
-            
+
             SetMultimap<FacetPath, Expr> constraintIndex = HashMultimap.create();
             for (Expr expr : exprs) {
                 Set<FacetPath> paths = NodeFacetPath.mentionedPaths(expr);
@@ -318,12 +318,11 @@ public class ElementGenerator {
     }
 
 
-
     public Collection<Expr> transformAddScope(Collection<Expr> exprs, VarScope scope) {
         NodeTransform constraintTransform = NodeCustom.mapValue((FacetPath fp) -> ScopedFacetPath.of(scope, fp));
         Collection<Expr> result = exprs.stream()
-      	    .map(e -> e.applyNodeTransform(constraintTransform))
-      	    .collect(Collectors.toList());
+              .map(e -> e.applyNodeTransform(constraintTransform))
+              .collect(Collectors.toList());
         return result;
     }
 
@@ -333,12 +332,12 @@ public class ElementGenerator {
 //        Collection<Expr> exprs = rawExprs.stream()
 //        		.map(e -> e.applyNodeTransform(constraintTransform))
 //        		.collect(Collectors.toList());
-//        
+//
 //        SetMultimap<ScopedFacetPath, Expr> result = org.aksw.jenax.treequery2.impl.FacetConstraints.createConstraintIndex(exprs);
 //        return result;
 //
 //    }
-    
+
 
     public static MappedQuery createQuery(UnaryRelation baseConcept, TreeData<FacetPath> rawTreeData, SetMultimap<FacetPath, Expr> constraintIndex, Predicate<FacetPath> isProjected) {
 
@@ -346,15 +345,15 @@ public class ElementGenerator {
 
         Var rootVar = baseConcept.getVar();
         VarScope scope = VarScope.of(rootVar);
-        
+
         TreeData<ScopedFacetPath> treeData = rawTreeData.map(facetPath -> ScopedFacetPath.of(rootVar, facetPath));
-        
-        
-        
-        
+
+
+
+
         // rawTreeData.g
-        
-        
+
+
 //        Var superRootVar = Var.alloc("superRoot"); // Should not appear
         // DynamicInjectiveFunction<FacetPath, Var> ifn = DynamicInjectiveFunction.of(varGen);
 //        FacetPath superRootPath = FacetPath.newAbsolutePath();
@@ -393,15 +392,15 @@ public class ElementGenerator {
 
         // worker.getOrCreateContext(VarScope.of(rootVar)).setFacetTree(treeData);
         // worker.getOrCreateContext(
-        
+
         // Traverser.<TreeData>forTree(TreeData::getChildren).;
         // Traverser.forTree(treeData::getChildren).depthFirstPreOrder(treeData.getRootItems()).forEach(cxt::addPath);
         ElementGeneratorContext cxt = worker.getOrCreateContext(scope);
-        
+
         cxt
-        	.setFacetTree(rawTreeData)
-        	.setConstraintIndex(constraintIndex);
-        
+            .setFacetTree(rawTreeData)
+            .setConstraintIndex(constraintIndex);
+
 
 //        ElementGroup group = new ElementGroup();
 //        // baseConcept.getElements().forEach(group::addElement);
@@ -425,7 +424,7 @@ public class ElementGenerator {
         query.addProjectVars(visibleVars);
 
         BiMap<ScopedFacetPath, Var> varMap = worker.getPathToVar();
-        
+
         System.err.println("Generated Query: " + query);
         // Map<FacetPathVar> map = cxt.getPathToVar();
         MappedQuery result = new MappedQuery(treeData, query, varMap.inverse());
@@ -455,8 +454,9 @@ public class ElementGenerator {
                 ? constraintIndex
                 : ElementGeneratorUtils.hideConstraintsForPath(constraintIndex, path);
 
+        Var var = FacetPathMappingImpl.resolveVar(pathMapping, path).asVar();
 
-        Var var = Var.alloc("todoAddRoot");
+        // Var var = Var.alloc("todoAddRoot");
         // ElementGeneratorContext cxt = new ElementGeneratorContext(var, facetTree, effectiveConstraints);
         MappedElement me = new ElementGeneratorWorker(pathMapping, propertyResolver).createElement();
 
@@ -505,7 +505,7 @@ public class ElementGenerator {
         for(ScopedFacetPath childPath : constrainedChildPaths) {
 
             // FacetStep facetStep = facetOriginPath.relativize(childPath).toSegment();
-        	FacetStep facetStep = facetOriginPath.getFacetPath().relativize(childPath.getFacetPath()).toSegment();
+            FacetStep facetStep = facetOriginPath.getFacetPath().relativize(childPath.getFacetPath()).toSegment();
 
             MappedElement mr = createRelationForPath(childPath, applySelfConstraints, negated, includeAbsent);
             Var childVar = mr.getVar(childPath);
@@ -573,15 +573,17 @@ public class ElementGenerator {
     public BinaryRelation getRemainingFacetsWithoutAbsent(ScopedFacetPath sourceFacetPath, Direction direction, boolean negated, boolean includeAbsent) {
         FacetStep pStep = FacetStep.of(NodeUtils.ANY_IRI, direction, null, FacetStep.PREDICATE);
         FacetStep oStep = FacetStep.of(NodeUtils.ANY_IRI, direction, null, FacetStep.TARGET);
-        ScopedFacetPath pPath = sourceFacetPath.transformPath(p -> p.resolve(pStep));
-        ScopedFacetPath oPath = sourceFacetPath.transformPath(p -> p.resolve(oStep));
+        ScopedFacetPath pPath = sourceFacetPath.resolve(pStep);
+        ScopedFacetPath oPath = sourceFacetPath.resolve(oStep);
+//        ScopedFacetPath pPath = sourceFacetPath.transformPath(p -> p.resolve(pStep));
+//        ScopedFacetPath oPath = sourceFacetPath.transformPath(p -> p.resolve(oStep));
 
         TreeData<ScopedFacetPath> newTree = facetTree.cloneTree();
         newTree.putItem(pPath, ScopedFacetPath::getParent);
         newTree.putItem(oPath, ScopedFacetPath::getParent);
 
         //ElementGeneratorContext cxt = new ElementGeneratorContext(newTree);
-        
+
         ElementGeneratorWorker worker = new ElementGeneratorWorker(newTree, constraintIndex, pathMapping, propertyResolver);
         worker.declareMandatoryPath(oPath);
 

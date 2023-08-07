@@ -7,8 +7,8 @@ import java.util.Set;
 
 import org.aksw.facete.v3.api.TreeData;
 import org.aksw.facete.v3.api.TreeDataMap;
+import org.aksw.facete.v3.api.VarScope;
 import org.aksw.jenax.path.core.FacetPath;
-import org.aksw.jenax.treequery2.api.VarScope;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.Expr;
 

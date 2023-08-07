@@ -1,11 +1,13 @@
 package org.aksw.jenax.vaadin.component.grid.sparql;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -24,6 +26,7 @@ import org.aksw.facete.v3.api.FacetedDataQuery;
 import org.aksw.facete.v3.api.FacetedQuery;
 import org.aksw.facete.v3.impl.FacetedQueryImpl;
 import org.aksw.facete.v4.impl.ElementGenerator;
+import org.aksw.facete.v4.impl.FacetedRelationQuery;
 import org.aksw.facete.v4.impl.PropertyResolverImpl;
 import org.aksw.facete.v4.impl.TreeDataUtils;
 import org.aksw.jena_sparql_api.concepts.Concept;
@@ -67,8 +70,10 @@ import org.vaadin.addons.componentfactory.PaperSlider;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Streams;
 import com.google.common.graph.Traverser;
 import com.google.common.math.LongMath;
+import com.google.common.primitives.Ints;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasText;
 import com.vaadin.flow.component.button.Button;
@@ -78,6 +83,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.HeaderRow.HeaderCell;
+import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.grid.dnd.GridDropLocation;
 import com.vaadin.flow.component.grid.dnd.GridDropMode;
 import com.vaadin.flow.component.html.Div;
@@ -301,8 +307,12 @@ class DetailsView
 
         // QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(dataSource);
 
-        FacetedQuery fq = FacetedQueryImpl.create(null).baseConcept(model.getBaseConcept());
-        FacetNode fn = goTo(fq.root(), activePath);
+        // FacetedQuery fq = FacetedQueryImpl.create(null).baseConcept(model.getBaseConcept());
+        FacetedRelationQuery frq = FacetedRelationQuery.of(model.getBaseConcept());
+        FacetedQuery fq = frq.getFacetedQuery();
+
+
+        FacetNode fn = fq.root().traverse(activePath);
         UnaryRelation rel = fn.availableValues().baseRelation().toUnaryRelation();
         Query query = rel.toQuery();
         query.setDistinct(true);
@@ -421,22 +431,28 @@ class DetailsView
 
 
         removePathBtn.addClickListener(ev -> {
-            List<FacetPath> children = treeDataProvider.getTreeData().getChildren(activePath);
-            Consumer<Object> action = x -> {
-                    treeDataProvider.getTreeData().removeItem(activePath);
-                    treeDataProvider.refreshAll();
-            };
-            if (children != null && children.size() >= 1) {
-                ConfirmDialogUtils.confirmDialog(
-                        "Remove path",
-                        "Removing this path removes all children. Proceed?",
-                        "Delete", action,
-                        "Cancel", null).open();
-            } else {
-                action.accept(null);
-            }
-            setActivePath(activePath.getParent());
-            refresh();
+            TableMapperComponent.removePath(treeDataProvider, activePath, false);
+//            List<FacetPath> children = treeDataProvider.getTreeData().getChildren(activePath);
+//            Consumer<Object> action = x -> {
+//                TreeData<FacetPath> treeData = treeDataProvider.getTreeData();
+//                treeData.removeItem(activePath);
+//                // Make sure to add a root if we deleted it
+//                if (treeData.getRootItems().isEmpty()) {
+//                    treeData.addRootItems(FacetPath.newAbsolutePath());
+//                }
+//                treeDataProvider.refreshAll();
+//            };
+//            if (children != null && children.size() >= 1) {
+//                ConfirmDialogUtils.confirmDialog(
+//                        "Remove path",
+//                        "Removing this path removes all children. Proceed?",
+//                        "Delete", action,
+//                        "Cancel", null).open();
+//            } else {
+//                action.accept(null);
+//            }
+//            setActivePath(activePath.getParent());
+//            refresh();
         });
 
 
@@ -670,8 +686,11 @@ class DetailsView
         RDFConnection conn = RDFConnections.of(qef);
 
         try {
-            FacetedQuery fq = FacetedQueryImpl.create(conn).baseConcept(model.getBaseConcept());
-            FacetNode fn = goTo(fq.root(), activePath);
+            // FacetedQuery fq = FacetedQueryImpl.create(conn).baseConcept(model.getBaseConcept());
+            FacetedRelationQuery frq = FacetedRelationQuery.of(model.getBaseConcept());
+            FacetedQuery fq = frq.getFacetedQuery();
+            fq.connection(conn);
+            FacetNode fn = fq.root().traverse(activePath);
             boolean isForward = !Boolean.TRUE.equals(isReverseToggle.getValue());
             Direction dir = Direction.ofFwd(isForward);
             FacetDirNode fdn = fn.step(dir);
@@ -710,24 +729,6 @@ class DetailsView
         FacetPath result = parent.resolve(new FacetStep(predicate, isForward, nextAlias, targetComponent));
         return result;
     }
-
-    public static FacetNode goTo(FacetNode start, FacetPath path) {
-        FacetNode current = path.isAbsolute() ? start.root() : start;
-        for (FacetStep step : path.getSegments()) {
-            Direction dir = Direction.ofFwd(step.isForward());
-            Node node = step.getNode();
-            FacetMultiNode fmn = current.step(node, dir);
-
-            String alias = step.getAlias();
-            if (alias == null || alias.isEmpty()) {
-                current = fmn.one();
-            } else {
-                current = fmn.viaAlias(alias);
-            }
-        }
-        return current;
-    }
-
 }
 
 
@@ -936,6 +937,52 @@ public class TableMapperComponent
         return result;
     }
 
+    public static <T> int countDescendents(TreeData<T> tree, T node) {
+        List<T> children = Optional.ofNullable(tree.getChildren(node)).orElse(Collections.emptyList());
+        int result = Ints.saturatedCast(Streams.stream(Traverser.<T>forTree(x -> tree.getChildren(x)).depthFirstPreOrder(children)).count());
+        return result;
+    }
+
+    public static void removePath(TreeDataProvider<FacetPath> treeDataProvider, FacetPath node, boolean removeChildrenOnly) {
+        // Don't delete the root node!
+        TreeData<FacetPath> treeData = treeDataProvider.getTreeData();
+        boolean _removeChildrenOnly = treeData.getParent(node) == null ? true : removeChildrenOnly;
+
+        Consumer<Object> action = unused -> {
+            removePathCore(treeData, node, _removeChildrenOnly);
+            treeDataProvider.refreshAll();
+        };
+
+        int numDescendents = countDescendents(treeData, node);
+        boolean showConfirmDlg = removeChildrenOnly ?
+                numDescendents > 1
+                : numDescendents > 0;
+
+        if (showConfirmDlg) {
+            ConfirmDialogUtils.confirmDialog(
+                    "Remove path",
+                    "Removal affects multiple paths. Proceed?",
+                    "Delete", action,
+                    "Cancel", null).open();
+        } else {
+            action.accept(null);
+        }
+    }
+
+    // TODO Move to TreeDataUtils
+    public static <T> void removePathCore(TreeData<T> treeData, T node, boolean removeChildrenOnly) {
+        if (removeChildrenOnly) {
+            List<T> children = new ArrayList<>(treeData.getChildren(node));
+            for (T child : children) {
+                treeData.removeItem(child);
+            }
+        } else {
+            treeData.removeItem(node);
+        }
+    }
+
+
+
     protected FacetPath draggedProperty = null;
 
 
@@ -1018,10 +1065,6 @@ public class TableMapperComponent
 //                visibleProperties.set(orderedPaths);
             }
         });
-
-
-
-
 
         propertyTreeGrid.addComponentHierarchyColumn(node -> {
 //            Avatar avatar = new Avatar();
@@ -1112,6 +1155,35 @@ public class TableMapperComponent
 
         add(refreshTableBtn);
         add(sparqlGridContainer);
+
+        GridContextMenu<FacetPath> cxtMenu = propertyTreeGrid.addContextMenu();
+        cxtMenu.setDynamicContentHandler(facetPath -> {
+            cxtMenu.removeAll();
+            TreeData<FacetPath> treeData = treeDataProvider.getTreeData();
+            List<?> children = Optional.ofNullable(treeData.getChildren(facetPath)).orElse(Collections.emptyList());
+            int numOptions = 0;
+            if (facetPath != null) {
+                if (facetPath.getParent() != null) {
+                    String text = children.isEmpty() ? "Remove this node" : "Remove this node and all children";
+                    cxtMenu
+                        .addItem(text)
+                        .addMenuItemClickListener(ev -> {
+                            removePath(treeDataProvider, facetPath, false);
+                        });
+                    ++numOptions;
+                }
+
+                if (!children.isEmpty()) {
+                    cxtMenu
+                        .addItem("Remove all children of this node")
+                        .addMenuItemClickListener(ev -> {
+                            removePath(treeDataProvider, facetPath, true);
+                        });
+                    ++numOptions;
+                }
+            }
+            return numOptions != 0;
+        });
 
         propertyTreeGrid.addExpandListener(ev -> expandedPaths.addAll(ev.getItems()));
         propertyTreeGrid.addCollapseListener(ev -> expandedPaths.removeAll(ev.getItems()));

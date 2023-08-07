@@ -8,11 +8,12 @@ import org.aksw.facete.v3.api.FacetNode;
 import org.aksw.facete.v3.api.FacetedDataQuery;
 import org.aksw.facete.v3.api.FacetedQuery;
 import org.aksw.facete.v3.api.TreeQueryNode;
+import org.aksw.facete.v3.api.VarScope;
 import org.aksw.facete.v3.impl.FacetedDataQueryImpl;
-import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.relation.api.BinaryRelation;
+import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.treequery2.api.ScopedFacetPath;
 import org.apache.jena.graph.Node;
@@ -141,10 +142,29 @@ public class FacetNodeImpl
 
 
     public FacetedDataQuery<RDFNode> createValueQuery(boolean applySelfConstraints) {
+
+        // TODO The base element is missing when running configure - where should it be appended?
         ElementGenerator eltGen = ElementGenerator.configure(facetedQuery);
 
-        ScopedFacetPath sfp = ScopedFacetPath.of(Vars.s, node.getFacetPath());
+        // UnaryRelation baseConcept = facetedQuery.baseConcept();
+        FacetedRelationQuery relationQuery = facetedQuery.relationQuery();
+        String scopeName = relationQuery.getScopeBaseName();
+        Var baseVar = facetedQuery.getBaseVar();
+        VarScope varScope = VarScope.of(scopeName, baseVar);
+        ScopedFacetPath sfp = ScopedFacetPath.of(varScope, node.getFacetPath());
+
+        Relation baseRelation = facetedQuery.relationQuery().baseRelation.get();
+
+
+//        Var baseVar = baseConcept.getVar();
+
         UnaryRelation relation = eltGen.getAvailableValuesAt(sfp, applySelfConstraints);
+
+        // Var baseVar = facetedQuery.baseConcept().getVar();
+        // Var resolvedVar =  FacetPathMappingImpl.resolveVar(pathMapping, sfp).asVar();
+
+
+        relation = relation.prependOn(relation.getVars()).with(baseRelation).toUnaryRelation();
 
         SparqlQueryConnection conn = facetedQuery.connection();
         FacetedDataQuery<RDFNode> result = new FacetedDataQueryImpl<>(

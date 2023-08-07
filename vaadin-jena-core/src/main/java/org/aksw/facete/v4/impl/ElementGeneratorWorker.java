@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import org.aksw.facete.v3.api.TreeData;
 import org.aksw.facete.v3.api.TreeDataMap;
+import org.aksw.facete.v3.api.VarScope;
 import org.aksw.jena_sparql_api.data_query.impl.FacetedQueryGenerator;
 import org.aksw.jenax.arq.util.expr.ExprUtils;
 import org.aksw.jenax.arq.util.node.NodeCustom;
@@ -28,7 +29,6 @@ import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.treequery2.api.FacetPathMapping;
 import org.aksw.jenax.treequery2.api.ScopedFacetPath;
-import org.aksw.jenax.treequery2.api.VarScope;
 import org.aksw.jenax.treequery2.impl.FacetConstraints;
 import org.aksw.jenax.treequery2.impl.FacetPathMappingImpl;
 import org.apache.jena.graph.Node;

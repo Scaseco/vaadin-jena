@@ -3,13 +3,13 @@ package org.aksw.jenax.treequery2.impl;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
+import org.aksw.facete.v3.api.VarScope;
 import org.aksw.facete.v4.impl.FacetPathUtils;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.treequery2.api.FacetPathMapping;
 import org.aksw.jenax.treequery2.api.ScopedFacetPath;
 import org.aksw.jenax.treequery2.api.ScopedVar;
-import org.aksw.jenax.treequery2.api.VarScope;
 import org.apache.jena.graph.Node;
 import org.apache.jena.sparql.core.Var;
 import org.slf4j.Logger;
@@ -29,9 +29,9 @@ import com.google.common.io.BaseEncoding;
 public class FacetPathMappingImpl
     implements FacetPathMapping
 {
-	public static final BaseEncoding DEFAULT_ENCODING = BaseEncoding.base32().omitPadding();
-	public static final HashFunction DEFAULT_HASH_FUNCTION = Hashing.murmur3_32_fixed();
-	
+    public static final BaseEncoding DEFAULT_ENCODING = BaseEncoding.base32().omitPadding();
+    public static final HashFunction DEFAULT_HASH_FUNCTION = Hashing.murmur3_32_fixed();
+
     private static final Logger logger = LoggerFactory.getLogger(FacetPathMappingImpl.class);
 
     /** So far allocated mappings */
@@ -59,35 +59,35 @@ public class FacetPathMappingImpl
     }
 
     public BaseEncoding getEncoding() {
-		return encoding;
-	}
-    
+        return encoding;
+    }
+
     public HashFunction getHashing() {
-		return hashing;
-	}
-    
+        return hashing;
+    }
+
     // XXX We could always allocate names for all intermediate paths
 //    public String allocate(FacetPath path, FacetStep step) {
 //
 //    }
 
     public byte[] increment(byte[] arr) {
-    	byte[] result = Arrays.copyOf(arr, arr.length);
-    	for (int i = arr.length - 1; i >= 0; --i) {
-    		byte before = result[i];
-    		byte after = result[i] += 1;
-    		if (after > before) {
-    			break;
-    		}
-    	}
-    	return result;
+        byte[] result = Arrays.copyOf(arr, arr.length);
+        for (int i = arr.length - 1; i >= 0; --i) {
+            byte before = result[i];
+            byte after = result[i] += 1;
+            if (after > before) {
+                break;
+            }
+        }
+        return result;
     }
-    
+
     @Override
     public String allocate(FacetPath rawFacetPath) {
         FacetPath facetPath = FacetPathUtils.toElementId(rawFacetPath);
         HashCode hc = pathToHashCode.computeIfAbsent(facetPath, fp -> {
-        	HashCode hashCode = hashing.hashString(facetPath.toString(), StandardCharsets.UTF_8);
+            HashCode hashCode = hashing.hashString(facetPath.toString(), StandardCharsets.UTF_8);
             BiMap<HashCode, FacetPath> nameToPath = pathToHashCode.inverse();
             while (true) {
                 FacetPath clashPath = nameToPath.get(hashCode);
@@ -110,7 +110,7 @@ public class FacetPathMappingImpl
         String result = DEFAULT_ENCODING.encode(bytes).toLowerCase();
         return result;
     }
-    
+
     public String hashCodeToString(HashCode hashCode) {
         byte[] bytes = hashCode.asBytes();
         String result = encoding.encode(bytes).toLowerCase();

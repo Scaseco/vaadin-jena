@@ -1,99 +1,104 @@
 package org.aksw.jenax.treequery2.api;
 
-import java.util.Objects;
-import java.util.function.Function;
+import java.util.Arrays;
+import java.util.List;
 
+import org.aksw.commons.path.core.Path;
+import org.aksw.commons.path.core.PathSysBase;
+import org.aksw.facete.v3.api.VarScope;
+import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.path.core.FacetPath;
+import org.aksw.jenax.path.core.FacetPathOps;
+import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.treequery2.impl.FacetPathMappingImpl;
 import org.apache.jena.sparql.core.Var;
+import org.apache.jena.vocabulary.RDF;
 
-public class ScopedFacetPath {
-    protected VarScope scope;
-    protected FacetPath facetPath;
-
-    public ScopedFacetPath(VarScope scope, FacetPath facetPath) {
-        super();
-        this.scope = scope;
-        this.facetPath = facetPath;
+public class ScopedFacetPath
+    extends PathSysBase<FacetStep, ScopedFacetPath, VarScope>
+{
+    public ScopedFacetPath(VarScope system, Path<FacetStep> delegate) {
+        super(system, delegate);
     }
 
-    public ScopedFacetPath getParent() {
-        return transformPath(FacetPath::getParent);
+    @Override
+    protected ScopedFacetPath wrap(Path<FacetStep> basePath) {
+        return of(system, basePath);
     }
 
-    public VarScope getScope() {
-        return scope;
+    @Override
+    public FacetPath getDelegate() {
+        return (FacetPath)super.getDelegate();
     }
 
-//    public String getScopeName() {
-//        return scopeName;
-//    }
-//
-//    public Var getStartVar() {
-//        return startVar;
-//    }
-
+    @Deprecated
     public FacetPath getFacetPath() {
-        return facetPath;
+        return getDelegate();
+    }
+
+    @Deprecated
+    public VarScope getScope() {
+        return getSystem();
+    }
+
+    @Override
+    public String toString() {
+        return getSystem() + ":" + getDelegate();
+    }
+
+    public static ScopedFacetPath of(VarScope system, Path<FacetStep> basePath) {
+        return new ScopedFacetPath(system, basePath);
+    }
+
+    /** Convenience static shorthand for .get().newRoot() */
+    public static ScopedFacetPath newAbsolutePath(VarScope scope, FacetStep ... segments) {
+        return newAbsolutePath(scope, Arrays.asList(segments));
+    }
+
+    public static ScopedFacetPath newAbsolutePath(VarScope scope, List<FacetStep> segments) {
+        return of(scope, FacetPathOps.get().newPath(true, segments));
+    }
+
+    public static ScopedFacetPath newRelativePath(VarScope scope, FacetStep ... segments) {
+        return newRelativePath(scope, Arrays.asList(segments));
+    }
+
+    public static ScopedFacetPath newRelativePath(VarScope scope, List<FacetStep> segments) {
+        return of(scope, FacetPathOps.get().newPath(false, segments));
+    }
+
+    public static ScopedFacetPath of(Var startVar, FacetPath facetPath) {
+        return of(VarScope.of(startVar), facetPath);
     }
 
     /**
      * Return a new ScopedFacetPath with the path transformed by the given function.
      * If the path is null then this function returns null.
      */
-    public ScopedFacetPath transformPath(Function<? super FacetPath, ? extends FacetPath> facetPathFn) {
-        FacetPath newPath = facetPathFn.apply(facetPath);
-        return newPath == null ? null : new ScopedFacetPath(scope, newPath);
-    }
+//    public ScopedFacetPathOld transformPath(Function<? super FacetPath, ? extends FacetPath> facetPathFn) {
+//        FacetPath newPath = facetPathFn.apply(facetPath);
+//        return newPath == null ? null : new ScopedFacetPathOld(scope, newPath);
+//    }
 
     public ScopedVar toScopedVar(FacetPathMapping facetPathMapping) {
         return toScopedVar(this, facetPathMapping);
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(scope, facetPath);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ScopedFacetPath other = (ScopedFacetPath) obj;
-        if (facetPath == null) {
-            if (other.facetPath != null)
-                return false;
-        } else if (!facetPath.equals(other.facetPath))
-            return false;
-        if (scope == null) {
-            if (other.scope != null)
-                return false;
-        } else if (!scope.equals(other.scope))
-            return false;
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return "ScopedFacetPath [scope=" + scope + ", facetPath=" + facetPath + "]";
-    }
-
     public static ScopedVar toScopedVar(ScopedFacetPath scopedFacetPath, FacetPathMapping facetPathMapping) {
-        String scopeName = scopedFacetPath.getScope().getScopeName();
-        Var startVar = scopedFacetPath.getScope().getStartVar();
-        FacetPath facetPath = scopedFacetPath.getFacetPath();
+        String scopeName = scopedFacetPath.getSystem().getScopeName();
+        Var startVar = scopedFacetPath.getSystem().getStartVar();
+        FacetPath facetPath = (FacetPath)scopedFacetPath.getDelegate();
         return FacetPathMappingImpl.resolveVar(facetPathMapping, scopeName, startVar, facetPath);
     }
 
-    public static ScopedFacetPath of(VarScope scope, FacetPath facetPath) {
-    	return new ScopedFacetPath(scope, facetPath);
-    }
-
-    public static ScopedFacetPath of(Var startVar, FacetPath facetPath) {
-    	return of(VarScope.of(startVar), facetPath);
+    public static void main(String[] args) {
+        VarScope scope1 = VarScope.of("scope1", Vars.x);
+        VarScope scope2 = VarScope.of("scope2", Vars.y);
+        ScopedFacetPath path1 = ScopedFacetPath.newAbsolutePath(scope1);
+        ScopedFacetPath path2 = ScopedFacetPath.newRelativePath(scope1).resolve(FacetStep.fwd(RDF.type.asNode()));
+        ScopedFacetPath path3 = path1.resolve(path2);
+        System.out.println(path3);
+        System.out.println(path3.getParent());
+        System.out.println(path3.resolve(path2));
     }
 }

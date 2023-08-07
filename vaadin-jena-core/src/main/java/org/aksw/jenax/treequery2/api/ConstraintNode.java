@@ -3,6 +3,7 @@ package org.aksw.jenax.treequery2.api;
 import java.nio.charset.StandardCharsets;
 
 import org.aksw.facete.v3.api.ConstraintFacade;
+import org.aksw.facete.v3.api.VarScope;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.treequery2.impl.FacetPathMappingImpl;
 
