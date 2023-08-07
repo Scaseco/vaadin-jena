@@ -39,6 +39,10 @@ public class DataRetriever {
     protected QueryExecutionFactoryQuery qef;
 
 
+    public DataRetriever(QueryExecutionFactoryQuery qef) {
+        this.qef = qef;
+    }
+
     public Map<Node, RDFNode> retrieve(List<Node> nodes) {
 
         EntityGraphFragment entityGraphFragment = entityClassifier.createGraphFragment();

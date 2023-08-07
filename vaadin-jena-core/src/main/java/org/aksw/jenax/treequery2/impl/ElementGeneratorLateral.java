@@ -603,7 +603,7 @@ System.out.println(fpm.allocate(nq
         QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(rdfDataSource);
 
         Supplier<UnaryRelation> conceptSupplier = () -> ConceptUtils.createSubjectConcept();
-        DataRetriever retriever = null;
+        DataRetriever retriever = new DataRetriever(qef);
         DataProvider<RDFNode, String> dataProvider = new DataProviderNodeQuery(qef, conceptSupplier, retriever);
 
         List<RDFNode> list = dataProvider.fetch(new com.vaadin.flow.data.provider.Query<>()).collect(Collectors.toList());
