@@ -47,7 +47,6 @@ import org.apache.jena.sparql.syntax.ElementGroup;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
 
 /**

@@ -1,6 +1,7 @@
 package org.aksw.jena_sparql_api.vaadin.data.provider;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -91,12 +92,17 @@ public class DataProviderNodeQuery
         System.err.println("NodeQuery: " + sparqlQuery);
         System.err.println("GOT NODES: " + nodes);
 
-        retriever.retrieve(null);
+        Map<Node, RDFNode> data = retriever.retrieve(nodes);
 
-        LookupService<Node, DatasetOneNg> lookupService = new LookupServiceSparqlConstructQuads(qef, sparqlQuery);
-        Map<Node, DatasetOneNg> map = lookupService.fetchMap(nodes);
-        Collection<RDFNode> result = map.values().stream()
-                .map(ds -> (RDFNode)new ResourceInDatasetImpl(ds, ds.getGraphName(), NodeFactory.createURI(ds.getGraphName()))).collect(Collectors.toList());
+        Collection<RDFNode> result;
+        if (false) {
+	        LookupService<Node, DatasetOneNg> lookupService = new LookupServiceSparqlConstructQuads(qef, sparqlQuery);
+	        Map<Node, DatasetOneNg> map = lookupService.fetchMap(nodes);
+	        result = map.values().stream()
+	                .map(ds -> (RDFNode)new ResourceInDatasetImpl(ds, ds.getGraphName(), NodeFactory.createURI(ds.getGraphName()))).collect(Collectors.toList());
+        } else {
+        	result = Collections.emptyList();
+        }
         return result.stream();
     }
 

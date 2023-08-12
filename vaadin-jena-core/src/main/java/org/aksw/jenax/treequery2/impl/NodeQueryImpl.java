@@ -179,6 +179,10 @@ public class NodeQueryImpl
     }
 
     public static NodeQuery newRoot() {
-        return new NodeQueryImpl((RelationQueryImpl)RelationQuery.of(new Concept(new ElementGroup(), Vars.s)), Vars.s, null);
+    	RelationQuery rq = RelationQuery.of(Vars.s);
+    	NodeQuery result = rq.nodeFor(Vars.s);
+    	return result;
+    	// new RelationQueryImpl("", null, )
+        // return new NodeQueryImpl((RelationQueryImpl)RelationQuery.of(new Concept(new ElementGroup(), Vars.s)), Vars.s, null);
     }
 }

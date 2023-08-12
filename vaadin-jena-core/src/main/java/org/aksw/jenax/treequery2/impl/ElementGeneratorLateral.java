@@ -28,6 +28,7 @@ import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderNodeQuery;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataRetriever;
 import org.aksw.jenax.arq.connection.core.QueryExecutionFactories;
 import org.aksw.jenax.arq.connection.link.RDFLinkDecorizer;
+import org.aksw.jenax.arq.datashape.viewselector.EntityClassifier;
 import org.aksw.jenax.arq.datasource.RdfDataSourceWithBnodeRewrite;
 import org.aksw.jenax.arq.datasource.RdfDataSources;
 import org.aksw.jenax.arq.util.node.NodeCustom;
@@ -80,6 +81,7 @@ import org.apache.jena.sys.JenaSystem;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.topbraid.shacl.model.SHFactory;
+import org.topbraid.shacl.vocabulary.SH;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -520,6 +522,14 @@ public class ElementGeneratorLateral {
         Model shaclModel = RDFDataMgr.loadModel("/home/raven/Projects/Eclipse/rmltk-parent/r2rml-resource-shacl/src/main/resources/r2rml.core.shacl.ttl");
         List<ShNodeShape> nodeShapes = org.aksw.jenax.model.shacl.util.ShUtils.listNodeShapes(shaclModel);
 
+        EntityClassifier entityClassifier = new EntityClassifier(Arrays.asList(Vars.s));
+
+        // https://www.w3.org/TR/shacl/#targets
+        // "The target of a shape is the union of all RDF terms produced by the individual targets that are declared by the shape in the shapes graph."
+        for (ShNodeShape nodeShape : nodeShapes) {
+        	EntityClassifier.registerNodeShape(entityClassifier, nodeShape);
+        }
+
         if (false) {
             for (ShNodeShape nodeShape : nodeShapes) {
                 // NodeQuery nq = NodeQueryImpl.newRoot();
@@ -603,7 +613,18 @@ System.out.println(fpm.allocate(nq
         QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(rdfDataSource);
 
         Supplier<UnaryRelation> conceptSupplier = () -> ConceptUtils.createSubjectConcept();
-        DataRetriever retriever = new DataRetriever(qef);
+        DataRetriever retriever = new DataRetriever(qef, entityClassifier);
+        
+        
+
+        for (ShNodeShape nodeShape : nodeShapes) {
+            // NodeQuery nq = NodeQueryImpl.newRoot();
+            NodeQuery nqq = NodeQueryImpl.newRoot();
+
+            toNodeQuery(nqq, nodeShape);
+            retriever.getClassToQuery().put(nodeShape.asNode(), nqq);
+        }
+        
         DataProvider<RDFNode, String> dataProvider = new DataProviderNodeQuery(qef, conceptSupplier, retriever);
 
         List<RDFNode> list = dataProvider.fetch(new com.vaadin.flow.data.provider.Query<>()).collect(Collectors.toList());

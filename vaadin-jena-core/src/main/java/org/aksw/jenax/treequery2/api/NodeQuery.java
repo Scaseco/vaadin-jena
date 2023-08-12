@@ -15,6 +15,10 @@ public interface NodeQuery
     extends FacetTraversable<NodeQuery>, HasSlice
     // extends NodeQuery
 {
+	/**
+	 * Wrap this node as a Jena node so that it can be used as a 'pseudo-variable' in expressions.
+	 * To substitute NodeQuery references in expressions, apply a node transform using NodeFacetPath.createNodeTransform(pathTransform).
+	 */
     default Node asJenaNode() {
         return NodeFacetPath.of(this);
     }
