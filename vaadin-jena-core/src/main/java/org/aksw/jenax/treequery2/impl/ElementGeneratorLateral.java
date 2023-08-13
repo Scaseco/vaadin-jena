@@ -527,7 +527,7 @@ public class ElementGeneratorLateral {
         // https://www.w3.org/TR/shacl/#targets
         // "The target of a shape is the union of all RDF terms produced by the individual targets that are declared by the shape in the shapes graph."
         for (ShNodeShape nodeShape : nodeShapes) {
-        	EntityClassifier.registerNodeShape(entityClassifier, nodeShape);
+            EntityClassifier.registerNodeShape(entityClassifier, nodeShape);
         }
 
         if (false) {
@@ -614,8 +614,8 @@ System.out.println(fpm.allocate(nq
 
         Supplier<UnaryRelation> conceptSupplier = () -> ConceptUtils.createSubjectConcept();
         DataRetriever retriever = new DataRetriever(qef, entityClassifier);
-        
-        
+
+
 
         for (ShNodeShape nodeShape : nodeShapes) {
             // NodeQuery nq = NodeQueryImpl.newRoot();
@@ -624,14 +624,22 @@ System.out.println(fpm.allocate(nq
             toNodeQuery(nqq, nodeShape);
             retriever.getClassToQuery().put(nodeShape.asNode(), nqq);
         }
-        
+
         DataProvider<RDFNode, String> dataProvider = new DataProviderNodeQuery(qef, conceptSupplier, retriever);
 
-        List<RDFNode> list = dataProvider.fetch(new com.vaadin.flow.data.provider.Query<>()).collect(Collectors.toList());
-        for (RDFNode item : list) {
-            System.out.println(item);
-            RDFDataMgr.write(System.out, item.getModel(), RDFFormat.TURTLE_PRETTY);
-        }
+        com.vaadin.flow.data.provider.Query<RDFNode, String> q = new com.vaadin.flow.data.provider.Query<>();
+        List<RDFNode> list = dataProvider.fetch(q).collect(Collectors.toList());
+        int itemCount = list.size();
+        int size = dataProvider.size(q);
+
+        System.out.println("Retrieved items vs counted items: " + itemCount + " / " + size);
+
+
+
+//        for (RDFNode item : list) {
+//            System.out.println(item);
+//            RDFDataMgr.write(System.out, item.getModel(), RDFFormat.TURTLE_PRETTY);
+//        }
 
 
 //        org.apache.jena.query.Query sparqlQuery = ElementGeneratorLateral.toQuery(target);

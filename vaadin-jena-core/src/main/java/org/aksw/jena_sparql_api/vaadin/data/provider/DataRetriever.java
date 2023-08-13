@@ -33,6 +33,8 @@ import org.aksw.jenax.treequery2.impl.ElementGeneratorLateral;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.SortCondition;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.riot.RDFDataMgr;
@@ -66,15 +68,15 @@ public class DataRetriever {
         this.qef = qef;
         this.entityClassifier = entityClassifier;
     }
-    
+
     public Map<Node, NodeQuery> getClassToQuery() {
-		return classToQuery;
-	}
+        return classToQuery;
+    }
 
     public Map<Node, RDFNode> retrieve(List<Node> nodes) {
 
-    	Map<Node, RDFNode> result = new LinkedHashMap<>();
-    	
+        Map<Node, RDFNode> result = new LinkedHashMap<>();
+
         EntityGraphFragment entityGraphFragment = entityClassifier.createGraphFragment();
 
         UnaryRelation concept = Concept.create(Vars.s, nodes);
@@ -94,72 +96,83 @@ public class DataRetriever {
 //        // Classify the entities
         // List<Quad> rawQuads = EntityQueryRx.execConstructEntitiesNg(qef::createQueryExecution, basic).toList().blockingGet();
         List<RDFNode> rawEntities = EntityQueryRx.execConstructRooted(qef, basic).toList().blockingGet(); //     execConstructEntitiesNg(qef::createQueryExecution, basic).toList().blockingGet();
-//        
+//
 //        Dataset ds = DatasetFactory.create();
 //        rawQuads.forEach(ds.asDatasetGraph()::add);
-//        
+//
 //        List<ResourceInDataset> entries = FlowOfRdfNodesInDatasetsOps.naturalResources(ds).map(r -> r.as()).toList().blockingGet();
-        
+
         //RDFNodeInDatasetUtils.na
-        
-        
+
+
         // FIXME I think the concept with EntityQueryRx was that the 'result set' is a set of RDF resources whose properties can be traversed.
-		Multimap<Node, Node> entityToClasses = // EntityQueryRx.execConstructEntitiesNg(qef::createQueryExecution, basic)
-				rawEntities.stream().flatMap(r -> r.asResource().listProperties(EntityClassifier.classifier).toList().stream().map(Statement::getObject).map(RDFNode::asNode).map(n -> Map.entry(r.asNode(), n)))
-				.collect(Multimaps.toMultimap(Entry::getKey, Entry::getValue, HashMultimap::create));        
-        
+        Multimap<Node, Node> entityToClasses = // EntityQueryRx.execConstructEntitiesNg(qef::createQueryExecution, basic)
+                rawEntities.stream().flatMap(r -> r.asResource().listProperties(EntityClassifier.classifier).toList().stream().map(Statement::getObject).map(RDFNode::asNode).map(n -> Map.entry(r.asNode(), n)))
+                .collect(Multimaps.toMultimap(Entry::getKey, Entry::getValue, HashMultimap::create));
+
 //		Multimap<Node, Node> entityToClasses = // EntityQueryRx.execConstructEntitiesNg(qef::createQueryExecution, basic)
 //				rawQuads.stream().collect(Multimaps.toMultimap(Quad::getGraph, Quad::getObject, HashMultimap::create));
-		
-		
-		// ListMultimap<Node, Node> ll = ArrayListMultimap.create();
-		// entityToClasses.forEach(ll::putAll);
-		Multimap<Node, Node> classToEntities = Multimaps.invertFrom(entityToClasses, HashMultimap.create());
-		
-        
-		Collection<Node> detectedClasses = new HashSet<>(entityToClasses.values());
 
-		System.out.println("Detected classes: " + detectedClasses);
+
+        // ListMultimap<Node, Node> ll = ArrayListMultimap.create();
+        // entityToClasses.forEach(ll::putAll);
+        Multimap<Node, Node> classToEntities = Multimaps.invertFrom(entityToClasses, HashMultimap.create());
+
+
+        Collection<Node> detectedClasses = new HashSet<>(entityToClasses.values());
+
+        System.out.println("Detected classes: " + detectedClasses);
 
         // .forEach(quad -> System.out.println(quad));
         // TODO Create a Multimap<Node, Node> entityToClasses
 
         // For each detected class perform the lookups with the respective node sets
-        
-        // for (Node classification : detectedClasses) {
-		for (Entry<Node, Collection<Node>> e : classToEntities.asMap().entrySet()) {
-			Node classification = e.getKey();
-			Collection<Node> entities = e.getValue();
-			System.out.println("Entities: " + entities);
-        	NodeQuery nodeQuery = classToQuery.get(classification);
-        	if (nodeQuery != null) {	        	
-	        	Var rootVar = Vars.s;
-	            RelationQuery rrq = nodeQuery.relationQuery();
-	            Element elt = new ElementGeneratorLateral().createElement(rrq);
-	            Query query = new Query();
-	            query.setConstructTemplate(new Template(new QuadAcc(Arrays.asList(Quad.create(rootVar, Vars.x, Vars.y, Vars.z)))));
-	            query.setQueryConstructType();
-	            query.setQueryPattern(elt);
-	            System.out.println(query);	            
-	            LookupService<Node, DatasetOneNg> ls = new LookupServiceSparqlConstructQuads(qef, query);
-	            Map<Node, RDFNode> data = ls
-	            		.mapNonNullValues(ds -> {
-	            			RDFNode r = ds.getSelfResource();
-	            			// RDFNode r = ds == null ? null : ds.getSelfResource().listProperties(EntityClassifier.classifier).getObject();
-	        	            // RDFDataMgr.write(System.out, r.getModel(), RDFFormat.TURTLE_PRETTY);
-	            			return r;
-	            		})
-	            		.fetchMap(entities);
-	            result.putAll(data);
-	            // System.out.println("Data: " + data);
-        	} else {
-        		System.out.println("No query for class: " + classification);
-        	}
-        	// nodeQuery
-        }
-        
 
-		return result;
+        // for (Node classification : detectedClasses) {
+        for (Entry<Node, Collection<Node>> e : classToEntities.asMap().entrySet()) {
+            Node classification = e.getKey();
+            Collection<Node> entities = e.getValue();
+            System.out.println("Entities: " + entities);
+            NodeQuery nodeQuery = classToQuery.get(classification);
+            if (nodeQuery != null) {
+                Var rootVar = Vars.s;
+                RelationQuery rrq = nodeQuery.relationQuery();
+                Element elt = new ElementGeneratorLateral().createElement(rrq);
+                Query query = new Query();
+                query.setConstructTemplate(new Template(new QuadAcc(Arrays.asList(Quad.create(rootVar, Vars.x, Vars.y, Vars.z)))));
+                query.setQueryConstructType();
+                query.setQueryPattern(elt);
+                System.out.println(query);
+                LookupService<Node, DatasetOneNg> ls = new LookupServiceSparqlConstructQuads(qef, query);
+                Map<Node, RDFNode> data = ls
+                        .mapNonNullValues(ds -> {
+                            RDFNode r = ds.getSelfResource();
+                            // RDFNode r = ds == null ? null : ds.getSelfResource().listProperties(EntityClassifier.classifier).getObject();
+                            // RDFDataMgr.write(System.out, r.getModel(), RDFFormat.TURTLE_PRETTY);
+                            return r;
+                        })
+                        .fetchMap(entities);
+                result.putAll(data);
+                // System.out.println("Data: " + data);
+            } else {
+                System.out.println("No query for class: " + classification);
+            }
+            // nodeQuery
+        }
+
+        // TODO Add all unclassified items
+        for (Node node : nodes) {
+            if (!result.containsKey(node)) {
+                // Used DatasetOneNg for consistency?
+                Model model = ModelFactory.createDefaultModel();
+                RDFNode rdfNode = model.asRDFNode(node);
+                result.put(node, rdfNode);
+            }
+        }
+
+
+
+        return result;
 
 //        Relation r = entityClassifier.createClassifyingRelation();
 //

@@ -1,4 +1,4 @@
-package org.aksw.vaadin.app.demo.view.edit.propertylist;
+package org.aksw.vaadin.app.demo.view.tablemapper;
 
 import org.aksw.jenax.vaadin.component.grid.sparql.TableMapperComponent;
 import org.aksw.jenax.vaadin.label.LabelService;

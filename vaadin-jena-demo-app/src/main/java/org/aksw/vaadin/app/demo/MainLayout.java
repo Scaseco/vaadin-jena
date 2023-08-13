@@ -14,9 +14,10 @@ import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.dataaccess.LabelUtils;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.jenax.vaadin.label.VaadinRdfLabelMgrImpl;
-import org.aksw.vaadin.app.demo.view.edit.propertylist.TableMapperView;
 import org.aksw.vaadin.app.demo.view.edit.resource.ResourceEditorView;
 import org.aksw.vaadin.app.demo.view.label.LabelView;
+import org.aksw.vaadin.app.demo.view.shaclgrid.ShaclGridView;
+import org.aksw.vaadin.app.demo.view.tablemapper.TableMapperView;
 import org.aksw.vaadin.app.demo.view.welcome.LandingPageView;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.Property;
@@ -121,7 +122,8 @@ public class MainLayout
                 RouteTabs.newTab(VaadinIcon.HOME, "Home", LandingPageView.class),
                 RouteTabs.newTab(VaadinIcon.FOLDER_ADD, "New Data Project", ResourceEditorView.class),
                 RouteTabs.newTab(VaadinIcon.EYE, "Labels", LabelView.class),
-                RouteTabs.newTab(VaadinIcon.TABLE, "TableMapper", TableMapperView.class)
+                RouteTabs.newTab(VaadinIcon.TABLE, "TableMapper", TableMapperView.class),
+                RouteTabs.newTab(VaadinIcon.LINK, "ShaclGrid", ShaclGridView.class)
 //                createTab(VaadinIcon.EYE, "Browse", BrowseRepoView.class),
 //                createTab(VaadinIcon.CONNECT, "Connections", ConnectionMgmtView.class),
 //                createTab(VaadinIcon.DATABASE, "Catalogs", CatalogMgmtView.class)

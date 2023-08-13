@@ -11,6 +11,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.aksw.commons.util.obj.ObjectUtils;
 import org.aksw.jena_sparql_api.concepts.RelationUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlRdfNode;
@@ -164,15 +165,26 @@ public class VaadinSparqlUtils {
     }
 
 
+
+    /** Util method that sets up a view by calling base.withConfigurableFilter() */
+    public static <T> DataProvider<T, Expr> withSparqlFilter(DataProvider<T, Expr> base) {
+        DataProvider<T, Expr> result = base
+                .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
+                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
+                )));
+
+        return result;
+    }
+
     public static void setQueryForGridBinding(
             Grid<Binding> grid,
             HeaderRow headerRow,
             DataProviderSparqlBinding dataProviderCore) {
 
-        DataProvider<Binding, Expr> dataProvider = dataProviderCore
-                .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
-                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
-                )));
+        DataProvider<Binding, Expr> dataProvider = withSparqlFilter(dataProviderCore);
+//                .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
+//                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
+//                )));
 
 
         grid.setDataProvider(dataProvider);
@@ -306,14 +318,15 @@ public class VaadinSparqlUtils {
 
 
     public static Map<Var, TextField> configureGridFilter(
-            Grid<Binding> grid, HeaderRow filterRow, Collection<Var> vars, Function<Var, Function<String, Expr>> varToStrToExpr) {
+            Grid<?> grid, HeaderRow filterRow, Collection<Var> vars, Function<Var, Function<String, Expr>> varToStrToExpr) {
         // HeaderRow filterRow = grid.appendHeaderRow();
 
         Map<Var, TextField> result = new LinkedHashMap<>();
         for (Var var : vars) {
             Function<String, Expr> strToExpr = varToStrToExpr.apply(var);
 
-            Column<Binding> column = grid.getColumnByKey(var.getName());
+            String columnKey = var.getName();
+            Column<?> column = grid.getColumnByKey(columnKey);
             if (column != null) {
                 HeaderCell cell = filterRow.getCell(column);
                 if (cell != null) {
@@ -346,10 +359,10 @@ public class VaadinSparqlUtils {
         return result;
     }
 
-    public static void registerGridFilters(Grid<Binding> grid, Map<Var, ? extends HasValue<?, String>> filterFields, Function<String, Expr> strToExpr) {
-        DataProvider<Binding, ?> rawDataProvider = grid.getDataProvider();
+    public static void registerGridFilters(Grid<?> grid, Map<Var, ? extends HasValue<?, String>> filterFields, Function<String, Expr> strToExpr) {
+        DataProvider<?, ?> rawDataProvider = grid.getDataProvider();
         if (rawDataProvider instanceof ConfigurableFilterDataProvider) {
-            ConfigurableFilterDataProvider<Binding, Expr, Expr> dataProvider = (ConfigurableFilterDataProvider<Binding, Expr, Expr>)rawDataProvider;
+            ConfigurableFilterDataProvider<?, Expr, Expr> dataProvider = (ConfigurableFilterDataProvider<?, Expr, Expr>)rawDataProvider;
             List<Expr> exprs = filterFields.entrySet().stream()
                 .flatMap(e -> {
                     String str = e.getValue().getValue();
@@ -366,6 +379,8 @@ public class VaadinSparqlUtils {
 
             Expr expr = ExprUtils.andifyBalanced(exprs);
             dataProvider.setFilter(expr);
+        } else {
+            throw new IllegalArgumentException("The grid's DataProvider was expected to be of type ConfigurableFilterDataProvider but was: " + ObjectUtils.getClass(rawDataProvider));
         }
     }
 

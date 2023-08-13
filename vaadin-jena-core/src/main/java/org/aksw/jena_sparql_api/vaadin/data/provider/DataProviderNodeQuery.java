@@ -90,20 +90,21 @@ public class DataProviderNodeQuery
 
         // logger.info
         System.err.println("NodeQuery: " + sparqlQuery);
-        System.err.println("GOT NODES: " + nodes);
+        System.err.println("GOT NODES " + (nodes.size()) + " - " + nodes);
 
         Map<Node, RDFNode> data = retriever.retrieve(nodes);
 
         Collection<RDFNode> result;
         if (false) {
-	        LookupService<Node, DatasetOneNg> lookupService = new LookupServiceSparqlConstructQuads(qef, sparqlQuery);
-	        Map<Node, DatasetOneNg> map = lookupService.fetchMap(nodes);
-	        result = map.values().stream()
-	                .map(ds -> (RDFNode)new ResourceInDatasetImpl(ds, ds.getGraphName(), NodeFactory.createURI(ds.getGraphName()))).collect(Collectors.toList());
+            LookupService<Node, DatasetOneNg> lookupService = new LookupServiceSparqlConstructQuads(qef, sparqlQuery);
+            Map<Node, DatasetOneNg> map = lookupService.fetchMap(nodes);
+            result = map.values().stream()
+                    .map(ds -> (RDFNode)new ResourceInDatasetImpl(ds, ds.getGraphName(), NodeFactory.createURI(ds.getGraphName()))).collect(Collectors.toList());
         } else {
-        	result = Collections.emptyList();
+            result = Collections.emptyList();
         }
-        return result.stream();
+        // return result.stream();
+        return data.values().stream();
     }
 
     @Override
