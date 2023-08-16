@@ -18,6 +18,7 @@ import org.aksw.facete.v3.api.TreeData;
 import org.aksw.facete.v4.impl.ElementGeneratorWorker;
 import org.aksw.facete.v4.impl.MappedElement;
 import org.aksw.facete.v4.impl.PropertyResolver;
+import org.aksw.jena_sparql_api.algebra.expr.transform.ExprTransformVirtualBnodeUris;
 import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jena_sparql_api.rx.entity.engine.EntityQueryRx;
 import org.aksw.jena_sparql_api.rx.entity.model.EntityBaseQuery;
@@ -27,10 +28,8 @@ import org.aksw.jena_sparql_api.schema.ShUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderNodeQuery;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataRetriever;
 import org.aksw.jenax.arq.connection.core.QueryExecutionFactories;
-import org.aksw.jenax.arq.connection.link.RDFLinkDecorizer;
 import org.aksw.jenax.arq.datashape.viewselector.EntityClassifier;
 import org.aksw.jenax.arq.datasource.RdfDataSourceWithBnodeRewrite;
-import org.aksw.jenax.arq.datasource.RdfDataSources;
 import org.aksw.jenax.arq.util.node.NodeCustom;
 import org.aksw.jenax.arq.util.node.NodeUtils;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
@@ -60,7 +59,6 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.Expr;
@@ -81,7 +79,6 @@ import org.apache.jena.sys.JenaSystem;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.topbraid.shacl.model.SHFactory;
-import org.topbraid.shacl.vocabulary.SH;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -441,20 +438,19 @@ public class ElementGeneratorLateral {
         };
     }
 
-
-
     // TODO We now need to add a facet-path to variable name mapping
-
-
     public static void toNodeQuery(NodeQuery nodeQuery, ShNodeShape nodeShape) {
         for (ShPropertyShape propertyShape : nodeShape.getProperties()) {
             Resource pathResource = propertyShape.getPath();
             Path sparqlPath = ShUtils.assemblePath(pathResource);
             System.err.println("GOT PATH: " + sparqlPath);
 
+//            if (sparqlPath.toString().contains("sqlQuery")) {
+//                System.err.println("DEBUG POINT");
+//            }
+
+
             BiMap<Node, Path> iriToPath = HashBiMap.create();
-            Generator<Node> pGen = Generator.create("urn:p")
-                    .map(NodeFactory::createURI).filterDrop(iriToPath::containsKey);
             try {
                 List<P_Path0> steps = PathUtils.toList(sparqlPath);
                 NodeQuery current = nodeQuery;
@@ -463,11 +459,31 @@ public class ElementGeneratorLateral {
                     current = current.getOrCreateChild(facetStep);
                 }
             } catch (UnsupportedOperationException e) {
+                Generator<Node> pGen = Generator.create("urn:p")
+                        .map(NodeFactory::createURI).filterDrop(iriToPath::containsKey);
                 Node iri = iriToPath.inverse().computeIfAbsent(sparqlPath, sp -> pGen.next());
                 nodeQuery.getOrCreateChild(FacetStep.fwd(iri));
                 Element elt = ElementUtils.createElementPath(Vars.s, sparqlPath, Vars.o);
                 // FIXME Register the iri with sparql path in the nodeQuery context
             }
+        }
+
+        for (ShNodeShape ns : nodeShape.getAnd()) {
+            toNodeQuery(nodeQuery, ns);
+        }
+
+        for (ShNodeShape ns : nodeShape.getOr()) {
+            toNodeQuery(nodeQuery, ns);
+        }
+
+        for (ShNodeShape ns : nodeShape.getXone()) {
+            toNodeQuery(nodeQuery, ns);
+        }
+
+        // Include NOT shapes? They should not be present anyway, but displaying them
+        // might be useful to spot data quality issues
+        for (ShNodeShape ns : nodeShape.getNot()) {
+            toNodeQuery(nodeQuery, ns);
         }
     }
 
@@ -521,6 +537,7 @@ public class ElementGeneratorLateral {
         SHFactory.ensureInited();
         Model shaclModel = RDFDataMgr.loadModel("/home/raven/Projects/Eclipse/rmltk-parent/r2rml-resource-shacl/src/main/resources/r2rml.core.shacl.ttl");
         List<ShNodeShape> nodeShapes = org.aksw.jenax.model.shacl.util.ShUtils.listNodeShapes(shaclModel);
+        // List<ShNodeShape> nodeShapes = shaclModel.listSubjects().mapWith(r -> r.as(ShNodeShape.class)).toList();
 
         EntityClassifier entityClassifier = new EntityClassifier(Arrays.asList(Vars.s));
 
@@ -609,23 +626,30 @@ System.out.println(fpm.allocate(nq
 
 
         RdfDataSource rdfDataSourceRaw = () -> RDFConnection.connect("http://localhost:8642/sparql");
-        RdfDataSource rdfDataSource = RdfDataSourceWithBnodeRewrite.wrapWithAutoBnodeProfileDetection(rdfDataSourceRaw);
-        QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(rdfDataSource);
+        RdfDataSource dataSource = RdfDataSourceWithBnodeRewrite.wrapWithAutoBnodeProfileDetection(rdfDataSourceRaw);
+        // QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(rdfDataSource);
 
         Supplier<UnaryRelation> conceptSupplier = () -> ConceptUtils.createSubjectConcept();
-        DataRetriever retriever = new DataRetriever(qef, entityClassifier);
+        DataRetriever retriever = new DataRetriever(dataSource, entityClassifier);
 
 
 
         for (ShNodeShape nodeShape : nodeShapes) {
+            Node nodeShapeNode = nodeShape.asNode();
+            if (nodeShapeNode.isBlank()) {
+                nodeShapeNode = ExprTransformVirtualBnodeUris.bnodeToIri(nodeShapeNode);
+            }
+
             // NodeQuery nq = NodeQueryImpl.newRoot();
             NodeQuery nqq = NodeQueryImpl.newRoot();
 
             toNodeQuery(nqq, nodeShape);
-            retriever.getClassToQuery().put(nodeShape.asNode(), nqq);
+
+
+            retriever.getClassToQuery().put(nodeShapeNode, nqq);
         }
 
-        DataProvider<RDFNode, String> dataProvider = new DataProviderNodeQuery(qef, conceptSupplier, retriever);
+        DataProvider<RDFNode, String> dataProvider = new DataProviderNodeQuery(dataSource, conceptSupplier, retriever);
 
         com.vaadin.flow.data.provider.Query<RDFNode, String> q = new com.vaadin.flow.data.provider.Query<>();
         List<RDFNode> list = dataProvider.fetch(q).collect(Collectors.toList());

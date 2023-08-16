@@ -24,7 +24,7 @@ import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.relation.api.Relation;
-import org.aksw.jenax.vaadin.component.grid.sparql.DynamicInjectiveFunction;
+import org.aksw.jenax.vaadin.deprecated.DynamicInjectiveFunction;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.sparql.algebra.Table;
@@ -129,7 +129,7 @@ public class FacetedRelationQuery {
     // TODO Paths need to eventually be resolved against variables - so probably we need to scope variables by their root.
     // Yet, we could use a common name for every path
     // So the first level of FacetNodes that refers to the root variables is different from the other FacetNodes. But how to capture that?!
-    protected FacetPathMapping pathMapping;
+    // protected FacetPathMapping pathMapping;
 
 
     protected QueryType queryType;
@@ -155,13 +155,13 @@ public class FacetedRelationQuery {
         this.baseRelation = baseRelation;
         this.scopeName = scopeName;
 
-        Generator<Var> varGen = GeneratorFromFunction.createInt().map(i -> Var.alloc("vv" + i));
-        DynamicInjectiveFunction<FacetPath, Var> ifn = DynamicInjectiveFunction.of(varGen);
-        FacetPathMapping fpm = ifn::apply;
-
-
-        // TODO Use a global path mapping by default
-        this.pathMapping = fpm;
+//        Generator<Var> varGen = GeneratorFromFunction.createInt().map(i -> Var.alloc("vv" + i));
+//        DynamicInjectiveFunction<FacetPath, Var> ifn = DynamicInjectiveFunction.of(varGen);
+//        FacetPathMapping fpm = ifn::apply;
+//
+//
+//        // TODO Use a global path mapping by default
+//        this.pathMapping = fpm;
     }
 
     public String getScopeBaseName() {

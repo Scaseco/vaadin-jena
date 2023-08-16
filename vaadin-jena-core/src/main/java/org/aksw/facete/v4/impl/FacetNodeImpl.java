@@ -10,6 +10,7 @@ import org.aksw.facete.v3.api.FacetedQuery;
 import org.aksw.facete.v3.api.TreeQueryNode;
 import org.aksw.facete.v3.api.VarScope;
 import org.aksw.facete.v3.impl.FacetedDataQueryImpl;
+import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.relation.api.BinaryRelation;
@@ -18,7 +19,6 @@ import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.treequery2.api.ScopedFacetPath;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdfconnection.SparqlQueryConnection;
 import org.apache.jena.sparql.core.Var;
 
 public class FacetNodeImpl
@@ -166,9 +166,9 @@ public class FacetNodeImpl
 
         relation = relation.prependOn(relation.getVars()).with(baseRelation).toUnaryRelation();
 
-        SparqlQueryConnection conn = facetedQuery.connection();
+        RdfDataSource dataSource = facetedQuery.dataSource();
         FacetedDataQuery<RDFNode> result = new FacetedDataQueryImpl<>(
-                conn,
+                dataSource,
                 relation.getElement(),
                 relation.getVar(),
                 null,

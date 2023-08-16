@@ -1,4 +1,4 @@
-package org.aksw.jenax.vaadin.component.grid.sparql;
+package org.aksw.jenax.vaadin.deprecated;
 
 import java.util.function.Function;
 

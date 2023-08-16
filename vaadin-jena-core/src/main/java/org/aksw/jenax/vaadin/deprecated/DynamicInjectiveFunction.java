@@ -1,4 +1,4 @@
-package org.aksw.jenax.vaadin.component.grid.sparql;
+package org.aksw.jenax.vaadin.deprecated;
 
 import org.aksw.commons.collections.generator.Generator;
 import org.aksw.commons.collections.generator.GeneratorBlacklist;

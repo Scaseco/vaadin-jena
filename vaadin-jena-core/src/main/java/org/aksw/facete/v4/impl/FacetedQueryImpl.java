@@ -9,10 +9,10 @@ import org.aksw.facete.v3.api.FacetNode;
 import org.aksw.facete.v3.api.FacetedQuery;
 import org.aksw.facete.v3.api.TreeQueryNode;
 import org.aksw.jena_sparql_api.concepts.Concept;
+import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.apache.jena.ext.com.google.common.base.Preconditions;
-import org.apache.jena.rdfconnection.SparqlQueryConnection;
 import org.apache.jena.sparql.core.Var;
 
 import com.google.common.cache.Cache;
@@ -21,7 +21,7 @@ import com.google.common.cache.CacheBuilder;
 public class FacetedQueryImpl
     implements FacetedQuery
 {
-    protected SparqlQueryConnection conn;
+    protected RdfDataSource dataSource;
 
     protected FacetedRelationQuery relationQuery;
     protected Var baseVar;
@@ -117,13 +117,13 @@ public class FacetedQueryImpl
     }
 
     @Override
-    public FacetedQuery connection(SparqlQueryConnection conn) {
-        this.conn = conn;
-        return this;
+    public RdfDataSource dataSource() {
+        return dataSource;
     }
 
     @Override
-    public SparqlQueryConnection connection() {
-        return conn;
+    public FacetedQuery dataSource(RdfDataSource dataSource) {
+        this.dataSource = dataSource;
+        return this;
     }
 }

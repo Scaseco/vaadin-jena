@@ -20,13 +20,10 @@ import org.aksw.jena_sparql_api.rx.entity.model.EntityQueryImpl;
 import org.aksw.jena_sparql_api.rx.entity.model.EntityTemplateImpl;
 import org.aksw.jena_sparql_api.rx.entity.model.GraphPartitionJoin;
 import org.aksw.jenax.arq.dataset.api.DatasetOneNg;
-import org.aksw.jenax.arq.dataset.api.RDFNodeInDataset;
 import org.aksw.jenax.arq.datashape.viewselector.EntityClassifier;
 import org.aksw.jenax.arq.util.var.Vars;
-import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
-import org.aksw.jenax.sparql.query.rx.RDFDataMgrEx;
+import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
-import org.aksw.jenax.sparql.rx.op.FlowOfRdfNodesInDatasetsOps;
 import org.aksw.jenax.treequery2.api.NodeQuery;
 import org.aksw.jenax.treequery2.api.RelationQuery;
 import org.aksw.jenax.treequery2.impl.ElementGeneratorLateral;
@@ -37,8 +34,6 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.E_Str;
@@ -61,11 +56,12 @@ public class DataRetriever {
     protected Map<Node, NodeQuery> classToQuery = new LinkedHashMap<>();
 
     /** The query execution factory on which to run the queries */
-    protected QueryExecutionFactoryQuery qef;
+    // protected QueryExecutionFactoryQuery qef;
+    protected RdfDataSource dataSource;
 
 
-    public DataRetriever(QueryExecutionFactoryQuery qef, EntityClassifier entityClassifier) {
-        this.qef = qef;
+    public DataRetriever(RdfDataSource dataSource, EntityClassifier entityClassifier) {
+        this.dataSource = dataSource;
         this.entityClassifier = entityClassifier;
     }
 
@@ -79,7 +75,8 @@ public class DataRetriever {
 
         EntityGraphFragment entityGraphFragment = entityClassifier.createGraphFragment();
 
-        UnaryRelation concept = Concept.create(Vars.s, nodes);
+        // UnaryRelation concept = Concept.create(Vars.s, nodes);
+        UnaryRelation concept = Concept.createFilteredSubjects(Vars.s, nodes);
         EntityBaseQuery ebq = new EntityBaseQuery(Collections.singletonList(Vars.s), new EntityTemplateImpl(), concept.asQuery());
 
         Expr partitionSortExpr = new ExprAggregator(Var.alloc("dummy"),
@@ -95,7 +92,7 @@ public class DataRetriever {
 
 //        // Classify the entities
         // List<Quad> rawQuads = EntityQueryRx.execConstructEntitiesNg(qef::createQueryExecution, basic).toList().blockingGet();
-        List<RDFNode> rawEntities = EntityQueryRx.execConstructRooted(qef, basic).toList().blockingGet(); //     execConstructEntitiesNg(qef::createQueryExecution, basic).toList().blockingGet();
+        List<RDFNode> rawEntities = EntityQueryRx.execConstructRooted(dataSource.asQef(), basic).toList().blockingGet(); //     execConstructEntitiesNg(qef::createQueryExecution, basic).toList().blockingGet();
 //
 //        Dataset ds = DatasetFactory.create();
 //        rawQuads.forEach(ds.asDatasetGraph()::add);
@@ -143,7 +140,7 @@ public class DataRetriever {
                 query.setQueryConstructType();
                 query.setQueryPattern(elt);
                 System.out.println(query);
-                LookupService<Node, DatasetOneNg> ls = new LookupServiceSparqlConstructQuads(qef, query);
+                LookupService<Node, DatasetOneNg> ls = new LookupServiceSparqlConstructQuads(dataSource.asQef(), query);
                 Map<Node, RDFNode> data = ls
                         .mapNonNullValues(ds -> {
                             RDFNode r = ds.getSelfResource();

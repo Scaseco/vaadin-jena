@@ -137,7 +137,5 @@ public class SparqlGridComponent extends VerticalLayout {
         this.add(tm);
 
         this.add(sparqlGrid);
-
-        // this.add(settingsBtn);
     }
 }
