@@ -1,9 +1,16 @@
 package org.aksw.vaadin.app.demo.view.tablemapper;
 
+import org.aksw.jena_sparql_api.concepts.Concept;
+import org.aksw.jenax.arq.datasource.RdfDataSourceWithBnodeRewrite;
+import org.aksw.jenax.arq.util.syntax.ElementUtils;
+import org.aksw.jenax.arq.util.var.Vars;
+import org.aksw.jenax.connection.datasource.RdfDataSource;
+import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.vaadin.component.grid.sparql.TableMapperComponent;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.vaadin.app.demo.MainLayout;
 import org.apache.jena.graph.Node;
+import org.apache.jena.rdfconnection.RDFConnection;
 
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
@@ -18,7 +25,19 @@ public class TableMapperView
     // protected LabelService<Node, String> labelService;
 
     public TableMapperView(LabelService<Node, String> labelService) {
-        TableMapperComponent tableMapper = new TableMapperComponent(labelService);
+
+        // QueryExecutionFactoryQuery qef = query -> RDFConnection.connect("http://localhost:8642/sparql").query(query);
+        UnaryRelation baseConcept = new Concept(ElementUtils.createElementTriple(Vars.x, Vars.y, Vars.z), Vars.x);
+
+        RdfDataSource base = () -> RDFConnection.connect("http://localhost:8642/sparql");
+
+        RdfDataSource dataSource = base
+                .decorate(RdfDataSourceWithBnodeRewrite::wrapWithAutoBnodeProfileDetection)
+                // .decorate(RdfDataSourceWithLocalCache::new)
+                ;
+
+
+        TableMapperComponent tableMapper = new TableMapperComponent(dataSource, baseConcept, labelService);
         add(tableMapper);
 
 //        Dataset dataset = RDFDataMgr.loadDataset("linkedgeodata-2018-04-04.dcat.ttl");

@@ -11,22 +11,13 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.aksw.facete.v3.api.FacetedQuery;
-import org.aksw.facete.v3.impl.FacetedQueryImpl;
 import org.aksw.facete.v4.impl.ElementGenerator;
 import org.aksw.facete.v4.impl.TreeDataUtils;
-import org.aksw.jena_sparql_api.concepts.Concept;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinStyleUtils;
-import org.aksw.jenax.arq.connection.core.QueryExecutionFactories;
-import org.aksw.jenax.arq.datasource.RdfDataSourceWithBnodeRewrite;
-import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.arq.util.syntax.QueryGenerationUtils;
-import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
-import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetPathOps;
 import org.aksw.jenax.path.core.FacetStep;
@@ -36,7 +27,6 @@ import org.aksw.vaadin.common.component.util.ConfirmDialogUtils;
 import org.aksw.vaadin.common.component.util.NotificationUtils;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.expr.Expr;
 
@@ -91,8 +81,8 @@ public class TableMapperComponent
     protected Set<FacetPath> expandedPaths = new HashSet<>();
     protected Map<FacetPath, Boolean> pathToVisibility = new HashMap<>();
 
-    // protected RdfDataSource dataSource;
-    protected QueryExecutionFactoryQuery qef;
+    protected RdfDataSource dataSource;
+    // protected QueryExecutionFactoryQuery qef;
 
 
     protected DataProviderSparqlBinding sparqlDataProvider;
@@ -101,54 +91,43 @@ public class TableMapperComponent
 
     protected UnaryRelation baseConcept;
 
-    public TableMapperComponent(LabelService<Node, String> labelService) {
+//    public TableMapperComponent(RdfDataSource dataSource, UnaryRelation baseConcept, LabelService<Node, String> labelService) {
+//
+//
+//        // RDFConnection conn = dataSource.getConnection();
+//        //FacetedQuery fq = FacetedQueryImpl.create(conn);
+//
+////        System.out.println("BaseConcept: " + baseConcept);
+////
+////        if(baseConcept != null) {
+////            fq.baseConcept(baseConcept);
+////        }
+////
+////        this.qef = QueryExecutionFactories.of(conn);
+//
+//        this.dataSource = dataSource;
+//
+//        // this.dataSource = dataSource;
+//        this.labelMgr = labelService;
+//
+//        // add(resetLabelsBtn);
+//
+//
+//
+//        this.detailsView = new TableMapperDetailsView(labelMgr, qef, baseConcept, treeDataProvider);
+//        // FacetedQuery fq = new XFacetedQueryImpl(null, null)
+//
+//        //this.sparqlDataProvider = new ListDataProvider<>(Collections.emptyList());
+//        // this.sparqlDataProvider = new DataProviderSparqlBinding(RelationUtils.create, qef)
+//
+//        initComponent();
+//    }
 
-        // QueryExecutionFactoryQuery qef = query -> RDFConnection.connect("http://localhost:8642/sparql").query(query);
-        baseConcept = new Concept(ElementUtils.createElementTriple(Vars.x, Vars.y, Vars.z), Vars.x);
-
-        RdfDataSource base = () -> RDFConnection.connect("http://localhost:8642/sparql");
-
-        RdfDataSource dataSource = base
-                .decorate(RdfDataSourceWithBnodeRewrite::wrapWithAutoBnodeProfileDetection)
-                // .decorate(RdfDataSourceWithLocalCache::new)
-                ;
-
-        RDFConnection conn = dataSource.getConnection();
-        FacetedQuery fq = FacetedQueryImpl.create(conn);
-
-        System.out.println("BaseConcept: " + baseConcept);
-
-        if(baseConcept != null) {
-            fq.baseConcept(baseConcept);
-        }
-
-        this.qef = QueryExecutionFactories.of(conn);
-
-        // this.dataSource = dataSource;
-        this.labelMgr = labelService;
-
-        // add(resetLabelsBtn);
-
-
-
-        this.detailsView = new TableMapperDetailsView(labelMgr, qef, baseConcept, treeDataProvider);
-        // FacetedQuery fq = new XFacetedQueryImpl(null, null)
-
-        //this.sparqlDataProvider = new ListDataProvider<>(Collections.emptyList());
-        // this.sparqlDataProvider = new DataProviderSparqlBinding(RelationUtils.create, qef)
-
-        initComponent();
-    }
-
-    public TableMapperComponent(QueryExecutionFactoryQuery qef, UnaryRelation baseConcept, LabelService<Node, String> labelService) {
-        this.qef = qef;
+    public TableMapperComponent(RdfDataSource dataSource, UnaryRelation baseConcept, LabelService<Node, String> labelService) {
+        this.dataSource = dataSource;
         this.baseConcept = baseConcept;
         this.labelMgr = labelService;
-
-
-        this.detailsView = new TableMapperDetailsView(labelMgr, qef, baseConcept, treeDataProvider);
-
-
+        this.detailsView = new TableMapperDetailsView(labelMgr, dataSource, baseConcept, treeDataProvider);
         initComponent();
     }
 
@@ -504,7 +483,7 @@ public class TableMapperComponent
 //        RelationUtils.createQuery(null);
         // VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);
         // VaadinSparqlUtils.configureGridFilter(sparqlGrid, filterRow, query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
-        SparqlGrid.setQueryForGridBinding(sparqlGrid, qef, labelMgr, mappedQuery);
+        SparqlGrid.setQueryForGridBinding(sparqlGrid, dataSource.asQef(), labelMgr, mappedQuery);
 
         sparqlGridContainer.removeAll();
         sparqlGridContainer.add(sparqlGrid);

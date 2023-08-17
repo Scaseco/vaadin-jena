@@ -27,7 +27,6 @@ import com.vaadin.flow.router.Route;
 public class ShaclGridView
     extends VerticalLayout
 {
-
     public DataProviderNodeQuery setup() {
         SHFactory.ensureInited();
         Model shaclModel = RDFDataMgr.loadModel("/home/raven/Projects/Eclipse/rmltk-parent/r2rml-resource-shacl/src/main/resources/r2rml.core.shacl.ttl");
@@ -39,13 +38,13 @@ public class ShaclGridView
 
     // @Autowired
     // protected LabelService<Node, String> labelService;
-
     public ShaclGridView(LabelService<Node, String> labelService) {
 
         DataProviderNodeQuery dataProvider = setup();
 
         Grid<RDFNode> grid = new Grid<>();
         VaadinShaclGridUtils.configureGrid(grid, dataProvider, labelService);
+        grid.setDataProvider(dataProvider);
         // VaadinSparqlUtils.configureGridFilter(grid, filterRow, vars, var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
 
         HeaderRow filterRow = grid.appendHeaderRow();

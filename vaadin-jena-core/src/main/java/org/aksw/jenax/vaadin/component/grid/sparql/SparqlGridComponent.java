@@ -6,13 +6,14 @@ import java.util.Map;
 import org.aksw.facete.v4.impl.ElementGenerator;
 import org.aksw.facete.v4.impl.TreeDataUtils;
 import org.aksw.jena_sparql_api.concepts.ConceptUtils;
-import org.aksw.jenax.connection.query.QueryExecutionFactoryDataset;
-import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
+import org.aksw.jenax.arq.datasource.RdfDataEngines;
+import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetPathOps;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.apache.jena.graph.Node;
+import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.expr.Expr;
 
@@ -25,7 +26,7 @@ import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 
 public class SparqlGridComponent extends VerticalLayout {
-    protected QueryExecutionFactoryQuery qef;
+    protected RdfDataSource dataSource;
     protected UnaryRelation baseConcept;
     protected LabelService<Node, String> labelMgr;
     protected TreeDataProvider<FacetPath> treeDataProvider = new TreeDataProvider<>(new TreeData<>());
@@ -37,7 +38,7 @@ public class SparqlGridComponent extends VerticalLayout {
 
     public SparqlGridComponent() {
         // Dataset dummy = DatasetFactory.create();
-        this.qef = new QueryExecutionFactoryDataset();
+        this.dataSource = RdfDataEngines.of(DatasetFactory.create()); // new QueryExecutionFactoryDataset();
         this.baseConcept = ConceptUtils.createSubjectConcept();
 
         FacetPath rootPath = FacetPathOps.get().newRoot();
@@ -63,22 +64,30 @@ public class SparqlGridComponent extends VerticalLayout {
 
     }
 
-    public SparqlGridComponent(QueryExecutionFactoryQuery qef, UnaryRelation baseConcept,
+    public SparqlGridComponent(RdfDataSource dataSource, UnaryRelation baseConcept,
             LabelService<Node, String> labelMgr) {
         this();
-        this.qef = qef;
+        this.dataSource = dataSource;
         this.baseConcept = baseConcept;
         this.labelMgr = labelMgr;
 
         this.resetGrid();
     }
 
-    public QueryExecutionFactoryQuery getQef() {
-        return qef;
+//    public QueryExecutionFactoryQuery getQef() {
+//        return qef;
+//    }
+//
+//    public void setQef(QueryExecutionFactoryQuery qef) {
+//        this.qef = qef;
+//    }
+
+    public RdfDataSource getDataSource() {
+        return dataSource;
     }
 
-    public void setQef(QueryExecutionFactoryQuery qef) {
-        this.qef = qef;
+    public void setDataSource(RdfDataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     public UnaryRelation getBaseConcept() {
@@ -131,9 +140,9 @@ public class SparqlGridComponent extends VerticalLayout {
         // VaadinSparqlUtils.configureGridFilter(sparqlGrid, filterRow,
         // query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var,
         // str).orElse(null));
-        SparqlGrid.setQueryForGridBinding(sparqlGrid, qef, labelMgr, mappedQuery);
+        SparqlGrid.setQueryForGridBinding(sparqlGrid, dataSource.asQef(), labelMgr, mappedQuery);
 
-        TableMapperComponent tm = new TableMapperComponent(qef, baseConcept, labelMgr);
+        TableMapperComponent tm = new TableMapperComponent(dataSource, baseConcept, labelMgr);
         this.add(tm);
 
         this.add(sparqlGrid);

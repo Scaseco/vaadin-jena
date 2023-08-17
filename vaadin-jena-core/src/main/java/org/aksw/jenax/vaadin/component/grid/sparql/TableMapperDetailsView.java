@@ -23,7 +23,7 @@ import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
 import org.aksw.jenax.arq.connection.core.QueryExecutionFactories;
 import org.aksw.jenax.arq.connection.core.RDFConnections;
 import org.aksw.jenax.arq.util.node.NodeUtils;
-import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
+import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.relation.api.Relation;
@@ -48,8 +48,8 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.Grid.Column;
+import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -84,7 +84,7 @@ public class TableMapperDetailsView
     protected TreeDataProvider<FacetPath> treeDataProvider;
 
     // protected RdfDataSource dataSource;
-    protected QueryExecutionFactoryQuery qef;
+    protected RdfDataSource dataSource;
     protected UnaryRelation baseConcept;
     // protected FacetTreeModel model;
     protected FacetPath activePath;
@@ -130,7 +130,7 @@ public class TableMapperDetailsView
         // VaadinSparqlUtils.setQueryForGridRdfNode(valueGrid, qef, query, RDFNode.class, null, null);
         Relation relation = RelationUtils.fromQuery(query);
         String varName = relation.toUnaryRelation().getVar().getName();
-        DataProviderSparqlRdfNode<RDFNode> dataProvider = new DataProviderSparqlRdfNode<>(relation, qef, RDFNode.class, varName, null);
+        DataProviderSparqlRdfNode<RDFNode> dataProvider = new DataProviderSparqlRdfNode<>(relation, dataSource.asQef(), RDFNode.class, varName, null);
         dataProvider.setAlwaysDistinct(true);
 
         valueGrid.setDataProvider(dataProvider);
@@ -216,10 +216,10 @@ public class TableMapperDetailsView
 
     // TODO Slider for which predicates to retrieve
 
-    public TableMapperDetailsView(LabelService<Node, String> labelMgr, QueryExecutionFactoryQuery qef, UnaryRelation baseConcept, TreeDataProvider<FacetPath> treeDataProvider) {
+    public TableMapperDetailsView(LabelService<Node, String> labelMgr, RdfDataSource dataSource, UnaryRelation baseConcept, TreeDataProvider<FacetPath> treeDataProvider) {
         super();
         this.labelMgr = labelMgr;
-        this.qef = qef;
+        this.dataSource = dataSource;
         this.baseConcept = baseConcept;
         this.treeDataProvider = treeDataProvider;
 
@@ -378,7 +378,7 @@ public class TableMapperDetailsView
             // QueryExecutionFactoryQuery fnQef = QueryExecutionFactories.of(RdfDataEngines.of(DatasetFactory.empty()));
             // HeaderRow headerRow = functionsGrid.appendHeaderRow();
             // VaadinSparqlUtils.setQueryForGridBinding(functionsGrid, headerRow, qef, query);
-            functionsGrid.setDataProvider(VaadinSparqlUtils.createDataProvider(qef, query));
+            functionsGrid.setDataProvider(VaadinSparqlUtils.createDataProvider(dataSource.asQef(), query));
             Var fnVar = Var.alloc("function");
             functionsGrid.addComponentColumn(binding -> {
 
@@ -493,7 +493,7 @@ public class TableMapperDetailsView
     public void fetchPredicates() {
 
         // Bridge qef to conn
-        RDFConnection conn = RDFConnections.of(qef);
+        RDFConnection conn = dataSource.getConnection(); // RDFConnections.of(qef);
 
         try {
             // FacetedQuery fq = FacetedQueryImpl.create(conn).baseConcept(model.getBaseConcept());
