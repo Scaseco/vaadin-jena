@@ -50,28 +50,15 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 
 /**
- *
- *
- * This class should supersede {@link FacetedQueryGenerator}.
+ * Create individual elements for a facet paths.
+ * The class {@link ElementGenerator} can generate "high level" queries and uses this class as a worker to carry out
+ * specific sub tasks.
  */
 public class ElementGeneratorWorker {
-
     // protected Map<VarScope, TreeData<FacetPath>> facetTree;
-
     protected Map<VarScope, ElementGeneratorContext> scopeToContext = new LinkedHashMap<>();
     protected FacetPathMapping pathMapping;
     protected PropertyResolver propertyResolver;
-    // protected SetMultimap<ScopedFacetPath, Expr> constraintIndex;
-
-    /** Mapping of element paths (FacetPaths with the component set to the TUPLE constant) */
-    // protected Map<FacetPath, ElementAcc> eltPathToAcc = new LinkedHashMap<>();
-    // ElementAcc rootEltAcc = ElementAcc.newRoot(); // null; //new ElementAcc();
-//    protected TreeData<FacetPath> facetTree;
-//
-//    /** The FacetPaths on this tree are purely element ids (they reference relations rather than components) */
-//    protected Set<FacetPath> mandatoryElementIds = new HashSet<>();
-//    protected TreeDataMap<FacetPath, ElementAcc> facetPathToAcc = new TreeDataMap<>();
-//    protected Map<FacetPath, Var> pathToVar = new HashMap<>();
 
     public ElementGeneratorWorker(FacetPathMapping pathMapping, PropertyResolver propertyResolver) {
         this(new TreeData<>(), HashMultimap.create(), pathMapping, propertyResolver);
@@ -149,16 +136,6 @@ public class ElementGeneratorWorker {
         declareMandatoryPath(cxt, scopedPath.getFacetPath());
     }
 
-
-//    public ScopedFacetPath toElementId(ScopedFacetPath sfp) {
-//        return sfp.transformPath(FacetPathUtils::toElementId);
-//    }
-
-//    protected ElementGeneratorContext getOrCreateContext(ScopedFacetPath path) {
-//        VarScope scope = path.getScope();
-//
-//    }
-
     public ElementGeneratorContext getOrCreateContext(VarScope scope) {
         ElementGeneratorContext result = scopeToContext.computeIfAbsent(scope, sc -> {
             return new ElementGeneratorContext(sc);
@@ -189,7 +166,7 @@ public class ElementGeneratorWorker {
     }
 
     public ElementAcc allocateEltAcc(ElementGeneratorContext cxt, Var parentVar, Var targetVar, FacetPath path) {
-        // FIXME Naively adding optionl elements does not work when facet paths are mapped to BIND elements
+        // FIXME Naively adding optional elements does not work when facet paths are mapped to BIND elements
         // In the example below, ?bar will be unbound:
         // BIND("foo" AS ?foo) OPTIONAL { BIND(?foo AS ?bar) }
 
@@ -594,5 +571,26 @@ public class ElementGeneratorWorker {
         }
         return result;
     }
-
 }
+
+// protected SetMultimap<ScopedFacetPath, Expr> constraintIndex;
+
+/** Mapping of element paths (FacetPaths with the component set to the TUPLE constant) */
+// protected Map<FacetPath, ElementAcc> eltPathToAcc = new LinkedHashMap<>();
+// ElementAcc rootEltAcc = ElementAcc.newRoot(); // null; //new ElementAcc();
+//protected TreeData<FacetPath> facetTree;
+//
+///** The FacetPaths on this tree are purely element ids (they reference relations rather than components) */
+//protected Set<FacetPath> mandatoryElementIds = new HashSet<>();
+//protected TreeDataMap<FacetPath, ElementAcc> facetPathToAcc = new TreeDataMap<>();
+//protected Map<FacetPath, Var> pathToVar = new HashMap<>();
+//public ScopedFacetPath toElementId(ScopedFacetPath sfp) {
+//return sfp.transformPath(FacetPathUtils::toElementId);
+//}
+
+//protected ElementGeneratorContext getOrCreateContext(ScopedFacetPath path) {
+//VarScope scope = path.getScope();
+//
+//}
+
+

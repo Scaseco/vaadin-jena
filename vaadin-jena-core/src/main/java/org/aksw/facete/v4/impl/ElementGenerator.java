@@ -1,5 +1,6 @@
 package org.aksw.facete.v4.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -57,44 +58,41 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.graph.Traverser;
 
+/* This class should supersede {@link FacetedQueryGenerator}. */
 public class ElementGenerator {
 
-    protected FacetPathMapping pathMapping;
+    protected Element baseElement;
     protected ScopedFacetPath focusPath;
+
+    protected FacetPathMapping pathMapping;
     protected PropertyResolver propertyResolver = new PropertyResolverImpl();
 
-    // protected Element baseElement; // This element also exists in eltPathToAcc.get(FacetPath.newAbsolutePath())
-
     /** Hierarchy of all referenced paths. Serves as the basis for graph pattern creation. */
-    // protected Map<VarScope, TreeData<FacetPath>> scopeToFacetTree = new HashMap<>(); //new TreeData<>();
-    // protected TreeData<ScopedFacetPath> facetTree;
-    // protected Map<VarScope, TreeData<FacetPath>> facetTree = new HashMap<>();
     protected TreeData<ScopedFacetPath> facetTree = new TreeData<>();
 
     // Should the value be a wrapper that conveniently links back to all mentioned paths?
     protected SetMultimap<ScopedFacetPath, Expr> constraintIndex;
 
-    // protected Map<VarScope, ElementGenerator.Context> scopeToContext = new HashMap<>();
+    public ElementGenerator(FacetPathMapping pathMapping, SetMultimap<ScopedFacetPath, Expr> constraintIndex, ScopedFacetPath focusPath) {
+        super();
+        this.pathMapping = pathMapping;
+        this.constraintIndex = constraintIndex;
+        this.focusPath = focusPath;
 
-//    static class Context {
-//        /** Mapping of element paths (FacetPaths with the component set to the TUPLE constant) */
-//        protected Map<FacetPath, ElementAcc> eltPathToAcc = new LinkedHashMap<>();
-//
-//    }
+        this.baseElement = null;
+    }
+
+    public void setBaseElement(Element baseElement) {
+        this.baseElement = baseElement;
+    }
+
+    public Element getBaseElement() {
+        return baseElement;
+    }
 
     public FacetPathMapping getPathMapping() {
         return pathMapping;
     }
-
-//    public ElementGeneratorWorker createWorkerForPath(FacetPath facetPath) {
-//        SetMultimap<FacetPath, Expr> localIndex = ElementGeneratorUtils.hideConstraintsForPath(constraintIndex, facetPath);
-//        return new ElementGeneratorWorker(facetTree, localIndex, pathMapping, propertyResolver);
-//    }
-//
-//    public ElementGeneratorWorker createWorker() {
-//        return new ElementGeneratorWorker(facetTree, constraintIndex, pathMapping, propertyResolver);
-//    }
-
 
     public void addPath(ScopedFacetPath facetPath) {
         // facetTree.computeIfAbsent(facetPath.getScope(), sc -> new TreeData<>()).putItem(facetPath.getFacetPath(), FacetPath::getParent);
@@ -109,50 +107,40 @@ public class ElementGenerator {
         }
     }
 
-
-    public ElementGenerator(FacetPathMapping pathMapping, SetMultimap<ScopedFacetPath, Expr> constraintIndex, ScopedFacetPath focusPath) {
-        super();
-        this.pathMapping = pathMapping;
-        this.constraintIndex = constraintIndex;
-        this.focusPath = focusPath;
-    }
-
-
-
     public static ElementGenerator configure(FacetedQueryImpl fq) {
         FacetedRelationQuery frq = fq.relationQuery;
 //      UnaryRelation baseConcept;
 //      FacetConstraints constraints;
 
-      Relation baseRelation = frq.baseRelation.get();
-      List<Var> rootVars = baseRelation.getVars();
+        Relation baseRelation = frq.baseRelation.get();
+        List<Var> rootVars = baseRelation.getVars();
 
-      FacetConstraints constraints = frq.constraints;
+        FacetConstraints constraints = frq.constraints;
 
-      MappedQuery result = null;
+        MappedQuery result = null;
 
-      // For each variable create the element for the constraints.
-      // TODO How to handle cross-variable constraints cleanly?
-      for (Var rootVar : rootVars) {
+        // For each variable create the element for the constraints.
+        // TODO How to handle cross-variable constraints cleanly?
+        for (Var rootVar : rootVars) {
 
 
-          TreeData<ScopedFacetPath> treeData = new TreeData<>();
+            TreeData<ScopedFacetPath> treeData = new TreeData<>();
 
-          FacetNodeImpl focusNode = (FacetNodeImpl)frq.getFacetedQuery().focus();
-          TreeQueryNode tq = focusNode.node;
+            FacetNodeImpl focusNode = (FacetNodeImpl)frq.getFacetedQuery().focus();
+            TreeQueryNode tq = focusNode.node;
 
-          ScopedFacetPath focusPath = ScopedFacetPath.of(rootVar, tq.getFacetPath());
+            ScopedFacetPath focusPath = ScopedFacetPath.of(rootVar, tq.getFacetPath());
 
           // FacetPath focusPath = ElementGeneratorUtils.cleanPath(tq.getFacetPath());
 
 
-          treeData.putItem(focusPath, ScopedFacetPath::getParent);
+            treeData.putItem(focusPath, ScopedFacetPath::getParent);
           // TreeDataUtils.putItem(treeData, focusPath, FacetPath::getParent);
 
 
-          SetMultimap<ScopedFacetPath, Expr> constraintIndex = createConstraintIndex(constraints, treeData);
+            SetMultimap<ScopedFacetPath, Expr> constraintIndex = createConstraintIndex(constraints, treeData);
 
-          UnaryRelation baseConcept = new Concept(baseRelation.getElement(), rootVar);
+            UnaryRelation baseConcept = new Concept(baseRelation.getElement(), rootVar);
 
           // Generator<Var> varGen = GeneratorFromFunction.createInt().map(i -> Var.alloc("vv" + i));
 
@@ -171,15 +159,14 @@ public class ElementGenerator {
 
           //VarScope varScope = VarScope.of(rootVar);
 
-          FacetPathMapping fpm = new FacetPathMappingImpl();
-          ElementGenerator eltGen = new ElementGenerator(fpm, constraintIndex, focusPath);
-          Traverser.forTree(treeData::getChildren).depthFirstPreOrder(treeData.getRootItems()).forEach(eltGen::addPath);
+            FacetPathMapping fpm = new FacetPathMappingImpl();
+            ElementGenerator eltGen = new ElementGenerator(fpm, constraintIndex, focusPath);
+            Traverser.forTree(treeData::getChildren).depthFirstPreOrder(treeData.getRootItems()).forEach(eltGen::addPath);
 
-          return eltGen;
-      }
-
-      return null;
-  }
+            return eltGen;
+        }
+        return null;
+    }
 
 
     public static SetMultimap<VarScope, Expr> createUnscopedConstraintExprs(Collection<Expr> scopedExprs) {
@@ -198,12 +185,9 @@ public class ElementGenerator {
             }
 
             VarScope scope = index.keySet().iterator().next();
-
-
             Expr e = expr.applyNodeTransform(NodeCustom.mapValue(ScopedFacetPath::getFacetPath));
             result.put(scope, e);
         }
-
         return result;
     }
 
@@ -485,47 +469,42 @@ public class ElementGenerator {
      * The key of the map should probably be the facet FacetStep?!
      */
     public Map<String, TernaryRelation> createMapFacetsAndValues(ScopedFacetPath facetOriginPath, Direction direction, boolean applySelfConstraints, boolean negated, boolean includeAbsent) {
-
         // FacetPath facetOriginPath = ElementGeneratorUtils.cleanPath(rawFacetOriginPath);
-
         Map<String, TernaryRelation> result = new HashMap<>();
 
         // TODO We could reuse a TreeData structure to avoid iterating all paths of all constraints?
         Set<ScopedFacetPath> constrainedPaths = constraintIndex.keySet();
         Set<ScopedFacetPath> constrainedChildPaths = FacetPathUtils.getDirectChildren(facetOriginPath, direction, constrainedPaths);
 
-      // ElementGenerator.createQuery(parent.facetedQuery.relationQuery, x -> true);
-      // this.pathMapping.allocate(facetOriginPath)
+        // ElementGenerator.createQuery(parent.facetedQuery.relationQuery, x -> true);
+        // this.pathMapping.allocate(facetOriginPath)
 
-        // Var focusVar = pathMapping.allocate(focusPath);
         Var focusVar = FacetPathMappingImpl.resolveVar(pathMapping, focusPath).asVar();
 
         for(ScopedFacetPath childPath : constrainedChildPaths) {
-
-            // FacetStep facetStep = facetOriginPath.relativize(childPath).toSegment();
-            FacetStep facetStep = facetOriginPath.getFacetPath().relativize(childPath.getFacetPath()).toSegment();
+            FacetStep facetStep = facetOriginPath.relativize(childPath).toSegment();
+            // FacetStep facetStep = facetOriginPath.getFacetPath().relativize(childPath.getFacetPath()).toSegment();
 
             MappedElement mr = createRelationForPath(childPath, applySelfConstraints, negated, includeAbsent);
             Var childVar = mr.getVar(childPath);
 
-            List<Element> elts = ElementUtils.toElementList(mr.getElement());
+            // Note sure if this the best place where to add the baseElement
+            List<Element> elts = ElementUtils.flatMergeList(baseElement, mr.getElement());
             elts.add(new ElementBind(Vars.p, NodeValue.makeNode(facetStep.getNode())));
 
             TernaryRelation br = new TernaryRelationImpl(ElementUtils.groupIfNeeded(elts), focusVar, Vars.p, childVar);
-
-
             String pStr = childPath.getParent() == null ? "" : childPath.getFacetPath().getFileName().toSegment().getNode().getURI();
 
-          // Substitute the empty predicate by the empty string
-          // The empty string predicate (zero length path) is different from
-          // the set of remaining predicates indicated by a null entry in the result map
+            // Substitute the empty predicate by the empty string
+            // The empty string predicate (zero length path) is different from
+            // the set of remaining predicates indicated by a null entry in the result map
             pStr = pStr == null ? "" : pStr;
 
 
-          // Skip adding the relation empty string if the relation is empty
-//          if(!(pStr.isEmpty() && br.isEmpty())) {
+            // Skip adding the relation empty string if the relation is empty
+            // if(!(pStr.isEmpty() && br.isEmpty())) {
               result.put(pStr, br);
-//          }
+            // }
         }
 
       // Add the predicate/value paths and generate the element again
@@ -573,25 +552,31 @@ public class ElementGenerator {
         FacetStep oStep = FacetStep.of(NodeUtils.ANY_IRI, direction, null, FacetStep.TARGET);
         ScopedFacetPath pPath = sourceFacetPath.resolve(pStep);
         ScopedFacetPath oPath = sourceFacetPath.resolve(oStep);
-//        ScopedFacetPath pPath = sourceFacetPath.transformPath(p -> p.resolve(pStep));
-//        ScopedFacetPath oPath = sourceFacetPath.transformPath(p -> p.resolve(oStep));
 
         TreeData<ScopedFacetPath> newTree = facetTree.cloneTree();
         newTree.putItem(pPath, ScopedFacetPath::getParent);
         newTree.putItem(oPath, ScopedFacetPath::getParent);
 
-        //ElementGeneratorContext cxt = new ElementGeneratorContext(newTree);
-
         ElementGeneratorWorker worker = new ElementGeneratorWorker(newTree, constraintIndex, pathMapping, propertyResolver);
         worker.declareMandatoryPath(oPath);
 
         MappedElement me = worker.createElement();
+        Element elt = ElementUtils.flatMerge(baseElement, me.getElement());
+
+//        List<Element> foo = new ArrayList<>();
+//        if (baseElement != null) {
+//            foo.addAll(ElementUtils.toElementList(baseElement));
+//        }
+//        foo.addAll(brr.getElements());
+
+
         Var pVar = me.getVar(pPath);
         Var oVar = me.getVar(oPath);
-        BinaryRelation result = new BinaryRelationImpl(me.getElement(), pVar, oVar);
-
+        BinaryRelation result = new BinaryRelationImpl(elt, pVar, oVar);
         return result;
     }
+
+    /* Methods below are copied from Facete3's FacetedQueryGenerator and should probably be migrated to this class! */
 
 
 //    // UnaryRelation baseConcept, P focusPath, P facetPath,
@@ -965,3 +950,26 @@ public class ElementGenerator {
 }
 
 
+
+//public ElementGeneratorWorker createWorkerForPath(FacetPath facetPath) {
+//  SetMultimap<FacetPath, Expr> localIndex = ElementGeneratorUtils.hideConstraintsForPath(constraintIndex, facetPath);
+//  return new ElementGeneratorWorker(facetTree, localIndex, pathMapping, propertyResolver);
+//}
+//
+//public ElementGeneratorWorker createWorker() {
+//  return new ElementGeneratorWorker(facetTree, constraintIndex, pathMapping, propertyResolver);
+//}
+
+
+
+// protected Element baseElement; // This element also exists in eltPathToAcc.get(FacetPath.newAbsolutePath())
+// protected Map<VarScope, TreeData<FacetPath>> scopeToFacetTree = new HashMap<>(); //new TreeData<>();
+// protected TreeData<ScopedFacetPath> facetTree;
+// protected Map<VarScope, TreeData<FacetPath>> facetTree = new HashMap<>();
+// protected Map<VarScope, ElementGenerator.Context> scopeToContext = new HashMap<>();
+
+//static class Context {
+//    /** Mapping of element paths (FacetPaths with the component set to the TUPLE constant) */
+//    protected Map<FacetPath, ElementAcc> eltPathToAcc = new LinkedHashMap<>();
+//
+//}

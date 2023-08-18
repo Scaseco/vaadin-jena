@@ -11,8 +11,7 @@ public interface QueryContext {
 
     @Deprecated // Probably no longer needed?
     Generator<String> getScopeNameGenerator();
-    
-    FacetPathMapping getPathMapping(); 
 
+    FacetPathMapping getPathMapping();
     PropertyResolver getPropertyResolver();
 }

@@ -31,11 +31,13 @@ public class ScopedFacetPath
         return (FacetPath)super.getDelegate();
     }
 
+    /** Domain alias for getDelegate() - maybe undeprecate? */
     @Deprecated
     public FacetPath getFacetPath() {
         return getDelegate();
     }
 
+    /** Domain alias for getSystem() - maybe undeprecate? */
     @Deprecated
     public VarScope getScope() {
         return getSystem();

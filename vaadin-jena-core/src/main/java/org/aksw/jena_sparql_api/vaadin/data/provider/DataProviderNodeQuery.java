@@ -1,7 +1,6 @@
 package org.aksw.jena_sparql_api.vaadin.data.provider;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -17,10 +16,8 @@ import org.aksw.jena_sparql_api.lookup.LookupServiceSparqlConstructQuads;
 import org.aksw.jenax.arq.dataset.api.DatasetOneNg;
 import org.aksw.jenax.arq.dataset.impl.ResourceInDatasetImpl;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
-import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.sparql.query.rx.SparqlRx;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
-import org.aksw.jenax.treequery2.impl.ElementGeneratorLateral;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.RDFNode;
@@ -65,6 +62,14 @@ public class DataProviderNodeQuery
 
     public Supplier<UnaryRelation> getConceptSupplier() {
         return conceptSupplier;
+    }
+
+    public RdfDataSource getDataSource() {
+        return dataSource;
+    }
+
+    public DataRetriever getDataRetriever() {
+        return retriever;
     }
 
     @Override
