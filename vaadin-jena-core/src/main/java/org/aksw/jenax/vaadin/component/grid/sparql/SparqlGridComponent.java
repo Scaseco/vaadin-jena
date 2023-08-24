@@ -115,7 +115,6 @@ public class SparqlGridComponent extends VerticalLayout {
     }
 
     public void resetGrid() {
-
         this.removeAll();
 
         Grid<Binding> sparqlGrid = new Grid<>();
@@ -124,22 +123,12 @@ public class SparqlGridComponent extends VerticalLayout {
 
         SetMultimap<FacetPath, Expr> constraintIndex = HashMultimap.create();
 
-        // MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept,
-        // treeDataProvider.getTreeData(), constraintIndex, path ->
-        // !Boolean.FALSE.equals(pathToVisibility.get(path)));
-
         org.aksw.facete.v3.api.TreeData<FacetPath> treeProjection = TreeDataUtils
                 .toFacete(treeDataProvider.getTreeData());
 
         MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeProjection, constraintIndex,
                 path -> !Boolean.FALSE.equals(pathToVisibility.get(path)));
 
-//        Query query =
-//        RelationUtils.createQuery(null);
-        // VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);
-        // VaadinSparqlUtils.configureGridFilter(sparqlGrid, filterRow,
-        // query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var,
-        // str).orElse(null));
         SparqlGrid.setQueryForGridBinding(sparqlGrid, dataSource.asQef(), labelMgr, mappedQuery);
 
         TableMapperComponent tm = new TableMapperComponent(dataSource, baseConcept, labelMgr);
@@ -148,3 +137,13 @@ public class SparqlGridComponent extends VerticalLayout {
         this.add(sparqlGrid);
     }
 }
+
+// MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept,
+// treeDataProvider.getTreeData(), constraintIndex, path ->
+// !Boolean.FALSE.equals(pathToVisibility.get(path)));
+//Query query =
+//RelationUtils.createQuery(null);
+// VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);
+// VaadinSparqlUtils.configureGridFilter(sparqlGrid, filterRow,
+// query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var,
+// str).orElse(null));

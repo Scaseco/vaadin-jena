@@ -1,6 +1,7 @@
 package org.aksw.jena_sparql_api.vaadin.data.provider;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -25,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import com.vaadin.flow.data.provider.AbstractBackEndDataProvider;
 import com.vaadin.flow.data.provider.Query;
@@ -72,8 +74,17 @@ public class DataProviderNodeQuery
         return retriever;
     }
 
+    public DataProviderNodeQuery setDataRetriever(DataRetriever dataRetriever) {
+        this.retriever = dataRetriever;
+        return this;
+    }
+
     @Override
     protected Stream<RDFNode> fetchFromBackEnd(Query<RDFNode, String> query) {
+        System.out.println("fetchFromBackEnd: " + query);
+        System.out.println("fetchFromBackEnd: " + query.getLimit());
+        System.out.println("fetchFromBackEnd: " + query.getOffset());
+
 
         UnaryRelation concept = conceptSupplier.get();
         // new ListServiceConcept()
@@ -94,13 +105,25 @@ public class DataProviderNodeQuery
         // Pass the nodes through the classifier
         // EntityClassifier.
 
-
+        // Debug code because of either bug in my SPARQL cache or the query rewrite that attempts to use it
+        if (true) {
+            Map<Node, Node> tmp = new HashMap<>();
+            for (Node node : nodes) {
+                Node got = tmp.get(node);
+                if (got != null) {
+                    // Should never come here
+                    System.out.println(node + " has prior entry " + got);
+                } else {
+                    tmp.put(node, node);
+                }
+            }
+        }
 
 
         // logger.info
-        System.err.println("GOT NODES " + (nodes.size()) + " - " + nodes);
+        System.err.println("GOT NODES " + (Sets.newHashSet(nodes).size() + " / " + nodes.size()) + " - " + nodes);
 
-        Map<Node, RDFNode> data = retriever.retrieve(nodes);
+        Map<Node, RDFNode> data = retriever.fetchMap(nodes);
 
         Collection<RDFNode> result;
         if (false) {
@@ -113,18 +136,33 @@ public class DataProviderNodeQuery
         } else {
             // result = Collections.emptyList();
         }
+        System.err.println("DataProviderNodeQuery - enriched: " + data.values().size());
+
         // return result.stream();
-        return data.values().stream();
+        Stream<RDFNode> xresult = data.values().stream();
+
+        if (true) {
+            List<RDFNode> list = xresult.collect(Collectors.toList());
+            System.err.println("GOT NODES " + (Sets.newHashSet(list).size() + " / " + list.size()) + " - " + list);
+            xresult = list.stream();
+        }
+
+        return xresult;
     }
 
     @Override
     protected int sizeInBackEnd(Query<RDFNode, String> query) {
+        System.out.println("sizeInBackEnd: " + query);
+        System.out.println("sizeInBackEnd: " + query.getLimit());
+        System.out.println("sizeInBackEnd: " + query.getOffset());
+
         UnaryRelation concept = conceptSupplier.get();
         org.apache.jena.query.Query sparqlQuery = concept.asQuery();
         // org.apache.jena.query.Query sparqlQuery = ElementGeneratorLateral.toQuery(nodeQuery);
         Range<Long> range = SparqlRx.fetchCountQuery(dataSource.asQef(), sparqlQuery, null, null).blockingGet();
         CountInfo countInfo = RangeUtils.toCountInfo(range);
         int result = Ints.saturatedCast(countInfo.getCount());
+        System.err.println("DataProviderNodeQuery - size: " + result);
         return result;
     }
 }

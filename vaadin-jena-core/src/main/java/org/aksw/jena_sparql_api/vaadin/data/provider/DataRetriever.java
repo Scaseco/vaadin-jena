@@ -49,7 +49,11 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
-public class DataRetriever {
+import io.reactivex.rxjava3.core.Flowable;
+
+public class DataRetriever
+    implements LookupService<Node, RDFNode>
+{
     protected EntityClassifier entityClassifier; //  = new EntityClassifier(Arrays.asList(Vars.s));
 
     /** A mapping of classifier id to NodeQuery in order to fetch the appropriate data */
@@ -69,7 +73,12 @@ public class DataRetriever {
         return classToQuery;
     }
 
-    public Map<Node, RDFNode> retrieve(List<Node> nodes) {
+    @Override
+    public Flowable<Entry<Node, RDFNode>> apply(Iterable<Node> nodes) {
+    // public Flowable<Entry<Node, RDFNode> apply(Iterable<Node> nodes) {
+
+        // TODO Abstract as lookupservice in order to reuse partitioning
+
 
         Map<Node, RDFNode> result = new LinkedHashMap<>();
 
@@ -140,7 +149,8 @@ public class DataRetriever {
                 query.setQueryConstructType();
                 query.setQueryPattern(elt);
                 System.out.println(query);
-                LookupService<Node, DatasetOneNg> ls = new LookupServiceSparqlConstructQuads(dataSource.asQef(), query);
+                LookupService<Node, DatasetOneNg> ls = new LookupServiceSparqlConstructQuads(dataSource.asQef(), query)
+                        .partition(30);
                 Map<Node, RDFNode> data = ls
                         .mapNonNullValues(ds -> {
                             RDFNode r = ds.getSelfResource();
@@ -167,9 +177,7 @@ public class DataRetriever {
             }
         }
 
-
-
-        return result;
+        return Flowable.fromIterable(result.entrySet());
 
 //        Relation r = entityClassifier.createClassifyingRelation();
 //
@@ -183,6 +191,6 @@ public class DataRetriever {
 //        Op op = Algebra.optimize(Algebra.compile(grouped.getElement()));
 //        System.out.println(op);
         // return null;
-
     }
+
 }

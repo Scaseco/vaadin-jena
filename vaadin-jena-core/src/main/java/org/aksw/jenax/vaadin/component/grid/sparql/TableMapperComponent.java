@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.aksw.facete.v4.impl.ElementGenerator;
@@ -71,7 +72,7 @@ class PredicateRecord {
 public class TableMapperComponent
     extends VerticalLayout
 {
-    protected LabelService<Node, String> labelMgr;
+    protected LabelService<Node, String> labelService;
 
     protected TreeDataProvider<FacetPath> treeDataProvider = new TreeDataProvider<>(new TreeData<>());
 
@@ -126,8 +127,8 @@ public class TableMapperComponent
     public TableMapperComponent(RdfDataSource dataSource, UnaryRelation baseConcept, LabelService<Node, String> labelService) {
         this.dataSource = dataSource;
         this.baseConcept = baseConcept;
-        this.labelMgr = labelService;
-        this.detailsView = new TableMapperDetailsView(labelMgr, dataSource, baseConcept, treeDataProvider);
+        this.labelService = labelService;
+        this.detailsView = new TableMapperDetailsView(labelService, dataSource, baseConcept, treeDataProvider);
         initComponent();
     }
 
@@ -338,7 +339,7 @@ public class TableMapperComponent
                 Node n = lastStep.getNode();
                 boolean isFwd = lastStep.isForward();
                 boolean targetsPredicate = FacetStep.PREDICATE.equals(lastStep.getTargetComponent());
-                labelMgr.register(label, n, (c, map) -> {
+                labelService.register(label, n, (c, map) -> {
                     String s = map.get(n);
                     c.setText(s + (!isFwd ? " -1" : "") + (targetsPredicate ? " # " : ""));
                 });
@@ -462,32 +463,90 @@ public class TableMapperComponent
     }
 
     public void refreshTable() {
+        Predicate<FacetPath> isVisible = toPredicateAbsentAsTrue(pathToVisibility);
+        TreeData<FacetPath> treeData = treeDataProvider.getTreeData();
+        Grid<Binding> sparqlGrid = buildGrid(dataSource, baseConcept, treeData, isVisible, labelService);
+        sparqlGridContainer.removeAll();
+        sparqlGridContainer.add(sparqlGrid);
+    }
 
+    public static Grid<Binding> buildGrid(
+            RdfDataSource dataSource, UnaryRelation baseConcept, TreeData<FacetPath> treeData,
+            Predicate<FacetPath> isVisible, LabelService<Node, String> labelService)
+    {
         Grid<Binding> sparqlGrid = new Grid<>();
         sparqlGrid.setPageSize(1000);
         sparqlGrid.setWidthFull();
         sparqlGrid.setColumnReorderingAllowed(true);
 
-        // QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(dataSource);
+        SetMultimap<FacetPath, Expr> constraintIndex = HashMultimap.create();
+        org.aksw.facete.v3.api.TreeData<FacetPath> treeProjection = TreeDataUtils.toFacete(treeData);
+        MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeProjection, constraintIndex, isVisible);
+        mappedQuery = new MappedQuery(mappedQuery.getTree(), QueryGenerationUtils.discardUnbound(mappedQuery.getQuery()), mappedQuery.getVarToPath());
 
+        // RelationUtils.createQuery(null);
+        // VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);
+        // VaadinSparqlUtils.configureGridFilter(sparqlGrid, filterRow, query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
+        SparqlGrid.setQueryForGridBinding(sparqlGrid, dataSource.asQef(), labelService, mappedQuery);
+        return sparqlGrid;
+    }
+
+    /** Returns a snapshot (a copy) of the current tree data */
+    public org.aksw.facete.v3.api.TreeData<FacetPath> getTreeDataSnapshot() {
+        org.aksw.facete.v3.api.TreeData<FacetPath> result = TreeDataUtils.toFacete(treeDataProvider.getTreeData())
+                .cloneTree();
+        return result;
+    }
+
+    public Map<FacetPath, Boolean> getPathVisibilitySnapshot() {
+        return new HashMap<>(pathToVisibility);
+    }
+
+    public static Predicate<FacetPath> toPredicateAbsentAsTrue(Map<FacetPath, Boolean> pathToVisibility) {
+        return path -> !Boolean.FALSE.equals(pathToVisibility.get(path));
+    }
+
+    // TODO Add "mergeState" method
+    public void setState(TableMapperState state) {
+        pathToVisibility.clear();
+        pathToVisibility.putAll(state.getPathToVisibility());
+
+        org.aksw.facete.v3.api.TreeData<FacetPath> src = state.getFacetTree();
+
+        TreeData<FacetPath> tgt = treeDataProvider.getTreeData();
+        tgt.clear();
+        tgt.addItems(src.getRootItems(), src::getChildren);
+    }
+
+    public TableMapperState getState() {
+        return new TableMapperState(getTreeDataSnapshot(), getPathVisibilitySnapshot());
+    }
+
+    // TODO How to abstract the sparql grid for reuse?
+    public static Grid<Binding> createSparqlGrid(
+            RdfDataSource dataSource,
+            UnaryRelation baseConcept,
+            TreeDataProvider<FacetPath> treeDataProvider,
+            Map<FacetPath, Boolean> pathToVisibility,
+            LabelService<Node, String> labelMgr
+    ) {
+        Grid<Binding> sparqlGrid = new Grid<>();
+        sparqlGrid.setPageSize(1000);
+        sparqlGrid.setWidthFull();
+        sparqlGrid.setColumnReorderingAllowed(true);
 
         SetMultimap<FacetPath, Expr> constraintIndex = HashMultimap.create();
-
         org.aksw.facete.v3.api.TreeData<FacetPath> treeProjection = TreeDataUtils.toFacete(treeDataProvider.getTreeData());
-
         MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeProjection, constraintIndex, path -> !Boolean.FALSE.equals(pathToVisibility.get(path)));
-
         mappedQuery = new MappedQuery(mappedQuery.getTree(), QueryGenerationUtils.discardUnbound(mappedQuery.getQuery()), mappedQuery.getVarToPath());
+        SparqlGrid.setQueryForGridBinding(sparqlGrid, dataSource.asQef(), labelMgr, mappedQuery);
+        return sparqlGrid;
 
 //        Query query =
 //        RelationUtils.createQuery(null);
         // VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);
         // VaadinSparqlUtils.configureGridFilter(sparqlGrid, filterRow, query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
-        SparqlGrid.setQueryForGridBinding(sparqlGrid, dataSource.asQef(), labelMgr, mappedQuery);
-
-        sparqlGridContainer.removeAll();
-        sparqlGridContainer.add(sparqlGrid);
-
+        // QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(dataSource);
     }
 }
 
