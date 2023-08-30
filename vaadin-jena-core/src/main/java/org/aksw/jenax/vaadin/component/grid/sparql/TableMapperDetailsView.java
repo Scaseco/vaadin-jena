@@ -378,7 +378,7 @@ public class TableMapperDetailsView
             // QueryExecutionFactoryQuery fnQef = QueryExecutionFactories.of(RdfDataEngines.of(DatasetFactory.empty()));
             // HeaderRow headerRow = functionsGrid.appendHeaderRow();
             // VaadinSparqlUtils.setQueryForGridBinding(functionsGrid, headerRow, qef, query);
-            functionsGrid.setDataProvider(VaadinSparqlUtils.createDataProvider(dataSource.asQef(), query));
+            functionsGrid.setDataProvider(VaadinSparqlUtils.createDataProvider(dataSource.asQef(), query, true));
             Var fnVar = Var.alloc("function");
             functionsGrid.addComponentColumn(binding -> {
 
@@ -430,7 +430,7 @@ public class TableMapperDetailsView
             // QueryExecutionFactoryQuery fnQef = QueryExecutionFactories.of(RdfDataEngines.of(DatasetFactory.empty()));
             // HeaderRow headerRow = functionsGrid.appendHeaderRow();
             // VaadinSparqlUtils.setQueryForGridBinding(functionsGrid, headerRow, qef, query);
-            virtualPropertiesGrid.setDataProvider(VaadinSparqlUtils.createDataProvider(QueryExecutionFactories.of(PropertyResolverImpl.virtualProperties), query));
+            virtualPropertiesGrid.setDataProvider(VaadinSparqlUtils.createDataProvider(QueryExecutionFactories.of(PropertyResolverImpl.virtualProperties), query, true));
             Var iriVar = Var.alloc("customIri");
             virtualPropertiesGrid.addComponentColumn(binding -> {
 

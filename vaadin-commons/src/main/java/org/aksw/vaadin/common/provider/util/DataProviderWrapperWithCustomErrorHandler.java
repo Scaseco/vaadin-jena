@@ -28,6 +28,8 @@ public class DataProviderWrapperWithCustomErrorHandler<T, F>
         this.customErrorHandler = Objects.requireNonNull(customErrorHandler, "Error handler must not be null");
     }
 
+    // TODO We may have to add a cache for size(query) such that if fetch fails it fills up missing data up to size
+
     @Override
     public int size(Query<T, F> t) {
         int result;

@@ -123,9 +123,14 @@ public class VaadinSparqlUtils {
     public static void setQueryForGridSolution(
             Grid<QuerySolution> grid,
             QueryExecutionFactoryQuery qef,
-            Query query) {
+            Query query,
+            Function<DataProvider<QuerySolution, Expr>, DataProvider<QuerySolution, Expr>> dataProviderDecorizer
+            ) {
         Relation relation = RelationUtils.fromQuery(query);
-        DataProvider<QuerySolution, Expr> dataProvider = new DataProviderSparqlSolution(relation, qef);
+        DataProvider<QuerySolution, Expr> dataProviderRaw = new DataProviderSparqlSolution(relation, qef);
+        DataProvider<QuerySolution, Expr> dataProvider = dataProviderDecorizer == null
+                ? dataProviderRaw
+                : dataProviderDecorizer.apply(dataProviderRaw);
 
         grid.setDataProvider(dataProvider);
         List<Var> vars = query.getProjectVars();
@@ -216,10 +221,10 @@ public class VaadinSparqlUtils {
         }
     }
 
-    public static DataProvider<Binding, Expr> createDataProvider(QueryExecutionFactoryQuery qef, Query query) {
+    public static DataProvider<Binding, Expr> createDataProvider(QueryExecutionFactoryQuery qef, Query query, boolean alwaysDistinct) {
         Relation relation = RelationUtils.fromQuery(query);
         DataProviderSparqlBinding coreDataProvider = new DataProviderSparqlBinding(relation, qef);
-        coreDataProvider.setAlwaysDistinct(true);
+        coreDataProvider.setAlwaysDistinct(alwaysDistinct);
 
         DataProvider<Binding, Expr> dataProvider = coreDataProvider
                 .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
@@ -252,7 +257,7 @@ public class VaadinSparqlUtils {
 //                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
 //                )));
 
-        DataProvider<Binding, Expr> dataProvider = createDataProvider(qef, query);
+        DataProvider<Binding, Expr> dataProvider = createDataProvider(qef, query, true);
         grid.setDataProvider(dataProvider);
         List<Var> vars = visibleColumns == null ? query.getProjectVars() : visibleColumns;
         grid.removeAllColumns();
@@ -290,11 +295,12 @@ public class VaadinSparqlUtils {
             Query query,
             Function<Var, SerializableFunction<Binding, Component>> varToRenderer) {
 
-        Relation relation = RelationUtils.fromQuery(query);
-        DataProvider<Binding, Expr> dataProvider = new DataProviderSparqlBinding(relation, qef)
-                .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
-                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
-                )));
+        // Relation relation = RelationUtils.fromQuery(query);
+//        DataProvider<Binding, Expr> dataProvider = new DataProviderSparqlBinding(relation, qef)
+//                .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
+//                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
+//                )));
+        DataProvider<Binding, Expr> dataProvider = createDataProvider(qef, query, false);
 
         grid.setDataProvider(dataProvider);
         // List<Var> vars = visibleColumns == null ? query.getProjectVars() : visibleColumns;

@@ -135,7 +135,6 @@ public abstract class DataProviderSparqlBase<T>
             baseQuery.setDistinct(true);
         }
 
-
         logger.debug("Computing resultset size for\n" + baseQuery);
 
         Range<Long> range = SparqlRx.fetchCountQuery(qef, baseQuery, null, null).blockingGet();
