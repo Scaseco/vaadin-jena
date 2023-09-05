@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.aksw.commons.rx.lookup.LookupService;
+import org.aksw.commons.util.obj.Enriched;
 import org.aksw.commons.util.range.CountInfo;
 import org.aksw.commons.util.range.RangeUtils;
 import org.aksw.jena_sparql_api.concepts.ConceptUtils;
@@ -33,7 +34,7 @@ import com.vaadin.flow.data.provider.Query;
 
 
 public class DataProviderNodeQuery
-    extends AbstractBackEndDataProvider<RDFNode, String> {
+    extends AbstractBackEndDataProvider<Enriched<RDFNode>, String> {
     private static final Logger logger = LoggerFactory.getLogger(DataProviderNodeQuery.class);
 
     private static final long serialVersionUID = 1L;
@@ -80,7 +81,7 @@ public class DataProviderNodeQuery
     }
 
     @Override
-    protected Stream<RDFNode> fetchFromBackEnd(Query<RDFNode, String> query) {
+    protected Stream<Enriched<RDFNode>> fetchFromBackEnd(Query<Enriched<RDFNode>, String> query) {
         System.out.println("fetchFromBackEnd: " + query);
         System.out.println("fetchFromBackEnd: " + query.getLimit());
         System.out.println("fetchFromBackEnd: " + query.getOffset());
@@ -123,7 +124,7 @@ public class DataProviderNodeQuery
         // logger.info
         System.err.println("GOT NODES " + (Sets.newHashSet(nodes).size() + " / " + nodes.size()) + " - " + nodes);
 
-        Map<Node, RDFNode> data = retriever.fetchMap(nodes);
+        Map<Node, Enriched<RDFNode>> data = retriever.fetchMap(nodes);
 
         Collection<RDFNode> result;
         if (false) {
@@ -139,10 +140,10 @@ public class DataProviderNodeQuery
         System.err.println("DataProviderNodeQuery - enriched: " + data.values().size());
 
         // return result.stream();
-        Stream<RDFNode> xresult = data.values().stream();
+        Stream<Enriched<RDFNode>> xresult = data.values().stream();
 
         if (true) {
-            List<RDFNode> list = xresult.collect(Collectors.toList());
+            List<Enriched<RDFNode>> list = xresult.collect(Collectors.toList());
             System.err.println("GOT NODES " + (Sets.newHashSet(list).size() + " / " + list.size()) + " - " + list);
             xresult = list.stream();
         }
@@ -151,7 +152,7 @@ public class DataProviderNodeQuery
     }
 
     @Override
-    protected int sizeInBackEnd(Query<RDFNode, String> query) {
+    protected int sizeInBackEnd(Query<Enriched<RDFNode>, String> query) {
         System.out.println("sizeInBackEnd: " + query);
         System.out.println("sizeInBackEnd: " + query.getLimit());
         System.out.println("sizeInBackEnd: " + query.getOffset());

@@ -10,8 +10,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.aksw.commons.rx.lookup.LookupService;
+import org.aksw.commons.util.obj.Enriched;
 import org.aksw.jena_sparql_api.concepts.Concept;
 import org.aksw.jena_sparql_api.lookup.LookupServiceSparqlConstructQuads;
+import org.aksw.jena_sparql_api.mapper.jpa.criteria.expr.VPath;
 import org.aksw.jena_sparql_api.rx.entity.engine.EntityQueryRx;
 import org.aksw.jena_sparql_api.rx.entity.model.EntityBaseQuery;
 import org.aksw.jena_sparql_api.rx.entity.model.EntityGraphFragment;
@@ -52,7 +54,7 @@ import com.google.common.collect.Multimaps;
 import io.reactivex.rxjava3.core.Flowable;
 
 public class DataRetriever
-    implements LookupService<Node, RDFNode>
+    implements LookupService<Node, Enriched<RDFNode>>
 {
     protected EntityClassifier entityClassifier; //  = new EntityClassifier(Arrays.asList(Vars.s));
 
@@ -62,7 +64,6 @@ public class DataRetriever
     /** The query execution factory on which to run the queries */
     // protected QueryExecutionFactoryQuery qef;
     protected RdfDataSource dataSource;
-
 
     public DataRetriever(RdfDataSource dataSource, EntityClassifier entityClassifier) {
         this.dataSource = dataSource;
@@ -74,13 +75,13 @@ public class DataRetriever
     }
 
     @Override
-    public Flowable<Entry<Node, RDFNode>> apply(Iterable<Node> nodes) {
+    public Flowable<Entry<Node, Enriched<RDFNode>>> apply(Iterable<Node> nodes) {
     // public Flowable<Entry<Node, RDFNode> apply(Iterable<Node> nodes) {
 
         // TODO Abstract as lookupservice in order to reuse partitioning
 
 
-        Map<Node, RDFNode> result = new LinkedHashMap<>();
+        Map<Node, Enriched<RDFNode>> result = new LinkedHashMap<>();
 
         EntityGraphFragment entityGraphFragment = entityClassifier.createGraphFragment();
 
@@ -127,7 +128,7 @@ public class DataRetriever
 
         Collection<Node> detectedClasses = new HashSet<>(entityToClasses.values());
 
-        System.out.println("Detected classes: " + detectedClasses);
+        System.err.println("Detected classes: " + detectedClasses);
 
         // .forEach(quad -> System.out.println(quad));
         // TODO Create a Multimap<Node, Node> entityToClasses
@@ -138,7 +139,7 @@ public class DataRetriever
         for (Entry<Node, Collection<Node>> e : classToEntities.asMap().entrySet()) {
             Node classification = e.getKey();
             Collection<Node> entities = e.getValue();
-            System.out.println("Entities: " + entities);
+            System.err.println("Entities: " + entities);
             NodeQuery nodeQuery = classToQuery.get(classification);
             if (nodeQuery != null) {
                 Var rootVar = Vars.s;
@@ -148,7 +149,7 @@ public class DataRetriever
                 query.setConstructTemplate(new Template(new QuadAcc(Arrays.asList(Quad.create(rootVar, Vars.x, Vars.y, Vars.z)))));
                 query.setQueryConstructType();
                 query.setQueryPattern(elt);
-                System.out.println(query);
+                System.err.println(query);
                 LookupService<Node, DatasetOneNg> ls = new LookupServiceSparqlConstructQuads(dataSource.asQef(), query)
                         .partition(30);
                 Map<Node, RDFNode> data = ls
@@ -159,10 +160,26 @@ public class DataRetriever
                             return r;
                         })
                         .fetchMap(entities);
-                result.putAll(data);
+
+                for (Entry<Node, RDFNode> f : data.entrySet()) {
+                    result.compute(f.getKey(), (k, v) -> {
+                        if (v == null) {
+                            v = Enriched.of(f.getValue());
+                        }
+
+                        v.getOrCreateInstance(Classification.class, Classification::new)
+                                .getClasses().add(classification);
+
+                        return v;
+                    });
+
+                    // EnrichedItem<RDFNode> item = Enirched f.getValue();
+
+                    // result.putAll(data);
+                }
                 // System.out.println("Data: " + data);
             } else {
-                System.out.println("No query for class: " + classification);
+                System.err.println("No query for class: " + classification);
             }
             // nodeQuery
         }
@@ -173,7 +190,8 @@ public class DataRetriever
                 // Used DatasetOneNg for consistency?
                 Model model = ModelFactory.createDefaultModel();
                 RDFNode rdfNode = model.asRDFNode(node);
-                result.put(node, rdfNode);
+                Enriched<RDFNode> item = Enriched.of(rdfNode, new Classification());
+                result.put(node, item);
             }
         }
 

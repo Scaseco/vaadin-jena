@@ -2,6 +2,7 @@ package org.aksw.vaadin.app.demo.view.shaclgrid;
 
 import java.util.function.Supplier;
 
+import org.aksw.commons.util.obj.Enriched;
 import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderNodeQuery;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
@@ -42,7 +43,7 @@ public class ShaclGridView
 
         DataProviderNodeQuery dataProvider = setup();
 
-        Grid<RDFNode> grid = new Grid<>();
+        Grid<Enriched<RDFNode>> grid = new Grid<>();
         VaadinShaclGridUtils.configureGrid(grid, dataProvider, labelService);
         grid.setDataProvider(dataProvider);
         // VaadinSparqlUtils.configureGridFilter(grid, filterRow, vars, var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));

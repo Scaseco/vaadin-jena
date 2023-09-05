@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import org.aksw.commons.collections.generator.Generator;
 import org.aksw.commons.util.direction.Direction;
+import org.aksw.commons.util.obj.Enriched;
 import org.aksw.facete.v3.api.FacetPathMapping;
 import org.aksw.facete.v3.api.TreeData;
 import org.aksw.facete.v4.impl.ElementGeneratorWorker;
@@ -35,7 +36,6 @@ import org.aksw.jenax.arq.util.node.NodeUtils;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
-import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.model.shacl.domain.ShNodeShape;
 import org.aksw.jenax.model.shacl.domain.ShPropertyShape;
 import org.aksw.jenax.path.core.FacetPath;
@@ -649,10 +649,10 @@ System.out.println(fpm.allocate(nq
             retriever.getClassToQuery().put(nodeShapeNode, nqq);
         }
 
-        DataProvider<RDFNode, String> dataProvider = new DataProviderNodeQuery(dataSource, conceptSupplier, retriever);
+        DataProvider<Enriched<RDFNode>, String> dataProvider = new DataProviderNodeQuery(dataSource, conceptSupplier, retriever);
 
-        com.vaadin.flow.data.provider.Query<RDFNode, String> q = new com.vaadin.flow.data.provider.Query<>();
-        List<RDFNode> list = dataProvider.fetch(q).collect(Collectors.toList());
+        com.vaadin.flow.data.provider.Query<Enriched<RDFNode>, String> q = new com.vaadin.flow.data.provider.Query<>();
+        List<Enriched<RDFNode>> list = dataProvider.fetch(q).collect(Collectors.toList());
         int itemCount = list.size();
         int size = dataProvider.size(q);
 

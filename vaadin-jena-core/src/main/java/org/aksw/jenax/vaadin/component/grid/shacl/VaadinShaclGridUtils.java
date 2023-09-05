@@ -12,7 +12,9 @@ import java.util.stream.Collectors;
 
 import org.aksw.commons.util.direction.Direction;
 import org.aksw.commons.util.io.out.OutputStreamUtils;
+import org.aksw.commons.util.obj.Enriched;
 import org.aksw.jena_sparql_api.algebra.expr.transform.ExprTransformVirtualBnodeUris;
+import org.aksw.jena_sparql_api.vaadin.data.provider.Classification;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderNodeQuery;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataRetriever;
 import org.aksw.jenax.arq.datashape.viewselector.EntityClassifier;
@@ -21,6 +23,10 @@ import org.aksw.jenax.arq.util.triple.GraphUtils;
 import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.model.shacl.domain.ShNodeShape;
+import org.aksw.jenax.model.shacl.template.domain.HasTemplate;
+import org.aksw.jenax.model.shacl.template.domain.ShaclTemplateTerms;
+import org.aksw.jenax.model.shacl.util.ShPebbleUtils;
+import org.aksw.jenax.model.shacl.util.ShTemplateRegistry;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
@@ -58,6 +64,23 @@ import com.vaadin.flow.component.html.Pre;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 public class VaadinShaclGridUtils {
+    /** Returns a mapping from classification to view to template */
+    public static ShTemplateRegistry loadTemplates(Model shaclTemplateModel) {
+        ShTemplateRegistry result = new ShTemplateRegistry();
+        List<ShNodeShape> nodeShapes = org.aksw.jenax.model.shacl.util.ShUtils.listNodeShapes(shaclTemplateModel);
+        for (ShNodeShape nodeShape : nodeShapes) {
+            Node nodeShapeNode = ExprTransformVirtualBnodeUris.bnodeToIri(nodeShape.asNode());
+            HasTemplate hasTemplate = nodeShape.as(HasTemplate.class);
+            String templateStr = hasTemplate.getTemplate(ShaclTemplateTerms.pebble);
+            if (templateStr != null) {
+                // Special case where the node shape has the 'template' attribute and acts itself as the view.
+                Function<RDFNode, ?> renderer = ShPebbleUtils.forRdfNode(templateStr);
+                result.getShapeToViews().put(nodeShapeNode, nodeShapeNode);
+                result.getViewToTemplate().put(nodeShapeNode, renderer);
+            }
+        }
+        return result;
+    }
 
     public static DataRetriever setupRetriever(RdfDataSource dataSource, Model shaclModel) {
         List<ShNodeShape> nodeShapes = org.aksw.jenax.model.shacl.util.ShUtils.listNodeShapes(shaclModel);
@@ -163,21 +186,21 @@ System.out.println(fpm.allocate(nq
 //        }
 
         return dataProvider;
-
     }
 
 
-    public static void configureGrid(Grid<RDFNode> grid, DataProviderNodeQuery dataProvider, LabelService<Node, String> labelService) {
+    //
+    public static void configureGrid(Grid<Enriched<RDFNode>> grid, DataProviderNodeQuery dataProvider, LabelService<Node, String> labelService) {
         Supplier<UnaryRelation> conceptSupplier = dataProvider.getConceptSupplier();
         UnaryRelation concept = conceptSupplier.get();
         Var var = concept.getVar();
         String varName = var.getName();
 
-        Column<RDFNode> column = grid.addComponentColumn(val -> {
-            Graph g = val.getModel().getGraph();
+        Column<Enriched<RDFNode>> column = grid.addComponentColumn(val -> {
+            Graph g = val.getItem().getModel().getGraph();
             Set<Node> allNodes = GraphUtils.streamNodes(g).collect(Collectors.toSet());
             // str = str.replace("\\n", "<br />");
-            Component head = VaadinLabelMgr.forHasText(labelService, new H3(), val.asNode());
+            Component head = VaadinLabelMgr.forHasText(labelService, new H3(), val.getItem().asNode());
 
             Component body = VaadinLabelMgr.forHasText(labelService, new Pre(), allNodes, map -> {
                 Graph h = GraphFactory.createDefaultGraph();
@@ -199,6 +222,9 @@ System.out.println(fpm.allocate(nq
             card.getThemeList().add("spacing-s");
             card.add(head);
             card.add(body);
+
+            card.add("Classes: " + val.getInstance(Classification.class));
+
             return card;
         });
 
