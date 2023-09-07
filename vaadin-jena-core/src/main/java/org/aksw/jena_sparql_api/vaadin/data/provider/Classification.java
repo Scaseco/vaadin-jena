@@ -1,5 +1,6 @@
 package org.aksw.jena_sparql_api.vaadin.data.provider;
 
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -7,6 +8,13 @@ import java.util.Set;
 import org.apache.jena.graph.Node;
 
 public class Classification {
+    private static final Classification EMPTY = new Classification(Collections.emptySet());
+
+    /** An immutable empty classification */
+    public static Classification empty() {
+        return EMPTY;
+    }
+
     protected Set<Node> classes;
 
     public Classification() {

@@ -2,9 +2,12 @@ package org.aksw.jenax.vaadin.component.grid.shacl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -47,6 +50,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
+import org.apache.jena.riot.out.NodeFmtLib;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.graph.GraphFactory;
@@ -55,10 +59,17 @@ import org.apache.jena.sparql.syntax.Element;
 import org.apache.jena.sparql.syntax.Template;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
+import com.google.common.collect.Streams;
+import com.google.common.graph.Traverser;
+import com.google.common.html.HtmlEscapers;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Pre;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -189,8 +200,134 @@ System.out.println(fpm.allocate(nq
     }
 
 
-    //
-    public static void configureGrid(Grid<Enriched<RDFNode>> grid, DataProviderNodeQuery dataProvider, LabelService<Node, String> labelService) {
+    public static String toString(RDFNode rdfNode, Map<Node, String> nodeToLabel) {
+        Graph graph = rdfNode.getModel().getGraph();
+        Graph h = GraphFactory.createDefaultGraph();
+        GraphUtils.stream(graph).forEach(t -> {
+            Triple x = Triple.create(
+                labelNode(t.getSubject(), nodeToLabel, NodeFactory::createLiteral),
+                labelNode(t.getPredicate(), nodeToLabel, NodeFactory::createURI),
+                labelNode(t.getObject(), nodeToLabel, NodeFactory::createLiteral));
+            h.add(x);
+        });
+        String str = OutputStreamUtils.toString(out -> RDFDataMgr.write(out, ModelFactory.createModelForGraph(h), RDFFormat.TRIG_PRETTY), StandardCharsets.UTF_8);
+        return str;
+    }
+
+    public static VerticalLayout renderCardOfRdfNode(RDFNode rdfNode, LabelService<Node, String> labelService) {
+        Graph g = rdfNode.getModel().getGraph();
+        Node node = rdfNode.asNode();
+        Set<Node> allNodes = GraphUtils.streamNodes(g).collect(Collectors.toSet());
+        // str = str.replace("\\n", "<br />");
+        Component head = VaadinLabelMgr.forHasText(labelService, new H3(), node);
+
+        Component body = VaadinLabelMgr.forHasText(labelService, new Pre(), allNodes, map -> {
+            String str = toString(rdfNode, map);
+            return str;
+        });
+
+        VerticalLayout card = new VerticalLayout();
+        card.setWidthFull();
+        card.addClassName("card");
+        card.setSpacing(false);
+        card.getThemeList().add("spacing-s");
+        card.add(head);
+        card.add(body);
+
+        return card;
+    }
+
+    /** */
+    public static void configureGrid(Grid<Enriched<RDFNode>> grid, DataProviderNodeQuery dataProvider, ShTemplateRegistry templates, LabelService<Node, String> labelService) {
+        Supplier<UnaryRelation> conceptSupplier = dataProvider.getConceptSupplier();
+        UnaryRelation concept = conceptSupplier.get();
+        Var var = concept.getVar();
+        String varName = var.getName();
+        Column<Enriched<RDFNode>> column = grid.addComponentColumn(val -> {
+            RDFNode rdfNode = val.getItem();
+            Classification classification = val.getInstanceOrDefault(Classification.class, Classification.empty());
+            Function<RDFNode, ?> templateRenderer = null;
+            outer: for (Node cls : classification.getClasses()) {
+                Collection<Node> views = templates.getShapeToViews().get(cls);
+                for (Node view : views) {
+                    templateRenderer = templates.getViewToTemplate().get(view);
+                    if (templateRenderer != null) {
+                        break outer;
+                    }
+                }
+            }
+            if (templateRenderer == null) {
+                templateRenderer = rn -> renderCardOfRdfNode(rn, labelService);
+            }
+            Object obj = templateRenderer.apply(rdfNode);
+            Component r;
+
+            if (obj instanceof Component) {
+                r = (Component)obj;
+            } else {
+                String htmlStr = Objects.toString(obj);
+                Document doc = Jsoup.parseBodyFragment(htmlStr);
+
+                // Extract <rdf-node> elements
+                List<org.jsoup.nodes.Element> rdfNodeElts = Streams.stream(Traverser.<org.jsoup.nodes.Element>forTree(org.jsoup.nodes.Element::children)
+                    .depthFirstPostOrder(doc.body()))
+                    // .peek(x -> System.out.println("Peeked: " + x.tagName()))
+                    .filter(x -> x.tag().normalName().equals("rdf-node"))
+                    .collect(Collectors.toList());
+
+                // Parse the nodes
+                Set<Node> nodes = new LinkedHashSet<>();
+                for (org.jsoup.nodes.Element x : rdfNodeElts) {
+                    String value = x.attr("value");
+                    Node node = value == null ? null : NodeUtils.parseNode(value);
+                    if (node != null) {
+                        nodes.add(node);
+                    }
+                }
+
+                Div div = new Div();
+                Html html = new Html(htmlStr);
+                div.add(html);
+                if (!nodes.isEmpty()) {
+                    labelService.register(div, nodes, (el, map) -> {
+                        // System.out.println("Label service invoked: " + map);
+                        Document clone = doc.clone();
+
+                        List<org.jsoup.nodes.Element> elts = Streams.stream(Traverser.<org.jsoup.nodes.Element>forTree(org.jsoup.nodes.Element::children)
+                                .depthFirstPostOrder(clone.body()))
+                                .filter(x -> x.tag().normalName().equals("rdf-node"))
+                                .collect(Collectors.toList());
+
+                        for (org.jsoup.nodes.Element x : elts) {
+                            String value = x.attr("value");
+                            Node node = value == null ? null : NodeUtils.parseNode(value);
+                            if (node != null) {
+                                String str = map.get(node);
+                                if (str != null) {
+                                    Document tmp = Jsoup.parseBodyFragment("<span>" + HtmlEscapers.htmlEscaper().escape(str) + "</span>");
+                                    x.replaceWith(tmp.body());
+                                }
+                            }
+                        }
+                        String newStr = clone.toString();
+                        el.removeAll();
+                        el.add(new Html(newStr));
+                    });
+                }
+                r = div;
+            }
+
+            // labelService.register(e, var, null)
+            // System.out.println("Number of children: " +  r.getChildren().count());
+            return r;
+        });
+        column.setKey(varName);
+    }
+
+    /**
+     * Basic rendering of a grid of RDF resources - just renders the turtle (but passes IRIs through the label service)
+     */
+    public static void configureGridBasic(Grid<Enriched<RDFNode>> grid, DataProviderNodeQuery dataProvider, LabelService<Node, String> labelService) {
         Supplier<UnaryRelation> conceptSupplier = dataProvider.getConceptSupplier();
         UnaryRelation concept = conceptSupplier.get();
         Var var = concept.getVar();
