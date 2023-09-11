@@ -126,8 +126,9 @@ public class VaadinSparqlUtils {
             Query query,
             Function<DataProvider<QuerySolution, Expr>, DataProvider<QuerySolution, Expr>> dataProviderDecorizer
             ) {
-        Relation relation = RelationUtils.fromQuery(query);
-        DataProvider<QuerySolution, Expr> dataProviderRaw = new DataProviderSparqlSolution(relation, qef);
+        Relation relation = RelationUtils.fromQuery(query); // Relations currently don't support a distinct flag - but they should
+        DataProviderSparqlSolution dataProviderRaw = new DataProviderSparqlSolution(relation, qef);
+        dataProviderRaw.setAlwaysDistinct(query.isDistinct());
         DataProvider<QuerySolution, Expr> dataProvider = dataProviderDecorizer == null
                 ? dataProviderRaw
                 : dataProviderDecorizer.apply(dataProviderRaw);
@@ -140,7 +141,7 @@ public class VaadinSparqlUtils {
         for (String varName : varNames) {
             Column<QuerySolution> column = grid.addColumn(qs -> {
                 RDFNode rdfNode = qs.get(varName);
-                Node node = rdfNode.asNode();
+                Node node = rdfNode == null ? null : rdfNode.asNode();
                 Object r;
                 if (node == null) {
                     r = null;

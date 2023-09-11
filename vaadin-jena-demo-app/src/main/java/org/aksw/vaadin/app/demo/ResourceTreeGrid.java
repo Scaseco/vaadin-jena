@@ -120,7 +120,7 @@ public class ResourceTreeGrid
 
         Model prefixes = RDFDataMgr.loadModel("rdf-prefixes/prefix.cc.2019-12-17.ttl");
         LookupService<Node, String> labelService =
-                LabelUtils.createLookupServiceForLabels(LabelUtils.getLabelLookupService(qef, RDFS.label, prefixes), prefixes, prefixes).cache();
+                LabelUtils.createLookupServiceForLabels(LabelUtils.getLabelLookupService(qef, RDFS.label, prefixes, 30), prefixes, prefixes).cache();
 
 
         TreeGrid<Path<Node>> treeGrid = ShaclTreeGrid.createShaclEditor(

@@ -475,7 +475,7 @@ public class TableMapperComponent
             Predicate<FacetPath> isVisible, LabelService<Node, String> labelService)
     {
         Grid<Binding> sparqlGrid = new Grid<>();
-        sparqlGrid.setPageSize(1000);
+        // sparqlGrid.setPageSize(1000);
         sparqlGrid.setWidthFull();
         sparqlGrid.setColumnReorderingAllowed(true);
 
@@ -531,7 +531,7 @@ public class TableMapperComponent
             LabelService<Node, String> labelMgr
     ) {
         Grid<Binding> sparqlGrid = new Grid<>();
-        sparqlGrid.setPageSize(1000);
+        // sparqlGrid.setPageSize(1000);
         sparqlGrid.setWidthFull();
         sparqlGrid.setColumnReorderingAllowed(true);
 

@@ -174,7 +174,7 @@ public class ResourceEditor
 
 
         VaadinLabelMgr<Node, String> labelService = new VaadinLabelMgr<>(LabelUtils.getLabelLookupService(
-                qef, DCTerms.description, DefaultPrefixes.get()));
+                qef, DCTerms.description, DefaultPrefixes.get(), 30));
 
         // labelMgr =
 

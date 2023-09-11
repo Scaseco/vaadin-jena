@@ -35,7 +35,7 @@ public class ConfigComponentDemoVaadin {
         QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(dataSource); // QueryExecutionFactories.of(dataSource);
         Property labelProperty = RDFS.label;// DCTerms.description;
 
-        LookupService<Node, String> ls1 = LabelUtils.getLabelLookupService(qef, labelProperty, DefaultPrefixes.get());
+        LookupService<Node, String> ls1 = LabelUtils.getLabelLookupService(qef, labelProperty, DefaultPrefixes.get(), 30);
         LookupService<Node, String> ls2 = keys -> Flowable.fromIterable(keys).map(k -> Map.entry(k, Objects.toString(k)));
 
 

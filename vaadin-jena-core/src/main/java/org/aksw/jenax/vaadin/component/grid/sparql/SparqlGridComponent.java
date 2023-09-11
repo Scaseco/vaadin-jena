@@ -32,7 +32,12 @@ public class SparqlGridComponent extends VerticalLayout {
     protected TreeDataProvider<FacetPath> treeDataProvider = new TreeDataProvider<>(new TreeData<>());
     protected Map<FacetPath, Boolean> pathToVisibility = new HashMap<>();
 
+    /** Every reset creates a new instance of the grid! */
+    protected Grid<Binding> sparqlGrid = new Grid<>();
+
     protected Button settingsBtn;
+
+    protected int pageSize = 50;
 
     // TableMapperComponent tm = new TableMapperComponent();
 
@@ -62,6 +67,13 @@ public class SparqlGridComponent extends VerticalLayout {
 //        tableSettingsStyle.set("top", "0");
 //        tableSettingsStyle.set("right", "0");
 
+    }
+
+    public void setPageSize(int pageSize) {
+        this.pageSize = pageSize;
+        if (sparqlGrid != null) {
+            sparqlGrid.setPageSize(pageSize);
+        }
     }
 
     public SparqlGridComponent(RdfDataSource dataSource, UnaryRelation baseConcept,
@@ -117,8 +129,7 @@ public class SparqlGridComponent extends VerticalLayout {
     public void resetGrid() {
         this.removeAll();
 
-        Grid<Binding> sparqlGrid = new Grid<>();
-        sparqlGrid.setPageSize(1000);
+        sparqlGrid.setPageSize(pageSize);
         sparqlGrid.setWidthFull();
 
         SetMultimap<FacetPath, Expr> constraintIndex = HashMultimap.create();

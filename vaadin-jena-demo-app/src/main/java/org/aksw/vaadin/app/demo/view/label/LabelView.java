@@ -38,7 +38,7 @@ public class LabelView
         QueryExecutionFactory qef = new QueryExecutionFactoryDataset(dataset); // RDFConnection.connect(dataset);
 
 
-        labelService = new VaadinLabelMgr<>(LabelUtils.getLabelLookupService(qef, DCTerms.description, DefaultPrefixes.get()));
+        labelService = new VaadinLabelMgr<>(LabelUtils.getLabelLookupService(qef, DCTerms.description, DefaultPrefixes.get(), 30));
         for (Node node : subjects) {
             add(labelService.forHasText(new H1("Welcome"), node));
         }
