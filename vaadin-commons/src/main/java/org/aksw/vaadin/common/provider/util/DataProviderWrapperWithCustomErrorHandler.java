@@ -8,12 +8,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.flow.data.provider.DataProvider;
-import com.vaadin.flow.data.provider.DataProviderWrapper;
 import com.vaadin.flow.data.provider.Query;
 
 
 public class DataProviderWrapperWithCustomErrorHandler<T, F>
-    extends DataProviderWrapper<T, F, F>
+    extends DataProviderWrapperBase<T, F, F>
 {
     private static final Logger logger = LoggerFactory.getLogger(DataProviderWrapperWithCustomErrorHandler.class);
 
@@ -49,6 +48,7 @@ public class DataProviderWrapperWithCustomErrorHandler<T, F>
         try {
             result = super.fetch(t);
         } catch (Exception e) {
+            logger.warn("An unexpected exception was raised:", e);
             customErrorHandler.accept(e);
             result = Stream.empty();
         }

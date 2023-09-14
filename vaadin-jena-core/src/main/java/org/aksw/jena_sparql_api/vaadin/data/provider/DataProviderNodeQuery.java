@@ -83,8 +83,8 @@ public class DataProviderNodeQuery
     @Override
     protected Stream<Enriched<RDFNode>> fetchFromBackEnd(Query<Enriched<RDFNode>, String> query) {
         System.out.println("fetchFromBackEnd: " + query);
-        System.out.println("fetchFromBackEnd: " + query.getLimit());
-        System.out.println("fetchFromBackEnd: " + query.getOffset());
+        System.out.println("fetchFromBackEnd limit: " + query.getLimit());
+        System.out.println("fetchFromBackEnd offset: " + query.getOffset());
 
 
         UnaryRelation concept = conceptSupplier.get();
@@ -153,9 +153,9 @@ public class DataProviderNodeQuery
 
     @Override
     protected int sizeInBackEnd(Query<Enriched<RDFNode>, String> query) {
-        System.out.println("sizeInBackEnd: " + query);
-        System.out.println("sizeInBackEnd: " + query.getLimit());
-        System.out.println("sizeInBackEnd: " + query.getOffset());
+        System.out.println("sizeInBackEnd - query: " + query);
+        System.out.println("sizeInBackEnd - limit: " + query.getLimit());
+        System.out.println("sizeInBackEnd - offset: " + query.getOffset());
 
         UnaryRelation concept = conceptSupplier.get();
         org.apache.jena.query.Query sparqlQuery = concept.asQuery();

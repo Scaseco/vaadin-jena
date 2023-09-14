@@ -29,6 +29,7 @@ import com.vaadin.flow.data.provider.SortDirection;
 import io.reactivex.rxjava3.core.Flowable;
 
 public abstract class DataProviderSparqlBase<T>
+        // implements Unwrappable, Delegated<DataProvider<T, Expr>>
         extends AbstractBackEndDataProvider<T, Expr> {
     private static final Logger logger = LoggerFactory.getLogger(DataProviderSparqlBase.class);
 

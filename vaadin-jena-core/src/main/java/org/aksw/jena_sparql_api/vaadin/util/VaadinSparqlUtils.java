@@ -11,6 +11,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.aksw.commons.util.delegate.Unwrappable;
 import org.aksw.commons.util.obj.ObjectUtils;
 import org.aksw.jena_sparql_api.concepts.RelationUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
@@ -126,9 +127,11 @@ public class VaadinSparqlUtils {
             Query query,
             Function<DataProvider<QuerySolution, Expr>, DataProvider<QuerySolution, Expr>> dataProviderDecorizer
             ) {
-        Relation relation = RelationUtils.fromQuery(query); // Relations currently don't support a distinct flag - but they should
-        DataProviderSparqlSolution dataProviderRaw = new DataProviderSparqlSolution(relation, qef);
-        dataProviderRaw.setAlwaysDistinct(query.isDistinct());
+        // Relation relation = RelationUtils.fromQuery(query); // Relations currently don't support a distinct flag - but they should
+        // DataProviderSparqlSolution dataProviderRaw = new DataProviderSparqlSolution(relation, qef);
+        DataProvider<QuerySolution, Expr> dataProviderRaw = createDataProviderQs(qef, query, query.isDistinct());
+
+        // dataProviderRaw.setAlwaysDistinct(query.isDistinct());
         DataProvider<QuerySolution, Expr> dataProvider = dataProviderDecorizer == null
                 ? dataProviderRaw
                 : dataProviderDecorizer.apply(dataProviderRaw);
@@ -228,6 +231,18 @@ public class VaadinSparqlUtils {
         coreDataProvider.setAlwaysDistinct(alwaysDistinct);
 
         DataProvider<Binding, Expr> dataProvider = coreDataProvider
+                .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
+                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
+                )));
+        return dataProvider;
+    }
+
+    public static DataProvider<QuerySolution, Expr> createDataProviderQs(QueryExecutionFactoryQuery qef, Query query, boolean alwaysDistinct) {
+        Relation relation = RelationUtils.fromQuery(query);
+        DataProviderSparqlSolution coreDataProvider = new DataProviderSparqlSolution(relation, qef);
+        coreDataProvider.setAlwaysDistinct(alwaysDistinct);
+
+        DataProvider<QuerySolution, Expr> dataProvider = coreDataProvider
                 .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
                         Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
                 )));
@@ -355,7 +370,6 @@ public class VaadinSparqlUtils {
                 }
             }
         }
-
         return result;
     }
 
@@ -368,8 +382,11 @@ public class VaadinSparqlUtils {
 
     public static void registerGridFilters(Grid<?> grid, Map<Var, ? extends HasValue<?, String>> filterFields, Function<String, Expr> strToExpr) {
         DataProvider<?, ?> rawDataProvider = grid.getDataProvider();
-        if (rawDataProvider instanceof ConfigurableFilterDataProvider) {
-            ConfigurableFilterDataProvider<?, Expr, Expr> dataProvider = (ConfigurableFilterDataProvider<?, Expr, Expr>)rawDataProvider;
+        ConfigurableFilterDataProvider<?, Expr, Expr> dataProvider = Unwrappable.unwrap(rawDataProvider, ConfigurableFilterDataProvider.class, true).orElse(null);
+
+        // if (rawDataProvider instanceof ConfigurableFilterDataProvider) {
+        if (dataProvider != null) {
+            // ConfigurableFilterDataProvider<?, Expr, Expr> dataProvider = (ConfigurableFilterDataProvider<?, Expr, Expr>)rawDataProvider;
             List<Expr> exprs = filterFields.entrySet().stream()
                 .flatMap(e -> {
                     String str = e.getValue().getValue();
