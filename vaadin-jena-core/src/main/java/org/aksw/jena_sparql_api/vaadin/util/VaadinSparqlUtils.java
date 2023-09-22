@@ -123,6 +123,7 @@ public class VaadinSparqlUtils {
 
     public static void setQueryForGridSolution(
             Grid<QuerySolution> grid,
+            HeaderRow headerRow,
             QueryExecutionFactoryQuery qef,
             Query query,
             Function<DataProvider<QuerySolution, Expr>, DataProvider<QuerySolution, Expr>> dataProviderDecorizer
@@ -157,7 +158,8 @@ public class VaadinSparqlUtils {
 //                    r = node.toString();
 //                }
                 return r;
-            }).setHeader(varName);
+            }); //.setHeader(varName);
+            headerRow.getCell(column).setText(varName);
 
             column.setKey(varName);
             column.setResizable(true);
@@ -339,6 +341,12 @@ public class VaadinSparqlUtils {
     }
 
 
+    public static Map<Var, TextField> configureGridFilter(
+            Grid<?> grid, HeaderRow filterRow, Collection<Var> vars) {
+        return configureGridFilter(grid, filterRow, vars, var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
+    }
+
+    /** Must be called AFTER columns have been added. */
     public static Map<Var, TextField> configureGridFilter(
             Grid<?> grid, HeaderRow filterRow, Collection<Var> vars, Function<Var, Function<String, Expr>> varToStrToExpr) {
         // HeaderRow filterRow = grid.appendHeaderRow();

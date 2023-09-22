@@ -394,7 +394,6 @@ public class TableMapperComponent
             detailsView.refresh();
         });
 
-
         propertyTreeGrid.setWidthFull();
         detailsView.setWidthFull();
         layout.addToPrimary(propertyTreeGrid);
@@ -460,6 +459,14 @@ public class TableMapperComponent
                 }
             }
         });
+
+        propertyTreeGrid.select(rootPath);
+        detailsView.setActivePath(rootPath);
+        detailsView.refresh();
+    }
+
+    public TreeGrid<FacetPath> getPropertyTreeGrid() {
+        return propertyTreeGrid;
     }
 
     public void refreshTable() {

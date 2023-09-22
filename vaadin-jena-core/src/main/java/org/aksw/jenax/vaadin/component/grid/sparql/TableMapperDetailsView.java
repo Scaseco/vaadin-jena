@@ -297,17 +297,20 @@ public class TableMapperDetailsView
         entityOffsetSlider = createSlider("Entity Limit", 0, 9, 9, 0);
         entityLimitSlider = createSlider("Entity Offset", 0, 9, 9, 0);
 
-        samplerLayout.add(scanOffsetSlider);
-        samplerLayout.add(scanLimitSlider);
+        if (false) {
+            samplerLayout.add(scanOffsetSlider);
+            samplerLayout.add(scanLimitSlider);
+
+            Button testSamplerBtn = new Button("test");
+            testSamplerBtn.addClickListener(ev -> {
+                NotificationUtils.error("" + getSampleRange());
+            });
+            samplerLayout.add(testSamplerBtn);
+            predicatesLayout.add(samplerLayout);
+        }
 //        samplerLayout.add(entityOffsetSlider);
 //        samplerLayout.add(entityLimitSlider);
 
-        Button testSamplerBtn = new Button("test");
-        testSamplerBtn.addClickListener(ev -> {
-            NotificationUtils.error("" + getSampleRange());
-        });
-        samplerLayout.add(testSamplerBtn);
-        predicatesLayout.add(samplerLayout);
 
 
 
