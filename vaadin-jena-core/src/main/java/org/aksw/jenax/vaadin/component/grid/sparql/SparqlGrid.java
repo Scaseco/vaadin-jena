@@ -29,6 +29,7 @@ import org.aksw.jenax.treequery2.api.ScopedFacetPath;
 import org.aksw.jenax.vaadin.label.LabelMgr;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
+import org.aksw.vaadin.common.provider.util.DataProviderWrapperBase;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.Query;
 import org.apache.jena.riot.out.NodeFmtLib;
@@ -157,12 +158,27 @@ public class SparqlGrid {
         DataProviderSparqlBinding coreDataProvider = new DataProviderSparqlBinding(relation, qef);
         coreDataProvider.setAlwaysDistinct(true);
 
-        DataProvider<Binding, Expr> dataProvider = coreDataProvider
+        DataProvider<Binding, Expr> filteredDataProvider = coreDataProvider
                 .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
                         Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
                 )));
 
-        grid.setDataProvider(dataProvider);
+        // Somewhat hacky: Use our wrapper to expose the
+        // DataProviderSparqlBinding as the delegate, thereby bypassing the
+        // ConfigurableFilterDataProvider
+        DataProvider<Binding, Expr> unwrappableDataProvider = new DataProviderWrapperBase<>(filteredDataProvider) {
+            @Override
+            protected Expr getFilter(com.vaadin.flow.data.provider.Query<Binding, Expr> query) {
+                return query.getFilter().orElse(null);
+            }
+
+            public com.vaadin.flow.data.provider.DataProvider<Binding,Expr> delegate() {
+                return coreDataProvider;
+            }
+        };
+
+
+        grid.setDataProvider(unwrappableDataProvider);
         // List<Var> vars = visibleColumns == null ? query.getProjectVars() : visibleColumns;
     }
 

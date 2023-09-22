@@ -9,6 +9,12 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 
 public class ConfirmDialogUtils {
+    public static ConfirmDialog info(String header, String text, String confirmText) {
+        ConfirmDialog result = confirmDialog(header, text,
+                confirmText == null ? "OK" : confirmText, null, null, null);
+        return result;
+    }
+
     /**
      * Create a static confirmDialog with a preconfigured immutable text message.
      * Signature compatible with ConfirmDialog of vaadin pro.
@@ -26,9 +32,19 @@ public class ConfirmDialogUtils {
         ConfirmDialog result = ConfirmDialog
             .create()
             .withCaption(header)
-            .withMessage(textArea)
-            .withOkButton(() -> confirmListener.accept(null), ButtonOption.focus(), ButtonOption.caption(confirmText), ButtonOption.closeOnClick(true))
-            .withCancelButton(() -> { if (cancelListener != null) { cancelListener.accept(null); } }, ButtonOption.caption(cancelText), ButtonOption.closeOnClick(true));
+            .withMessage(textArea);
+
+        if (confirmText != null) {
+            result = result.withOkButton(
+                () -> { if (confirmListener != null) { confirmListener.accept(null); } },
+                ButtonOption.focus(), ButtonOption.caption(confirmText), ButtonOption.closeOnClick(true));
+        }
+
+        if (cancelText != null) {
+            result = result.withCancelButton(
+                () -> { if (cancelListener != null) { cancelListener.accept(null); } },
+                ButtonOption.caption(cancelText), ButtonOption.closeOnClick(true));
+        }
 
         return result;
     }

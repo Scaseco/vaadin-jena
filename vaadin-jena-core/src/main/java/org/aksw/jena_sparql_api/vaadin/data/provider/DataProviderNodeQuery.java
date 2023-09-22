@@ -82,9 +82,9 @@ public class DataProviderNodeQuery
 
     @Override
     protected Stream<Enriched<RDFNode>> fetchFromBackEnd(Query<Enriched<RDFNode>, String> query) {
-        System.out.println("fetchFromBackEnd: " + query);
-        System.out.println("fetchFromBackEnd limit: " + query.getLimit());
-        System.out.println("fetchFromBackEnd offset: " + query.getOffset());
+//        System.out.println("fetchFromBackEnd: " + query);
+//        System.out.println("fetchFromBackEnd limit: " + query.getLimit());
+//        System.out.println("fetchFromBackEnd offset: " + query.getOffset());
 
 
         UnaryRelation concept = conceptSupplier.get();

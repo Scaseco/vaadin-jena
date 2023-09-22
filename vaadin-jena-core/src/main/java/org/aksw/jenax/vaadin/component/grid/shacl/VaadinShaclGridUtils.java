@@ -104,68 +104,6 @@ public class VaadinShaclGridUtils {
             EntityClassifier.registerNodeShape(entityClassifier, nodeShape);
         }
 
-        RelationQuery rq = RelationQuery.of(Vars.s); // RelationQuery.of(ConceptUtils.createSubjectConcept());
-        System.out.println("Roots:" +  rq.roots());
-        NodeQuery tgtNode = rq.target().resolve(FacetPath.newAbsolutePath().resolve(FacetStep.fwd(RDF.type.asNode())).resolve(FacetStep.fwd(RDFS.label.asNode())));
-
-        System.out.println(tgtNode);
-        for (Entry<FacetStep, RelationQuery> child : rq.target().children().entrySet()) {
-            System.out.println(child);
-        }
-
-        NodeQuery tgtNode2 = rq.target().resolve(FacetPath.newAbsolutePath().resolve(FacetStep.fwd(RDF.type.asNode())).resolve(FacetStep.fwd(RDFS.label.asNode())));
-        tgtNode2.limit(10l);
-
-        NodeQuery o = tgtNode2.resolve(FacetPath.newRelativePath().resolve(FacetStep.fwd(NodeUtils.ANY_IRI)));
-        NodeQuery p = tgtNode2.resolve(FacetPath.newRelativePath().resolve(FacetStep.of(NodeUtils.ANY_IRI, Direction.FORWARD, null, FacetStep.PREDICATE)));
-
-        NodeQuery x = p.fwd("urn:foo").fwd("urn:bar");
-
-        p.limit(100l);
-
-        // Both nodes should be backed by the same relation
-        System.out.println("o limit: " + o.limit());
-
-        FacetPath ppath = p.getFacetPath();
-        System.out.println("p path: " + ppath);
-        System.out.println("x path: " + x.getFacetPath());
-
-        System.out.println("p relation: " + p.relationQuery().getRelation());
-
-        Var rootVar = Var.alloc("root");
-        NodeQuery nq = rq.roots().get(0);
-
-        nq
-          .fwd("urn:p1_1")
-              .bwd("urn:test").limit(15l).sortAsc().sortNone()
-                  // .orderBy().fwd("urn:orderProperty").asc() // Not yet supported
-                  // .constraints().fwd(NodeUtils.ANY_IRI)
-                  .constraints().fwd("urn:constraint").enterConstraints().eq(RDFS.seeAlso).activate().leaveConstraints().getRoot()
-              .getRoot()
-              .fwd("urn:1_2").limit(30l).sortAsc(); //.orderBy().fwd(RDFS.comment.asNode()).asc();
-          ;
-
-
-          org.aksw.jenax.treequery2.api.FacetPathMapping fpm = new FacetPathMappingImpl();
-System.out.println(fpm.allocate(nq
-          .fwd("urn:p1_1")
-              .bwd("urn:p2_1").getFacetPath()));
-
-        // RelationQuery rrq = nq.relationQuery();
-        // NodeQuery target = nq.fwd("urn:1_2");
-        NodeQuery target = nq;
-        // NodeQuery target = nq.fwd("urn:1_2");
-
-        RelationQuery rrq = target.relationQuery();
-        Element elt = new ElementGeneratorLateral().createElement(rrq);
-
-        Query query = new Query();
-        query.setConstructTemplate(new Template(new QuadAcc(Arrays.asList(Quad.create(rootVar, Vars.x, Vars.y, Vars.z)))));
-        query.setQueryConstructType();
-        query.setQueryPattern(elt);
-
-        System.out.println(query);
-
 
         DataRetriever retriever = new DataRetriever(dataSource, entityClassifier);
 
@@ -176,7 +114,6 @@ System.out.println(fpm.allocate(nq
                 nodeShapeNode = ExprTransformVirtualBnodeUris.bnodeToIri(nodeShapeNode);
             }
 
-
             // NodeQuery nq = NodeQueryImpl.newRoot();
             NodeQuery nqq = NodeQueryImpl.newRoot();
             ElementGeneratorLateral.toNodeQuery(nqq, nodeShape);
@@ -184,6 +121,70 @@ System.out.println(fpm.allocate(nq
         }
 
         return retriever;
+
+
+//        RelationQuery rq = RelationQuery.of(Vars.s); // RelationQuery.of(ConceptUtils.createSubjectConcept());
+//        System.out.println("Roots:" +  rq.roots());
+//        NodeQuery tgtNode = rq.target().resolve(FacetPath.newAbsolutePath().resolve(FacetStep.fwd(RDF.type.asNode())).resolve(FacetStep.fwd(RDFS.label.asNode())));
+//
+//        System.out.println(tgtNode);
+//        for (Entry<FacetStep, RelationQuery> child : rq.target().children().entrySet()) {
+//            System.out.println(child);
+//        }
+//
+//        NodeQuery tgtNode2 = rq.target().resolve(FacetPath.newAbsolutePath().resolve(FacetStep.fwd(RDF.type.asNode())).resolve(FacetStep.fwd(RDFS.label.asNode())));
+//        tgtNode2.limit(10l);
+//
+//        NodeQuery o = tgtNode2.resolve(FacetPath.newRelativePath().resolve(FacetStep.fwd(NodeUtils.ANY_IRI)));
+//        NodeQuery p = tgtNode2.resolve(FacetPath.newRelativePath().resolve(FacetStep.of(NodeUtils.ANY_IRI, Direction.FORWARD, null, FacetStep.PREDICATE)));
+//
+//        NodeQuery x = p.fwd("urn:foo").fwd("urn:bar");
+//
+//        p.limit(100l);
+//
+//        // Both nodes should be backed by the same relation
+//        System.out.println("o limit: " + o.limit());
+//
+//        FacetPath ppath = p.getFacetPath();
+//        System.out.println("p path: " + ppath);
+//        System.out.println("x path: " + x.getFacetPath());
+//
+//        System.out.println("p relation: " + p.relationQuery().getRelation());
+//
+//        Var rootVar = Var.alloc("root");
+//        NodeQuery nq = rq.roots().get(0);
+//
+//        nq
+//          .fwd("urn:p1_1")
+//              .bwd("urn:test").limit(15l).sortAsc().sortNone()
+//                  // .orderBy().fwd("urn:orderProperty").asc() // Not yet supported
+//                  // .constraints().fwd(NodeUtils.ANY_IRI)
+//                  .constraints().fwd("urn:constraint").enterConstraints().eq(RDFS.seeAlso).activate().leaveConstraints().getRoot()
+//              .getRoot()
+//              .fwd("urn:1_2").limit(30l).sortAsc(); //.orderBy().fwd(RDFS.comment.asNode()).asc();
+//          ;
+//
+//
+//          org.aksw.jenax.treequery2.api.FacetPathMapping fpm = new FacetPathMappingImpl();
+//System.out.println(fpm.allocate(nq
+//          .fwd("urn:p1_1")
+//              .bwd("urn:p2_1").getFacetPath()));
+//
+//        // RelationQuery rrq = nq.relationQuery();
+//        // NodeQuery target = nq.fwd("urn:1_2");
+//        NodeQuery target = nq;
+//        // NodeQuery target = nq.fwd("urn:1_2");
+//
+//        RelationQuery rrq = target.relationQuery();
+//        Element elt = new ElementGeneratorLateral().createElement(rrq);
+//
+//        Query query = new Query();
+//        query.setConstructTemplate(new Template(new QuadAcc(Arrays.asList(Quad.create(rootVar, Vars.x, Vars.y, Vars.z)))));
+//        query.setQueryConstructType();
+//        query.setQueryPattern(elt);
+//
+//        System.out.println(query);
+
     }
 
     public static DataProviderNodeQuery fromShacl(RdfDataSource dataSource, Supplier<UnaryRelation> conceptSupplier, Model shaclModel) {
