@@ -396,7 +396,7 @@ public class VaadinSparqlUtils {
                     result.put(var, tf);
                     tf.addValueChangeListener(event -> {
                         // if (grid.getDataProvider() instanceof InMemoryDataProvider) {
-                            registerGridFilters(grid, result, strToExpr);
+                            registerGridFilters(grid, result, varToStrToExpr);
                             grid.getDataProvider().refreshAll();
                         // }
                     });
@@ -420,7 +420,7 @@ public class VaadinSparqlUtils {
         return result;
     }
 
-    public static void registerGridFilters(Grid<?> grid, Map<Var, ? extends HasValue<?, String>> filterFields, Function<String, Expr> strToExpr) {
+    public static void registerGridFilters(Grid<?> grid, Map<Var, ? extends HasValue<?, String>> filterFields, Function<Var, Function<String, Expr>> varToStrToExpr) {
         DataProvider<?, ?> rawDataProvider = grid.getDataProvider();
         ConfigurableFilterDataProvider<?, Expr, Expr> dataProvider = Unwrappable.unwrap(rawDataProvider, ConfigurableFilterDataProvider.class, true).orElse(null);
 
@@ -429,7 +429,9 @@ public class VaadinSparqlUtils {
             // ConfigurableFilterDataProvider<?, Expr, Expr> dataProvider = (ConfigurableFilterDataProvider<?, Expr, Expr>)rawDataProvider;
             List<Expr> exprs = filterFields.entrySet().stream()
                 .flatMap(e -> {
+                    Var var = e.getKey();
                     String str = e.getValue().getValue();
+                    Function<String, Expr> strToExpr = varToStrToExpr.apply(var);
                     Expr expr = strToExpr.apply(str);
                     Stream<Expr> r = expr == null ? Stream.empty() : Stream.of(expr);
 
