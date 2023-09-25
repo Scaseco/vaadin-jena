@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.aksw.scaseco.vaadin</groupId>
+	<artifactId>vaadin-jena-bom</artifactId>
+	<version>4.9.0-1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<!-- <name>Jena SPARQL API - Vaadin - Parent</name> -->
+	<!-- <parent> <groupId>org.aksw.jena-sparql-api</groupId>
+	<artifactId>jena-sparql-api-parent</artifactId> 
+		<version>4.2.0-1-SNAPSHOT</version> </parent> -->
+	<properties>
+		<vaadin.version>14.10.1</vaadin.version>
+		<spring-boot.version>2.3.3.RELEASE</spring-boot.version>
+		<jackson.version>2.10.3</jackson.version>
+		<jenax.version>4.9.0-1-SNAPSHOT</jenax.version>
+		<aksw-commons.version>0.9.7-SNAPSHOT</aksw-commons.version>
+		<!-- <facete3.version>1.2.0-SNAPSHOT</facete3.version> -->
+		<slf4j.version>1.8.0-beta4</slf4j.version>
+		<log4j.version>2.17.2</log4j.version>
+		<maven.compiler.release>11</maven.compiler.release>
+		<file.encoding>UTF-8</file.encoding>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<gpg.keyname>AKSW</gpg.keyname>
+	</properties>
+	<modules>
+		<module>..</module>
+	</modules>
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.8.1</version>
+					<configuration>
+						<!-- <source>${maven.compiler.source}</source>
+						<target>${maven.compiler.target}</target> -->
+						<release>${maven.compiler.release}</release>
+						<encoding>${project.build.sourceEncoding}</encoding>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-shade-plugin</artifactId>
+					<version>2.4.3</version>
+					<executions>
+						<!-- Run shade goal on package phase -->
+						<execution>
+							<phase>package</phase>
+							<goals>
+								<goal>shade</goal>
+							</goals>
+							<configuration>
+								<!-- TODO Shading is currently needed for the
+								debian packages, which 
+									is slow and causes huge deployments -->
+								<!-- The deb packaging should be modified to
+								work similar to the 
+									dockerfile maven plugin: -->
+								<!-- Use the resource plugin to copy deps to a
+								lib folder and adjust 
+									the bash scripts -->
+								<shadedArtifactAttached>true</shadedArtifactAttached>
+								<shadedClassifierName>jar-with-dependencies</shadedClassifierName>
+								<filters>
+									<filter>
+										<artifact>*:*</artifact>
+										<excludes>
+											<exclude>META-INF/*.SF</exclude>
+											<exclude>META-INF/*.DSA</exclude>
+											<exclude>META-INF/*.RSA</exclude>
+										</excludes>
+									</filter>
+								</filters>
+								<transformers>
+									<transformer
+										implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+									<!-- add Main-Class to manifest file -->
+									<!-- <transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"> -->
+									<!--
+									<mainClass>com.mkyong.core.utils.App</mainClass> -->
+									<!-- </transformer> -->
+								</transformers>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.aksw.scaseco.vaadin</groupId>
+				<artifactId>vaadin-jena-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.aksw.scaseco.vaadin</groupId>
+				<artifactId>vaadin-jena-rdf-term-editor</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.aksw.scaseco.vaadin</groupId>
+				<artifactId>vaadin-jena-shacl-editor</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.claspina</groupId>
+				<artifactId>confirm-dialog</artifactId>
+				<version>2.0.0</version>
+			</dependency>
+			<!-- jackson version fixes -->
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-core</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-annotations</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<!-- commons-lang3 version fixes -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-lang3</artifactId>
+				<version>3.12.0</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-slf4j18-impl</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.vaadin.gatanaso</groupId>
+				<artifactId>multiselect-combo-box-flow</artifactId>
+				<version>3.0.2</version>
+			</dependency>
+			<dependency>
+				<groupId>org.aksw.scaseco.vaadin</groupId>
+				<artifactId>vaadin-commons</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.aksw.scaseco.vaadin</groupId>
+				<artifactId>vaadin-jena-shacl-editor</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.aksw.commons</groupId>
+				<artifactId>aksw-commons-rx-ex</artifactId>
+				<version>${aksw-commons.version}</version>
+			</dependency>
+			<!-- <dependency> -->
+			<!-- <groupId>org.aksw.commons</groupId> -->
+			<!-- <artifactId>aksw-commons-paths</artifactId> -->
+			<!-- <version>${aksw-commons.version}</version> -->
+			<!-- </dependency> -->
+			<dependency>
+				<groupId>org.aksw.jenax</groupId>
+				<artifactId>jenax-arq-relations</artifactId>
+				<version>${jenax.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.aksw.jenax</groupId>
+				<artifactId>jenax-arq-rx</artifactId>
+				<version>${jenax.version}</version>
+			</dependency>
+			<!-- Needed for GeometryWrapperUtils; there should be a more fine
+			grained 
+				module for geo stuff -->
+			<dependency>
+				<groupId>org.aksw.jenax</groupId>
+				<artifactId>jenax-arq-plugins-bundle</artifactId>
+				<version>${jenax.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.aksw.jenax</groupId>
+				<artifactId>jenax-facete-impl</artifactId>
+				<version>${jenax.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.aksw.jenax</groupId>
+				<artifactId>jenax-arq-datapaths</artifactId>
+				<version>${jenax.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.aksw.jenax</groupId>
+				<artifactId>jenax-arq-datashapes</artifactId>
+				<version>${jenax.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.12</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.aksw.jenax</groupId>
+				<artifactId>jenax-resources-test-config</artifactId>
+				<version>${jenax.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<!-- <dependency> <groupId>org.aksw.jena-sparql-api</groupId>
+			<artifactId>jena-sparql-api-sparql-ext</artifactId> 
+				</dependency> -->
+			<!-- <dependency> -->
+			<!-- <groupId>org.springframework.boot</groupId> -->
+			<!-- <artifactId>spring-boot-starter-parent</artifactId> -->
+			<!-- <version>2.2.0.RELEASE</version> -->
+			<!-- </dependency> -->
+			<dependency>
+				<groupId>com.vaadin</groupId>
+				<artifactId>vaadin-bom</artifactId>
+				<version>${vaadin.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	<distributionManagement>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+		<snapshotRepository>
+			<id>maven.aksw.snapshots</id>
+			<name>AKSW Snapshot Repository</name>
+			<url>https://maven.aksw.org/archiva/repository/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+	<repositories>
+		<!-- The order of definitions matters. Explicitly defining central here 
+			to make sure it has the highest priority. -->
+		<!-- Main Maven repository -->
+		<repository>
+			<id>central</id>
+			<url>https://repo.maven.apache.org/maven2</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<!-- Repository used by many Vaadin add-ons -->
+		<repository>
+			<id>Vaadin Directory</id>
+			<url>https://maven.vaadin.com/vaadin-addons</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>maven.aksw.snapshots</id>
+			<name>AKSW Snapshot Repository</name>
+			<url>https://maven.aksw.org/archiva/repository/snapshots</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<!-- Main Maven repository -->
+		<pluginRepository>
+			<id>central</id>
+			<url>https://repo.maven.apache.org/maven2</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+</project>

@@ -11,6 +11,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.aksw.commons.util.delegate.Delegated;
 import org.aksw.commons.util.delegate.Unwrappable;
 import org.aksw.commons.util.obj.ObjectUtils;
 import org.aksw.jena_sparql_api.concepts.RelationUtils;
@@ -43,9 +44,12 @@ import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.HeaderRow.HeaderCell;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ConfigurableFilterDataProvider;
+import com.vaadin.flow.data.provider.ConfigurableFilterDataProviderWrapper;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.FilterUtils;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.function.SerializableBiFunction;
 import com.vaadin.flow.function.SerializableFunction;
 
 public class VaadinSparqlUtils {
@@ -227,15 +231,47 @@ public class VaadinSparqlUtils {
         }
     }
 
+    public static class UnwrappableConfigurableFilterDataProvider<T, Q, C, F>
+        extends ConfigurableFilterDataProviderWrapper<T, Q, C, F>
+        implements Delegated<DataProvider<T, F>>, Unwrappable
+    {
+        private static final long serialVersionUID = 1L;
+
+        protected SerializableBiFunction<Q, C, F> filterCombiner;
+
+        public UnwrappableConfigurableFilterDataProvider(DataProvider<T, F> dataProvider, SerializableBiFunction<Q, C, F> filterCombiner) {
+            super(dataProvider);
+            this.filterCombiner = filterCombiner;
+        }
+
+        @Override
+        public DataProvider<T, F> delegate() {
+            return dataProvider;
+        }
+
+        @Override
+        protected F combineFilters(Q queryFilter, C configuredFilter) {
+            return FilterUtils.combineFilters(filterCombiner, queryFilter,
+                    configuredFilter);
+        }
+
+        public static <T, Q, C, F> DataProvider<T, Q> of(DataProvider<T, F> dataProvider, SerializableBiFunction<Q, C, F> filterCombiner) {
+            return new UnwrappableConfigurableFilterDataProvider<>(dataProvider, filterCombiner);
+        }
+    }
+
+    public static <T> DataProvider<T, Expr> wrapDataProviderWithFilter(DataProvider<T, Expr> delegate) {
+        DataProvider<T, Expr> result = UnwrappableConfigurableFilterDataProvider.of(delegate,
+                (Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
+                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList())));
+        return result;
+    }
+
     public static DataProvider<Binding, Expr> createDataProvider(QueryExecutionFactoryQuery qef, Query query, boolean alwaysDistinct) {
         Relation relation = RelationUtils.fromQuery(query);
         DataProviderSparqlBinding coreDataProvider = new DataProviderSparqlBinding(relation, qef);
         coreDataProvider.setAlwaysDistinct(alwaysDistinct);
-
-        DataProvider<Binding, Expr> dataProvider = coreDataProvider
-                .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
-                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
-                )));
+        DataProvider<Binding, Expr> dataProvider = wrapDataProviderWithFilter(coreDataProvider);
         return dataProvider;
     }
 
@@ -243,11 +279,7 @@ public class VaadinSparqlUtils {
         Relation relation = RelationUtils.fromQuery(query);
         DataProviderSparqlSolution coreDataProvider = new DataProviderSparqlSolution(relation, qef);
         coreDataProvider.setAlwaysDistinct(alwaysDistinct);
-
-        DataProvider<QuerySolution, Expr> dataProvider = coreDataProvider
-                .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
-                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
-                )));
+        DataProvider<QuerySolution, Expr> dataProvider = wrapDataProviderWithFilter(coreDataProvider);
         return dataProvider;
     }
 

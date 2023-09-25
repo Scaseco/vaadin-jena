@@ -74,6 +74,14 @@ public abstract class DataProviderSparqlBase<T>
         return relation;
     }
 
+    public QueryExecutionFactoryQuery getQueryExecutionFactory() {
+        return qef;
+    }
+
+    public void setQueryExecutionFactory(QueryExecutionFactoryQuery qef) {
+        this.qef = qef;
+    }
+
     public static org.apache.jena.query.Query toJena(Relation relation, Query<?, Expr> query) {
         org.apache.jena.query.Query baseQuery = createEffectiveQuery(relation, query);
         org.apache.jena.query.Query q = QueryUtils.applySlice(

@@ -15,6 +15,14 @@ import com.vaadin.flow.data.provider.DataProviderListener;
 import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.shared.Registration;
 
+
+/**
+ * DataProvider implementation that passes all items through a convert function
+ *
+ * @param <O>
+ * @param <F>
+ * @param <I>
+ */
 public class DataProviderWithConversion<O, F, I>
     implements DataProvider<O, F>
 {
