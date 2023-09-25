@@ -12,7 +12,7 @@ import org.aksw.jena_sparql_api.concepts.Concept;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.sparql.relation.api.Relation;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
-import org.apache.jena.ext.com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 import org.apache.jena.sparql.core.Var;
 
 import com.google.common.cache.Cache;

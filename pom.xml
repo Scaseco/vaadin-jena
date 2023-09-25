@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.aksw.scaseco.vaadin</groupId>
 	<artifactId>vaadin-jena-parent</artifactId>
-	<version>4.8.0-1-SNAPSHOT</version>
+	<version>4.9.0-1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<!-- <name>Jena SPARQL API - Vaadin - Parent</name> -->
 	<!-- <parent> <groupId>org.aksw.jena-sparql-api</groupId>
@@ -15,7 +15,7 @@
 		<vaadin.version>14.10.1</vaadin.version>
 		<spring-boot.version>2.3.3.RELEASE</spring-boot.version>
 		<jackson.version>2.10.3</jackson.version>
-		<jenax.version>4.8.0-3-SNAPSHOT</jenax.version>
+		<jenax.version>4.9.0-1-SNAPSHOT</jenax.version>
 		<aksw-commons.version>0.9.7-SNAPSHOT</aksw-commons.version>
 		<!-- <facete3.version>1.2.0-SNAPSHOT</facete3.version> -->
 		<slf4j.version>1.8.0-beta4</slf4j.version>
@@ -198,11 +198,6 @@
 			<dependency>
 				<groupId>org.aksw.jenax</groupId>
 				<artifactId>jenax-arq-datapaths</artifactId>
-				<version>${jenax.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.aksw.scaseco.vaadin</groupId>
-				<artifactId>vaadin-commons</artifactId>
 				<version>${jenax.version}</version>
 			</dependency>
 			<dependency>

@@ -2,7 +2,7 @@ package org.aksw.jenax.treequery2.impl;
 
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.treequery2.api.RootedFacetTraversable;
-import org.apache.jena.ext.com.google.common.base.Objects;
+import com.google.common.base.Objects;
 
 public abstract class RootedFacetTraversableBase<R, T extends RootedFacetTraversable<R, T>>
     implements RootedFacetTraversable<R, T>
