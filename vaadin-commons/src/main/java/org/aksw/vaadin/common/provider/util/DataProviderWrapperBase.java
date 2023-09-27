@@ -6,7 +6,9 @@ import org.aksw.commons.util.delegate.Unwrappable;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.DataProviderWrapper;
 
-/** DataProvider with a public {@link #getDelegate()} method. */
+/**
+ * An unwrappable DataProvider.
+ */
 public abstract class DataProviderWrapperBase<T, F, M>
     extends DataProviderWrapper<T, F, M>
     implements Delegated<DataProvider<T, M>>, Unwrappable
@@ -19,10 +21,6 @@ public abstract class DataProviderWrapperBase<T, F, M>
 
     @Override
     public DataProvider<T, M> delegate() {
-        return this.dataProvider;
-    }
-
-    public DataProvider<T, M> getDelegate() {
         return this.dataProvider;
     }
 }

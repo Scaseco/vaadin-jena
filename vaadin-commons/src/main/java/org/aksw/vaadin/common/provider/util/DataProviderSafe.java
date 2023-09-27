@@ -12,6 +12,8 @@ import com.vaadin.flow.data.provider.Query;
 public class DataProviderSafe<T, F>
     extends DataProviderWrapperBase<T, F, F>
 {
+    private static final long serialVersionUID = 1L;
+
     protected Cache<Query<T, F>, Future<Optional<Long>>> queryToSize;
 
     protected DataProviderSafe(DataProvider<T, F> dataProvider) {

@@ -449,5 +449,4 @@ public class VaadinSparqlUtils {
             throw new IllegalArgumentException("The grid's DataProvider was expected to be of type ConfigurableFilterDataProvider but was: " + ObjectUtils.getClass(rawDataProvider));
         }
     }
-
 }

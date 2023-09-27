@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.Query;
 
-
 public class DataProviderWrapperWithCustomErrorHandler<T, F>
     extends DataProviderWrapperBase<T, F, F>
 {

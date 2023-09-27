@@ -158,11 +158,6 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.aksw.scaseco.vaadin</groupId>
-				<artifactId>vaadin-jena-shacl-editor</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
 				<groupId>org.aksw.commons</groupId>
 				<artifactId>aksw-commons-rx-ex</artifactId>
 				<version>${aksw-commons.version}</version>
