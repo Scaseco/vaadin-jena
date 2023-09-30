@@ -1,4 +1,4 @@
-package org.aksw.facete.v4.impl;
+package org.aksw.jenax.vaadin.component.grid.sparql;
 
 import java.util.function.Function;
 

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.aksw.facete.v4.impl.ElementGenerator;
-import org.aksw.facete.v4.impl.TreeDataUtils;
+import org.aksw.facete.v4.impl.MappedQuery;
 import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jenax.arq.datasource.RdfDataEngines;
 import org.aksw.jenax.connection.datasource.RdfDataSource;

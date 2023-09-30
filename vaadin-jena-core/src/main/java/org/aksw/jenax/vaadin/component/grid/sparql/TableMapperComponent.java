@@ -1,24 +1,43 @@
 package org.aksw.jenax.vaadin.component.grid.sparql;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.aksw.commons.util.direction.Direction;
+import org.aksw.commons.util.obj.Enriched;
 import org.aksw.facete.v4.impl.ElementGenerator;
-import org.aksw.facete.v4.impl.TreeDataUtils;
+import org.aksw.facete.v4.impl.MappedQuery;
+import org.aksw.jena_sparql_api.algebra.expr.transform.ExprTransformVirtualBnodeUris;
+import org.aksw.jena_sparql_api.concepts.ConceptUtils;
+import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderNodeQuery;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
+import org.aksw.jena_sparql_api.vaadin.data.provider.DataRetriever;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinStyleUtils;
+import org.aksw.jenax.arq.datashape.viewselector.EntityClassifier;
+import org.aksw.jenax.arq.datasource.RdfDataSourceWithBnodeRewrite;
+import org.aksw.jenax.arq.util.node.NodeUtils;
 import org.aksw.jenax.arq.util.syntax.QueryGenerationUtils;
+import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
+import org.aksw.jenax.facete.treequery2.api.NodeQuery;
+import org.aksw.jenax.facete.treequery2.api.RelationQuery;
+import org.aksw.jenax.facete.treequery2.impl.ElementGeneratorLateral;
+import org.aksw.jenax.facete.treequery2.impl.FacetPathMappingImpl;
+import org.aksw.jenax.facete.treequery2.impl.NodeQueryImpl;
+import org.aksw.jenax.model.shacl.domain.ShNodeShape;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetPathOps;
 import org.aksw.jenax.path.core.FacetStep;
@@ -27,9 +46,21 @@ import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.vaadin.common.component.util.ConfirmDialogUtils;
 import org.aksw.vaadin.common.component.util.NotificationUtils;
 import org.apache.jena.graph.Node;
+import org.apache.jena.query.Query;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdfconnection.RDFConnection;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.sparql.core.Quad;
+import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.expr.Expr;
+import org.apache.jena.sparql.modify.request.QuadAcc;
+import org.apache.jena.sparql.syntax.Element;
+import org.apache.jena.sparql.syntax.Template;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
+import org.topbraid.shacl.model.SHFactory;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
@@ -52,6 +83,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.treegrid.TreeGrid;
+import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import com.vaadin.flow.dom.Style;
@@ -554,6 +586,146 @@ public class TableMapperComponent
         // VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);
         // VaadinSparqlUtils.configureGridFilter(sparqlGrid, filterRow, query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
         // QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(dataSource);
+    }
+
+
+    public static void main(String[] args) {
+        SHFactory.ensureInited();
+        Model shaclModel = RDFDataMgr.loadModel("/home/raven/Projects/Eclipse/rmltk-parent/r2rml-resource-shacl/src/main/resources/r2rml.core.shacl.ttl");
+        List<ShNodeShape> nodeShapes = org.aksw.jenax.model.shacl.util.ShUtils.listNodeShapes(shaclModel);
+        // List<ShNodeShape> nodeShapes = shaclModel.listSubjects().mapWith(r -> r.as(ShNodeShape.class)).toList();
+
+        EntityClassifier entityClassifier = new EntityClassifier(Arrays.asList(Vars.s));
+
+        // https://www.w3.org/TR/shacl/#targets
+        // "The target of a shape is the union of all RDF terms produced by the individual targets that are declared by the shape in the shapes graph."
+        for (ShNodeShape nodeShape : nodeShapes) {
+            EntityClassifier.registerNodeShape(entityClassifier, nodeShape);
+        }
+
+        if (false) {
+            for (ShNodeShape nodeShape : nodeShapes) {
+                // NodeQuery nq = NodeQueryImpl.newRoot();
+                NodeQuery nq = NodeQueryImpl.newRoot();
+
+                ElementGeneratorLateral.toNodeQuery(nq, nodeShape);
+                Element elt = new ElementGeneratorLateral().createElement(nq.relationQuery());
+                System.out.println("Shape: " + nodeShape.asNode() + " --------");
+                System.out.println(elt);
+            }
+        }
+
+//        NodeQuery nq = NodeQueryImpl.newRoot();
+
+
+        RelationQuery rq = RelationQuery.of(Vars.s); // RelationQuery.of(ConceptUtils.createSubjectConcept());
+        System.out.println("Roots:" +  rq.roots());
+        NodeQuery tgtNode = rq.target().resolve(FacetPath.newAbsolutePath().resolve(FacetStep.fwd(RDF.type.asNode())).resolve(FacetStep.fwd(RDFS.label.asNode())));
+
+        System.out.println(tgtNode);
+        for (Entry<FacetStep, RelationQuery> child : rq.target().children().entrySet()) {
+            System.out.println(child);
+        }
+
+        NodeQuery tgtNode2 = rq.target().resolve(FacetPath.newAbsolutePath().resolve(FacetStep.fwd(RDF.type.asNode())).resolve(FacetStep.fwd(RDFS.label.asNode())));
+        tgtNode2.limit(10l);
+
+        NodeQuery o = tgtNode2.resolve(FacetPath.newRelativePath().resolve(FacetStep.fwd(NodeUtils.ANY_IRI)));
+        NodeQuery p = tgtNode2.resolve(FacetPath.newRelativePath().resolve(FacetStep.of(NodeUtils.ANY_IRI, Direction.FORWARD, null, FacetStep.PREDICATE)));
+
+        NodeQuery x = p.fwd("urn:foo").fwd("urn:bar");
+
+        p.limit(100l);
+
+        // Both nodes should be backed by the same relation
+        System.out.println("o limit: " + o.limit());
+
+        FacetPath ppath = p.getFacetPath();
+        System.out.println("p path: " + ppath);
+        System.out.println("x path: " + x.getFacetPath());
+
+        System.out.println("p relation: " + p.relationQuery().getRelation());
+
+        Var rootVar = Var.alloc("root");
+        NodeQuery nq = rq.roots().get(0);
+
+        nq
+          .fwd("urn:p1_1")
+              .bwd("urn:test").limit(15l).sortAsc().sortNone()
+                  // .orderBy().fwd("urn:orderProperty").asc() // Not yet supported
+                  // .constraints().fwd(NodeUtils.ANY_IRI)
+                  .constraints().fwd("urn:constraint").enterConstraints().eq(RDFS.seeAlso).activate().leaveConstraints().getRoot()
+              .getRoot()
+              .fwd("urn:1_2").limit(30l).sortAsc(); //.orderBy().fwd(RDFS.comment.asNode()).asc();
+          ;
+
+
+          org.aksw.jenax.facete.treequery2.api.FacetPathMapping fpm = new FacetPathMappingImpl();
+System.out.println(fpm.allocate(nq
+          .fwd("urn:p1_1")
+              .bwd("urn:p2_1").getFacetPath()));
+
+        // RelationQuery rrq = nq.relationQuery();
+        // NodeQuery target = nq.fwd("urn:1_2");
+        NodeQuery target = nq;
+        // NodeQuery target = nq.fwd("urn:1_2");
+
+        RelationQuery rrq = target.relationQuery();
+        Element elt = new ElementGeneratorLateral().createElement(rrq);
+
+        Query query = new Query();
+        query.setConstructTemplate(new Template(new QuadAcc(Arrays.asList(Quad.create(rootVar, Vars.x, Vars.y, Vars.z)))));
+        query.setQueryConstructType();
+        query.setQueryPattern(elt);
+
+        System.out.println(query);
+
+
+        RdfDataSource rdfDataSourceRaw = () -> RDFConnection.connect("http://localhost:8642/sparql");
+        RdfDataSource dataSource = RdfDataSourceWithBnodeRewrite.wrapWithAutoBnodeProfileDetection(rdfDataSourceRaw);
+        // QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(rdfDataSource);
+
+        Supplier<UnaryRelation> conceptSupplier = () -> ConceptUtils.createSubjectConcept();
+        DataRetriever retriever = new DataRetriever(dataSource, entityClassifier);
+
+
+
+        for (ShNodeShape nodeShape : nodeShapes) {
+            Node nodeShapeNode = nodeShape.asNode();
+            if (nodeShapeNode.isBlank()) {
+                nodeShapeNode = ExprTransformVirtualBnodeUris.bnodeToIri(nodeShapeNode);
+            }
+
+            // NodeQuery nq = NodeQueryImpl.newRoot();
+            NodeQuery nqq = NodeQueryImpl.newRoot();
+
+            ElementGeneratorLateral.toNodeQuery(nqq, nodeShape);
+
+
+            retriever.getClassToQuery().put(nodeShapeNode, nqq);
+        }
+
+        DataProvider<Enriched<RDFNode>, String> dataProvider = new DataProviderNodeQuery(dataSource, conceptSupplier, retriever);
+
+        com.vaadin.flow.data.provider.Query<Enriched<RDFNode>, String> q = new com.vaadin.flow.data.provider.Query<>();
+        List<Enriched<RDFNode>> list = dataProvider.fetch(q).collect(Collectors.toList());
+        int itemCount = list.size();
+        int size = dataProvider.size(q);
+
+        System.out.println("Retrieved items vs counted items: " + itemCount + " / " + size);
+
+
+
+//        for (RDFNode item : list) {
+//            System.out.println(item);
+//            RDFDataMgr.write(System.out, item.getModel(), RDFFormat.TURTLE_PRETTY);
+//        }
+
+
+//        org.apache.jena.query.Query sparqlQuery = ElementGeneratorLateral.toQuery(target);
+//        LookupService<Node, DatasetOneNg> lookupService = new LookupServiceSparqlConstructQuads(qef, sparqlQuery);
+//        Map<Node, DatasetOneNg> map = lookupService.defaultForAbsentKeys(n -> null).fetchMap(Arrays.asList("http://foo", "http://bar").stream().map(NodeFactory::createURI).collect(Collectors.toList()));
+//        System.out.println("Result: " + map);
     }
 }
 
