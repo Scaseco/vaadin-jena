@@ -39,7 +39,6 @@ import org.aksw.jenax.facete.treequery2.impl.FacetPathMappingImpl;
 import org.aksw.jenax.facete.treequery2.impl.NodeQueryImpl;
 import org.aksw.jenax.model.shacl.domain.ShNodeShape;
 import org.aksw.jenax.path.core.FacetPath;
-import org.aksw.jenax.path.core.FacetPathOps;
 import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.vaadin.label.LabelService;
@@ -282,7 +281,7 @@ public class TableMapperComponent
         layout.setSplitterPosition(20);
         layout.setWidthFull();
 
-        FacetPath rootPath = FacetPathOps.get().newRoot();
+        FacetPath rootPath = FacetPath.newAbsolutePath();
         treeDataProvider.getTreeData().addRootItems(rootPath);
 
         propertyTreeGrid.setDataProvider(treeDataProvider);

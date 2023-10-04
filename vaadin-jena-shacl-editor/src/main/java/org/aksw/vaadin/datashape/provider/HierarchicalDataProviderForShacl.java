@@ -21,7 +21,6 @@ import org.aksw.jena_sparql_api.rdf.collections.NodeMappers;
 import org.aksw.jena_sparql_api.schema.ShapedNode;
 import org.aksw.jena_sparql_api.schema.ShapedProperty;
 import org.aksw.jenax.path.core.PathNode;
-import org.aksw.jenax.path.core.PathOpsNode;
 import org.aksw.jenax.path.datatype.RDFDatatypePPath;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
@@ -212,7 +211,7 @@ public class HierarchicalDataProviderForShacl
 
         if (result == null) {
             result = root.fetchData(null).values().stream()
-                    .map(sn -> PathOpsNode.newAbsolutePath().resolve(sn.getSourceNode()));
+                    .map(sn -> PathNode.newAbsolutePath().resolve(sn.getSourceNode()));
             // result = Stream.empty();
         }
 

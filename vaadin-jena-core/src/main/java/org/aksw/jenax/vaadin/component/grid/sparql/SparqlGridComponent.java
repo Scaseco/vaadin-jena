@@ -9,7 +9,6 @@ import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jenax.arq.datasource.RdfDataEngines;
 import org.aksw.jenax.connection.datasource.RdfDataSource;
 import org.aksw.jenax.path.core.FacetPath;
-import org.aksw.jenax.path.core.FacetPathOps;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.apache.jena.graph.Node;
@@ -46,7 +45,7 @@ public class SparqlGridComponent extends VerticalLayout {
         this.dataSource = RdfDataEngines.of(DatasetFactory.create()); // new QueryExecutionFactoryDataset();
         this.baseConcept = ConceptUtils.createSubjectConcept();
 
-        FacetPath rootPath = FacetPathOps.get().newRoot();
+        FacetPath rootPath = FacetPath.newAbsolutePath();
         treeDataProvider.getTreeData().addRootItems(rootPath);
 
 //        settingsBtn = new Button(VaadinIcon.COG.create()); //"Available columns");

@@ -254,7 +254,7 @@ public class ResourceEditor
         resourceGridFilterRow = resourceGrid.appendHeaderRow();
 
 
-        Breadcrumb<P_Path0> breadcrumb = new Breadcrumb<>(PathOpsPP.get().newRoot(), labelService, Breadcrumb.labelAssemblerForPath0());
+        Breadcrumb<P_Path0> breadcrumb = new Breadcrumb<>(PathPP.newAbsolutePath(), labelService, Breadcrumb.labelAssemblerForPath0());
 //        breadcrumb.getModel().set(PathOpsPP.get().newRoot()
 //                .resolve(new P_Link(RDF.Nodes.type))
 //                .resolve(new P_Link(RDFS.Nodes.label))$

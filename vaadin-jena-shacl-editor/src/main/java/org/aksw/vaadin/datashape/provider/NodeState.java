@@ -15,7 +15,6 @@ import org.aksw.jena_sparql_api.collection.observable.ObservableGraphImpl;
 import org.aksw.jena_sparql_api.rdf.collections.NodeMapper;
 import org.aksw.jena_sparql_api.rdf.collections.NodeMappers;
 import org.aksw.jenax.path.core.PathNode;
-import org.aksw.jenax.path.core.PathOpsNode;
 import org.aksw.jenax.path.datatype.RDFDatatypePathNode;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
@@ -53,7 +52,7 @@ public class NodeState {
 
     public <S> ObservableValue<S> getValue(Path<Node> path, NodeMapper<S> nodeMapper, Node predicate, S initialValue) {
         if (path == null) {
-            path = PathOpsNode.newAbsolutePath();
+            path = PathNode.newAbsolutePath();
         }
         Node s = RDFDatatypePathNode.createNode(path);
 
@@ -108,7 +107,7 @@ public class NodeState {
 
             Set<PathNode> tmp = modified.stream()
                     .map(RDFDatatypePathNode::extractPath)
-                    .map(p -> PathOpsNode.newAbsolutePath().equals(p) ? null : p)
+                    .map(p -> PathNode.newAbsolutePath().equals(p) ? null : p)
                     .collect(Collectors.toSet());
             listener.accept(tmp);
         });
