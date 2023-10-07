@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 import org.aksw.commons.util.obj.Enriched;
 import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderNodeQuery;
-import org.aksw.jenax.connection.datasource.RdfDataSource;
+import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
 import org.aksw.jenax.model.shacl.util.ShTemplateRegistry;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.vaadin.component.grid.shacl.VaadinShaclGridUtils;

@@ -3,11 +3,11 @@ package org.aksw.vaadin.app.demo.view.label;
 import java.util.List;
 
 import org.aksw.jena_sparql_api.common.DefaultPrefixes;
-import org.aksw.jenax.arq.connection.core.QueryExecutionFactory;
-import org.aksw.jenax.arq.datasource.RdfDataEngineFromDataset;
-import org.aksw.jenax.connection.datasource.RdfDataSource;
-import org.aksw.jenax.connection.query.QueryExecutionFactoryDataset;
 import org.aksw.jenax.dataaccess.LabelUtils;
+import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
+import org.aksw.jenax.dataaccess.sparql.factory.dataengine.RdfDataEngineFromDataset;
+import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactory;
+import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryDataset;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
 import org.aksw.vaadin.app.demo.MainLayout;
 import org.apache.jena.graph.Node;

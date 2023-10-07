@@ -23,7 +23,7 @@ import org.aksw.jena_sparql_api.concepts.RelationUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
 import org.aksw.jenax.arq.util.expr.ExprUtils;
-import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
+import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.facete.treequery2.api.ScopedFacetPath;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.sparql.relation.api.Relation;

@@ -20,7 +20,7 @@ import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlRdfNode;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlResource;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlSolution;
 import org.aksw.jenax.arq.util.expr.ExprUtils;
-import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
+import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.sparql.relation.api.Relation;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.Query;

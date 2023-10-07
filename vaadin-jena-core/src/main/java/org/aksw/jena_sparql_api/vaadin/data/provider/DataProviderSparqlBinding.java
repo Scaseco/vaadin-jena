@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.aksw.jena_sparql_api.concepts.RelationImpl;
-import org.aksw.jenax.connection.query.QueryExecutionFactoryDataset;
-import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
+import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryDataset;
+import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.sparql.query.rx.SparqlRx;
 import org.aksw.jenax.sparql.relation.api.Relation;
 import org.apache.jena.query.Query;

@@ -6,11 +6,11 @@ import java.util.Objects;
 
 import org.aksw.commons.rx.lookup.LookupService;
 import org.aksw.jena_sparql_api.common.DefaultPrefixes;
-import org.aksw.jenax.arq.connection.core.QueryExecutionFactories;
-import org.aksw.jenax.arq.datasource.RdfDataSourceWithBnodeRewrite;
-import org.aksw.jenax.connection.datasource.RdfDataSource;
-import org.aksw.jenax.connection.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.dataaccess.LabelUtils;
+import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
+import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactories;
+import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
+import org.aksw.jenax.dataaccess.sparql.polyfill.datasource.RdfDataSourceWithBnodeRewrite;
 import org.aksw.jenax.vaadin.label.VaadinRdfLabelMgrImpl;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.Property;

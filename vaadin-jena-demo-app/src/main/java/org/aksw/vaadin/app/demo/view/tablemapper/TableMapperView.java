@@ -1,10 +1,10 @@
 package org.aksw.vaadin.app.demo.view.tablemapper;
 
 import org.aksw.jena_sparql_api.concepts.Concept;
-import org.aksw.jenax.arq.datasource.RdfDataSourceWithBnodeRewrite;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.arq.util.var.Vars;
-import org.aksw.jenax.connection.datasource.RdfDataSource;
+import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
+import org.aksw.jenax.dataaccess.sparql.polyfill.datasource.RdfDataSourceWithBnodeRewrite;
 import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.vaadin.component.grid.sparql.TableMapperComponent;
 import org.aksw.jenax.vaadin.label.LabelService;
