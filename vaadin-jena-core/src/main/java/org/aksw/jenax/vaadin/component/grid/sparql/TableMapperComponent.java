@@ -25,6 +25,7 @@ import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderNodeQuery;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataRetriever;
+import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinStyleUtils;
 import org.aksw.jenax.arq.datashape.viewselector.EntityClassifier;
 import org.aksw.jenax.arq.util.node.NodeUtils;
@@ -44,6 +45,7 @@ import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.vaadin.common.component.util.ConfirmDialogUtils;
 import org.aksw.vaadin.common.component.util.NotificationUtils;
+import org.aksw.vaadin.common.provider.util.DataProviderUtils;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
@@ -71,6 +73,7 @@ import com.vaadin.flow.component.HasText;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.HeaderRow.HeaderCell;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.grid.dnd.GridDropLocation;
@@ -513,6 +516,7 @@ public class TableMapperComponent
             Predicate<FacetPath> isVisible, LabelService<Node, String> labelService)
     {
         Grid<Binding> sparqlGrid = new Grid<>();
+        sparqlGrid.setMultiSort(true);
         // sparqlGrid.setPageSize(1000);
         sparqlGrid.setWidthFull();
         sparqlGrid.setColumnReorderingAllowed(true);
@@ -522,10 +526,9 @@ public class TableMapperComponent
         MappedQuery mappedQuery = ElementGenerator.createQuery(baseConcept, treeProjection, constraintIndex, isVisible);
         mappedQuery = new MappedQuery(mappedQuery.getTree(), QueryGenerationUtils.discardUnbound(mappedQuery.getQuery()), mappedQuery.getVarToPath());
 
-        // RelationUtils.createQuery(null);
-        // VaadinSparqlUtils.setQueryForGridBinding(sparqlGrid, headerRow, qef, query);
-        // VaadinSparqlUtils.configureGridFilter(sparqlGrid, filterRow, query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
         SparqlGrid.setQueryForGridBinding(sparqlGrid, dataSource.asQef(), labelService, mappedQuery);
+        DataProviderUtils.wrapWithErrorHandler(sparqlGrid);
+
         return sparqlGrid;
     }
 

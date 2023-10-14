@@ -8,7 +8,7 @@ import com.vaadin.flow.data.provider.DataProvider;
 
 public class DataProviderUtils {
     /**
-     * Gets a grid's data provider, wraps it with the error handler and sets the wrapped instance on the grid.
+     * Wraps the grid's current data provider with an error handling one.
      * This method does nothing if the data provider is already wrapped.
      */
     public static <T> void wrapWithErrorHandler(Grid<T> grid) {

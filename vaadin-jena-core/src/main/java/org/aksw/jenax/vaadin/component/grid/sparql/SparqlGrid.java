@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.aksw.commons.collections.trees.TreeUtils;
-import org.aksw.commons.util.stream.SequentialGroupBySpec;
-import org.aksw.commons.util.stream.StreamOperatorSequentialGroupBy;
+import org.aksw.commons.util.stream.CollapseRunsSpec;
+import org.aksw.commons.util.stream.StreamOperatorCollapseRuns;
 import org.aksw.facete.v4.impl.MappedQuery;
 import org.aksw.jena_sparql_api.concepts.RelationUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
@@ -109,7 +109,6 @@ public class SparqlGrid {
         Query query = mappedQuery.getQuery();
 
         List<Var> vars = mappedQuery.getQuery().getProjectVars();
-        // List<PathPPA> leafs = vars.stream().map(mappedQuery.getVarToPath()::get).collect(Collectors.toList());
 
         HeaderRow primaryHeaderRow = grid.appendHeaderRow();
         List<Entry<Column<?>, FacetPath>> pathToColumn = new ArrayList<>();
@@ -139,48 +138,19 @@ public class SparqlGrid {
         }
 
         HeaderRow filterRow = grid.appendHeaderRow();
-        VaadinSparqlUtils.configureGridFilter(grid, filterRow, vars, var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
-
+        VaadinSparqlUtils.configureGridFilter(grid, filterRow, vars); //, var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
         Multimap<FacetPath, HeaderCell> pathToCells = setupHeaders(grid, primaryHeaderRow, FacetPath::getParent, pathToColumn);
-
 
         Set<HeaderCell> leafCells = new HashSet<>(primaryHeaderRow.getCells());
 
-
         for (Entry<FacetPath, HeaderCell> entry : pathToCells.entries()) {
             boolean isLeafPath = leafCells.contains(entry.getValue());
-
             TableMapperComponent.labelForAliasPathLastStep(labelMgr, entry.getValue(), entry.getKey(), isLeafPath);
-            // entry.getValue().setText("" + entry.getKey().toString());
         }
 
+        DataProvider<Binding, Expr> dataProvider = VaadinSparqlUtils.createDataProvider(qef, query, true); // new DataProviderSparqlBinding(relation, qef);
 
-        Relation relation = RelationUtils.fromQuery(query);
-        DataProviderSparqlBinding coreDataProvider = new DataProviderSparqlBinding(relation, qef);
-        coreDataProvider.setAlwaysDistinct(true);
-
-        DataProvider<Binding, Expr> filteredDataProvider = coreDataProvider
-                .withConfigurableFilter((Expr e1, Expr e2) -> ExprUtils.andifyBalanced(
-                        Arrays.asList(e1, e2).stream().filter(Objects::nonNull).collect(Collectors.toList()
-                )));
-
-        // Somewhat hacky: Use our wrapper to expose the
-        // DataProviderSparqlBinding as the delegate, thereby bypassing the
-        // ConfigurableFilterDataProvider
-        DataProvider<Binding, Expr> unwrappableDataProvider = new DataProviderWrapperBase<>(filteredDataProvider) {
-            @Override
-            protected Expr getFilter(com.vaadin.flow.data.provider.Query<Binding, Expr> query) {
-                return query.getFilter().orElse(null);
-            }
-
-            public com.vaadin.flow.data.provider.DataProvider<Binding,Expr> delegate() {
-                return coreDataProvider;
-            }
-        };
-
-
-        grid.setDataProvider(unwrappableDataProvider);
-        // List<Var> vars = visibleColumns == null ? query.getProjectVars() : visibleColumns;
+        grid.setDataProvider(dataProvider);
     }
 
 
@@ -237,7 +207,7 @@ public class SparqlGrid {
 
             // Group the children's cells by their respective parents
             List<Entry<T, List<Entry<T, HeaderCell>>>> groups =
-                    StreamOperatorSequentialGroupBy.create(SequentialGroupBySpec.<Entry<T, HeaderCell>, T, List<Entry<T, HeaderCell>>>create(
+                    StreamOperatorCollapseRuns.create(CollapseRunsSpec.<Entry<T, HeaderCell>, T, List<Entry<T, HeaderCell>>>create(
                             entry -> {
                                 T childKey = entry.getKey();
                                 T parentKey = entry.getKey() == null ? null : getParent.apply(childKey);
@@ -317,7 +287,7 @@ public class SparqlGrid {
 
             // Group the children's cells by their respective parents
             List<Entry<T, List<Entry<T, HeaderCell>>>> groups =
-                    StreamOperatorSequentialGroupBy.create(SequentialGroupBySpec.<Entry<T, HeaderCell>, T, List<Entry<T, HeaderCell>>>create(
+                    StreamOperatorCollapseRuns.create(CollapseRunsSpec.<Entry<T, HeaderCell>, T, List<Entry<T, HeaderCell>>>create(
                             entry -> entry.getKey() == null ? null : getParent.apply(entry.getKey()),
                             (x, y) -> x == null && y == null ? false : Objects.equals(x, y),
                             groupKey -> new ArrayList<>(), (acc, item) -> { acc.add(item); return acc; }))
