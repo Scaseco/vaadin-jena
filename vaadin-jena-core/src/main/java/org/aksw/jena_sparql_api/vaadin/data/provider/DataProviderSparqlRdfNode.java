@@ -4,8 +4,8 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
+import org.aksw.jenax.sparql.fragment.api.Fragment;
 import org.aksw.jenax.sparql.query.rx.SparqlRx;
-import org.aksw.jenax.sparql.relation.api.Relation;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.RDFNode;
@@ -23,7 +23,7 @@ public class DataProviderSparqlRdfNode<T extends RDFNode>
     protected Function<Binding, QuerySolution> customBindingMapper;
 
     public DataProviderSparqlRdfNode(
-            Relation relation,
+            Fragment relation,
             QueryExecutionFactoryQuery qef,
             Class<T> rdfNodeClass,
             String projectedVarName,

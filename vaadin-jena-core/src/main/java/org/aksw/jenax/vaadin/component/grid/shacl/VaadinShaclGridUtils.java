@@ -37,7 +37,7 @@ import org.aksw.jenax.model.shacl.util.ShPebbleUtils;
 import org.aksw.jenax.model.shacl.util.ShTemplateRegistry;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
-import org.aksw.jenax.sparql.relation.api.UnaryRelation;
+import org.aksw.jenax.sparql.fragment.api.Fragment1;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
 import org.apache.jena.graph.Graph;
@@ -187,7 +187,7 @@ public class VaadinShaclGridUtils {
 
     }
 
-    public static DataProviderNodeQuery fromShacl(RdfDataSource dataSource, Supplier<UnaryRelation> conceptSupplier, Model shaclModel) {
+    public static DataProviderNodeQuery fromShacl(RdfDataSource dataSource, Supplier<Fragment1> conceptSupplier, Model shaclModel) {
         DataRetriever dataRetriever = setupRetriever(dataSource, shaclModel);
         DataProviderNodeQuery dataProvider = new DataProviderNodeQuery(dataSource, conceptSupplier, dataRetriever);
 
@@ -240,8 +240,8 @@ public class VaadinShaclGridUtils {
 
     /** */
     public static void configureGrid(Grid<Enriched<RDFNode>> grid, DataProviderNodeQuery dataProvider, ShTemplateRegistry templates, LabelService<Node, String> labelService) {
-        Supplier<UnaryRelation> conceptSupplier = dataProvider.getConceptSupplier();
-        UnaryRelation concept = conceptSupplier.get();
+        Supplier<Fragment1> conceptSupplier = dataProvider.getConceptSupplier();
+        Fragment1 concept = conceptSupplier.get();
         Var var = concept.getVar();
         String varName = var.getName();
         Column<Enriched<RDFNode>> column = grid.addComponentColumn(val -> {
@@ -329,8 +329,8 @@ public class VaadinShaclGridUtils {
      * Basic rendering of a grid of RDF resources - just renders the turtle (but passes IRIs through the label service)
      */
     public static void configureGridBasic(Grid<Enriched<RDFNode>> grid, DataProviderNodeQuery dataProvider, LabelService<Node, String> labelService) {
-        Supplier<UnaryRelation> conceptSupplier = dataProvider.getConceptSupplier();
-        UnaryRelation concept = conceptSupplier.get();
+        Supplier<Fragment1> conceptSupplier = dataProvider.getConceptSupplier();
+        Fragment1 concept = conceptSupplier.get();
         Var var = concept.getVar();
         String varName = var.getName();
 

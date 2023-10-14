@@ -3,11 +3,11 @@ package org.aksw.vaadin.app.demo.view.shaclgrid;
 import java.util.function.Supplier;
 
 import org.aksw.commons.util.obj.Enriched;
-import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderNodeQuery;
 import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
 import org.aksw.jenax.model.shacl.util.ShTemplateRegistry;
-import org.aksw.jenax.sparql.relation.api.UnaryRelation;
+import org.aksw.jenax.sparql.fragment.api.Fragment1;
+import org.aksw.jenax.sparql.fragment.impl.ConceptUtils;
 import org.aksw.jenax.vaadin.component.grid.shacl.VaadinShaclGridUtils;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.vaadin.app.demo.MainLayout;
@@ -33,7 +33,7 @@ public class ShaclGridView
         SHFactory.ensureInited();
         Model shaclModel = RDFDataMgr.loadModel("/home/raven/Projects/Eclipse/rmltk-parent/r2rml-resource-shacl/src/main/resources/r2rml.core.shacl.ttl");
         RdfDataSource dataSource = () -> RDFConnection.connect("http://localhost:8642/sparql");
-        Supplier<UnaryRelation> conceptSupplier = () -> ConceptUtils.createSubjectConcept();
+        Supplier<Fragment1> conceptSupplier = () -> ConceptUtils.createSubjectConcept();
 
         return VaadinShaclGridUtils.fromShacl(dataSource, conceptSupplier, shaclModel);
     }

@@ -5,11 +5,11 @@ import java.util.stream.Stream;
 
 import org.aksw.commons.util.range.CountInfo;
 import org.aksw.commons.util.range.RangeUtils;
-import org.aksw.jena_sparql_api.concepts.RelationImpl;
 import org.aksw.jenax.arq.util.syntax.QueryUtils;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
+import org.aksw.jenax.sparql.fragment.api.Fragment;
+import org.aksw.jenax.sparql.fragment.impl.FragmentImpl;
 import org.aksw.jenax.sparql.query.rx.SparqlRx;
-import org.aksw.jenax.sparql.relation.api.Relation;
 import org.apache.jena.query.SortCondition;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.binding.Binding;
@@ -38,12 +38,12 @@ public abstract class DataProviderSparqlBase<T>
     // This feels like a hack - it might be better to have the distinct flag part of the relation but this needs more thought
     protected boolean alwaysDistinct = false;
 
-    protected Relation relation;
+    protected Fragment relation;
     protected QueryExecutionFactoryQuery qef;
 
     public int predefinedSize = -1;
 
-    public DataProviderSparqlBase(Relation relation,
+    public DataProviderSparqlBase(Fragment relation,
             QueryExecutionFactoryQuery qef) {
         super();
         this.relation = relation;
@@ -59,18 +59,18 @@ public abstract class DataProviderSparqlBase<T>
     }
 
 
-    public void setRelation(Relation relation) {
+    public void setRelation(Fragment relation) {
         this.relation = relation;
         this.refreshAll();
     }
 
     public void setRelation(List<Var> vars, List<Binding> bindings) {
         ElementData elt = new ElementData(vars, bindings);
-        Relation rel = new RelationImpl(elt, vars);
+        Fragment rel = new FragmentImpl(elt, vars);
         setRelation(rel);
     }
 
-    public Relation getRelation() {
+    public Fragment getRelation() {
         return relation;
     }
 
@@ -82,7 +82,7 @@ public abstract class DataProviderSparqlBase<T>
         this.qef = qef;
     }
 
-    public static org.apache.jena.query.Query toJena(Relation relation, Query<?, Expr> query) {
+    public static org.apache.jena.query.Query toJena(Fragment relation, Query<?, Expr> query) {
         org.apache.jena.query.Query baseQuery = createEffectiveQuery(relation, query);
         org.apache.jena.query.Query q = QueryUtils.applySlice(
                 baseQuery,
@@ -156,7 +156,7 @@ public abstract class DataProviderSparqlBase<T>
     }
 
 
-    public static org.apache.jena.query.Query createEffectiveQuery(Relation relation, Query<?, Expr> query) {
+    public static org.apache.jena.query.Query createEffectiveQuery(Fragment relation, Query<?, Expr> query) {
         Expr expr = query.getFilter().orElse(null);
 
         org.apache.jena.query.Query result = relation.toQuery();

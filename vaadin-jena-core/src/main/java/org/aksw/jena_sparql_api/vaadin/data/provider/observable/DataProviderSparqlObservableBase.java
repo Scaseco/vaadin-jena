@@ -11,8 +11,8 @@ import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBase;
 import org.aksw.jenax.arq.util.syntax.QueryGenerationUtils;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactory;
 import org.aksw.jenax.sparql.datasource.observable.ObservableSource;
+import org.aksw.jenax.sparql.fragment.api.Fragment;
 import org.aksw.jenax.sparql.query.rx.SparqlRx;
-import org.aksw.jenax.sparql.relation.api.Relation;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.Expr;
 import org.slf4j.Logger;
@@ -36,7 +36,7 @@ public class DataProviderSparqlObservableBase<T>
 
     private static final long serialVersionUID = 1L;
 
-    protected Relation relation;
+    protected Fragment relation;
     protected ObservableSource<org.apache.jena.query.Query, Collection<T>> observableSource;
 
     protected Disposable dataDisposable;

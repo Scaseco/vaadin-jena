@@ -12,13 +12,13 @@ import java.util.Set;
 
 import org.aksw.facete.v3.impl.FacetedQueryBuilder;
 import org.aksw.jena_sparql_api.common.DefaultPrefixes;
-import org.aksw.jena_sparql_api.concepts.BinaryRelationImpl;
-import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jena_sparql_api.data_query.api.DataQuery;
 import org.aksw.jena_sparql_api.data_query.util.KeywordSearchUtils;
 import org.aksw.jena_sparql_api.rdf.collections.ResourceUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderFromDataQuerySupplier;
-import org.aksw.jenax.sparql.relation.api.UnaryRelation;
+import org.aksw.jenax.sparql.fragment.api.Fragment1;
+import org.aksw.jenax.sparql.fragment.impl.ConceptUtils;
+import org.aksw.jenax.sparql.fragment.impl.Fragment2Impl;
 import org.aksw.vaadin.common.provider.util.DataProviderUtils;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.TypeMapper;
@@ -183,8 +183,8 @@ public class RdfTermEditor
         langComboBox.setDataProvider(DataProviderUtils.wrapWithErrorHandler(new DataProviderFromDataQuerySupplier<Resource>() {
             @Override
             protected void applyFilter(DataQuery<Resource> dataQuery, String filterText) {
-                UnaryRelation filter = KeywordSearchUtils.createConceptExistsRegexIncludeSubject(
-                        BinaryRelationImpl.create(RDFS.label), filterText);
+                Fragment1 filter = KeywordSearchUtils.createConceptExistsRegexIncludeSubject(
+                        Fragment2Impl.create(RDFS.label), filterText);
                 dataQuery.filter(filter);
             }
 
@@ -212,8 +212,8 @@ public class RdfTermEditor
         literalTypeComboBox.setDataProvider(DataProviderUtils.wrapWithErrorHandler(new DataProviderFromDataQuerySupplier<Resource>() {
             @Override
             protected void applyFilter(DataQuery<Resource> dataQuery, String filterText) {
-                UnaryRelation filter = KeywordSearchUtils.createConceptExistsRegexIncludeSubject(
-                        BinaryRelationImpl.create(RDFS.label), filterText);
+                Fragment1 filter = KeywordSearchUtils.createConceptExistsRegexIncludeSubject(
+                        Fragment2Impl.create(RDFS.label), filterText);
                 dataQuery.filter(filter);
             }
 

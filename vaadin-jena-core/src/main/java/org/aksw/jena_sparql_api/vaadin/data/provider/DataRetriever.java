@@ -11,7 +11,6 @@ import java.util.Map.Entry;
 
 import org.aksw.commons.rx.lookup.LookupService;
 import org.aksw.commons.util.obj.Enriched;
-import org.aksw.jena_sparql_api.concepts.Concept;
 import org.aksw.jena_sparql_api.lookup.LookupServiceSparqlConstructQuads;
 import org.aksw.jena_sparql_api.mapper.jpa.criteria.expr.VPath;
 import org.aksw.jena_sparql_api.rx.entity.engine.EntityQueryRx;
@@ -28,7 +27,8 @@ import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
 import org.aksw.jenax.facete.treequery2.api.NodeQuery;
 import org.aksw.jenax.facete.treequery2.api.RelationQuery;
 import org.aksw.jenax.facete.treequery2.impl.ElementGeneratorLateral;
-import org.aksw.jenax.sparql.relation.api.UnaryRelation;
+import org.aksw.jenax.sparql.fragment.api.Fragment1;
+import org.aksw.jenax.sparql.fragment.impl.Concept;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.SortCondition;
@@ -86,7 +86,7 @@ public class DataRetriever
         EntityGraphFragment entityGraphFragment = entityClassifier.createGraphFragment();
 
         // UnaryRelation concept = Concept.create(Vars.s, nodes);
-        UnaryRelation concept = Concept.createFilteredSubjects(Vars.s, nodes);
+        Fragment1 concept = Concept.createFilteredSubjects(Vars.s, nodes);
         EntityBaseQuery ebq = new EntityBaseQuery(Collections.singletonList(Vars.s), new EntityTemplateImpl(), concept.asQuery());
 
         Expr partitionSortExpr = new ExprAggregator(Var.alloc("dummy"),

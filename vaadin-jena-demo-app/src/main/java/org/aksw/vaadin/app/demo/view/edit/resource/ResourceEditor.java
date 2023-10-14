@@ -22,9 +22,6 @@ import org.aksw.commons.collection.observable.Registration;
 import org.aksw.commons.collections.PolaritySet;
 import org.aksw.jena_sparql_api.collection.observable.GraphChange;
 import org.aksw.jena_sparql_api.common.DefaultPrefixes;
-import org.aksw.jena_sparql_api.concepts.BinaryRelationImpl;
-import org.aksw.jena_sparql_api.concepts.ConceptUtils;
-import org.aksw.jena_sparql_api.concepts.RelationUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBase;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinComponentUtils;
@@ -39,10 +36,13 @@ import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFa
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryDataset;
 import org.aksw.jenax.path.core.PathOpsPP;
 import org.aksw.jenax.path.core.PathPP;
+import org.aksw.jenax.sparql.fragment.api.Fragment;
+import org.aksw.jenax.sparql.fragment.api.Fragment1;
+import org.aksw.jenax.sparql.fragment.api.Fragment2;
+import org.aksw.jenax.sparql.fragment.impl.ConceptUtils;
+import org.aksw.jenax.sparql.fragment.impl.Fragment2Impl;
+import org.aksw.jenax.sparql.fragment.impl.FragmentUtils;
 import org.aksw.jenax.sparql.path.SimplePath;
-import org.aksw.jenax.sparql.relation.api.BinaryRelation;
-import org.aksw.jenax.sparql.relation.api.Relation;
-import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.aksw.jenax.vaadin.component.breadcrumb.Breadcrumb;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
 import org.aksw.vaadin.common.component.util.ConfirmDialogUtils;
@@ -130,8 +130,8 @@ class ObservableSelectionModel<T>
 public class ResourceEditor
     extends VerticalLayout
 {
-    protected UnaryRelation subjectConcept;
-    protected UnaryRelation graphConcept;
+    protected Fragment1 subjectConcept;
+    protected Fragment1 graphConcept;
 
     protected ObservableValue<List<Path>> visibleProperties = ObservableValueImpl.create(SetUniqueList.setUniqueList(new ArrayList<>()));
 
@@ -328,10 +328,10 @@ public class ResourceEditor
 
         // Query resourceQuery = QueryFactory.create("SELECT ?s { { SELECT DISTINCT ?s { ?s ?p ?o } LIMIT 5 } }");
         Query resourceQuery = QueryFactory.create("SELECT ?o { BIND(<http://dcat.linkedgeodata.org/dataset/osm-bremen-2018-04-04> AS ?o) }");
-        UnaryRelation resourceRelation = RelationUtils.fromQuery(resourceQuery).toUnaryRelation();
+        Fragment1 resourceRelation = FragmentUtils.fromQuery(resourceQuery).toUnaryRelation();
 
 
-        Relation propertyRelation = pathToRelation(breadcrumb.getModel().get());
+        Fragment propertyRelation = pathToRelation(breadcrumb.getModel().get());
 
 
 
@@ -385,8 +385,8 @@ public class ResourceEditor
 
         breadcrumb.addPathListener(ev -> {
             org.aksw.commons.path.core.Path<P_Path0> pp = ev.getPath();
-            BinaryRelation rel = pathToRelation(pp);
-            UnaryRelation newRel =
+            Fragment2 rel = pathToRelation(pp);
+            Fragment1 newRel =
                     rel.prependOn(rel.getSourceVar()).with(resourceRelation)
                     .project(rel.getTargetVar()).toUnaryRelation();
             // UnaryRelation newRel = resourceRelation.join().with(rel).toUnaryRelation();
@@ -450,20 +450,20 @@ public class ResourceEditor
 
     }
 
-    public static BinaryRelation pathToRelation(org.aksw.commons.path.core.Path<P_Path0> path) {
+    public static Fragment2 pathToRelation(org.aksw.commons.path.core.Path<P_Path0> path) {
         List<P_Path0> segments = path.getSegments();
-        BinaryRelation e;
+        Fragment2 e;
         if (segments.isEmpty()) {
-            e = BinaryRelationImpl.empty(Vars.o);
+            e = Fragment2Impl.empty(Vars.o);
         } else {
             Path pp = SimplePath.toPropertyPath(segments);
-            e = BinaryRelationImpl.create(pp);
+            e = Fragment2Impl.create(pp);
         }
 
         return e;
     }
 
-    protected void syncPropertiesWithView(Relation relation, int offset, int limit) {
+    protected void syncPropertiesWithView(Fragment relation, int offset, int limit) {
 
     }
 

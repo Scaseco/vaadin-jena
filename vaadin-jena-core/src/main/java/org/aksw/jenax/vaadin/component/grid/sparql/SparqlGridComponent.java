@@ -5,11 +5,11 @@ import java.util.Map;
 
 import org.aksw.facete.v4.impl.ElementGenerator;
 import org.aksw.facete.v4.impl.MappedQuery;
-import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
 import org.aksw.jenax.dataaccess.sparql.factory.dataengine.RdfDataEngines;
 import org.aksw.jenax.path.core.FacetPath;
-import org.aksw.jenax.sparql.relation.api.UnaryRelation;
+import org.aksw.jenax.sparql.fragment.api.Fragment1;
+import org.aksw.jenax.sparql.fragment.impl.ConceptUtils;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.DatasetFactory;
@@ -26,7 +26,7 @@ import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 
 public class SparqlGridComponent extends VerticalLayout {
     protected RdfDataSource dataSource;
-    protected UnaryRelation baseConcept;
+    protected Fragment1 baseConcept;
     protected LabelService<Node, String> labelMgr;
     protected TreeDataProvider<FacetPath> treeDataProvider = new TreeDataProvider<>(new TreeData<>());
     protected Map<FacetPath, Boolean> pathToVisibility = new HashMap<>();
@@ -75,7 +75,7 @@ public class SparqlGridComponent extends VerticalLayout {
         }
     }
 
-    public SparqlGridComponent(RdfDataSource dataSource, UnaryRelation baseConcept,
+    public SparqlGridComponent(RdfDataSource dataSource, Fragment1 baseConcept,
             LabelService<Node, String> labelMgr) {
         this();
         this.dataSource = dataSource;
@@ -101,11 +101,11 @@ public class SparqlGridComponent extends VerticalLayout {
         this.dataSource = dataSource;
     }
 
-    public UnaryRelation getBaseConcept() {
+    public Fragment1 getBaseConcept() {
         return baseConcept;
     }
 
-    public void setBaseConcept(UnaryRelation baseConcept) {
+    public void setBaseConcept(Fragment1 baseConcept) {
         this.baseConcept = baseConcept;
     }
 

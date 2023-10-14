@@ -17,7 +17,6 @@ import org.aksw.facete.v3.api.FacetedDataQuery;
 import org.aksw.facete.v3.api.FacetedQuery;
 import org.aksw.facete.v4.impl.FacetedRelationQuery;
 import org.aksw.facete.v4.impl.PropertyResolverImpl;
-import org.aksw.jena_sparql_api.concepts.RelationUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlRdfNode;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
 import org.aksw.jenax.arq.util.node.NodeUtils;
@@ -26,8 +25,9 @@ import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactories;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
-import org.aksw.jenax.sparql.relation.api.Relation;
-import org.aksw.jenax.sparql.relation.api.UnaryRelation;
+import org.aksw.jenax.sparql.fragment.api.Fragment;
+import org.aksw.jenax.sparql.fragment.api.Fragment1;
+import org.aksw.jenax.sparql.fragment.impl.FragmentUtils;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
 import org.aksw.vaadin.common.component.tab.TabSheet;
@@ -85,7 +85,7 @@ public class TableMapperDetailsView
 
     // protected RdfDataSource dataSource;
     protected RdfDataSource dataSource;
-    protected UnaryRelation baseConcept;
+    protected Fragment1 baseConcept;
     // protected FacetTreeModel model;
     protected FacetPath activePath;
 
@@ -123,12 +123,12 @@ public class TableMapperDetailsView
 
 
         FacetNode fn = fq.root().traverse(activePath);
-        UnaryRelation rel = fn.availableValues().baseRelation().toUnaryRelation();
+        Fragment1 rel = fn.availableValues().baseRelation().toUnaryRelation();
         Query query = rel.toQuery();
         query.setDistinct(true);
 
         // VaadinSparqlUtils.setQueryForGridRdfNode(valueGrid, qef, query, RDFNode.class, null, null);
-        Relation relation = RelationUtils.fromQuery(query);
+        Fragment relation = FragmentUtils.fromQuery(query);
         String varName = relation.toUnaryRelation().getVar().getName();
         DataProviderSparqlRdfNode<RDFNode> dataProvider = new DataProviderSparqlRdfNode<>(relation, dataSource.asQef(), RDFNode.class, varName, null);
         dataProvider.setAlwaysDistinct(true);
@@ -216,7 +216,7 @@ public class TableMapperDetailsView
 
     // TODO Slider for which predicates to retrieve
 
-    public TableMapperDetailsView(LabelService<Node, String> labelMgr, RdfDataSource dataSource, UnaryRelation baseConcept, TreeDataProvider<FacetPath> treeDataProvider) {
+    public TableMapperDetailsView(LabelService<Node, String> labelMgr, RdfDataSource dataSource, Fragment1 baseConcept, TreeDataProvider<FacetPath> treeDataProvider) {
         super();
         this.labelMgr = labelMgr;
         this.dataSource = dataSource;

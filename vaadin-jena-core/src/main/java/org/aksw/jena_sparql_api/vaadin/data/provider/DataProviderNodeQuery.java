@@ -12,14 +12,14 @@ import org.aksw.commons.rx.lookup.LookupService;
 import org.aksw.commons.util.obj.Enriched;
 import org.aksw.commons.util.range.CountInfo;
 import org.aksw.commons.util.range.RangeUtils;
-import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jena_sparql_api.core.utils.ServiceUtils;
 import org.aksw.jena_sparql_api.lookup.LookupServiceSparqlConstructQuads;
 import org.aksw.jenax.arq.dataset.api.DatasetOneNg;
 import org.aksw.jenax.arq.dataset.impl.ResourceInDatasetImpl;
 import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
+import org.aksw.jenax.sparql.fragment.api.Fragment1;
+import org.aksw.jenax.sparql.fragment.impl.ConceptUtils;
 import org.aksw.jenax.sparql.query.rx.SparqlRx;
-import org.aksw.jenax.sparql.relation.api.UnaryRelation;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.RDFNode;
@@ -46,7 +46,7 @@ public class DataProviderNodeQuery
     protected RdfDataSource dataSource;
 
     /** The supplier for the specification of the initial set of RDF terms */
-    protected Supplier<UnaryRelation> conceptSupplier;
+    protected Supplier<Fragment1> conceptSupplier;
 
     /** A classifier to determine what data to fetch */
     // protected MapService<Concept, Node, Set<Node>> classifierService;
@@ -56,14 +56,14 @@ public class DataProviderNodeQuery
     // protected NodeQuery nodeQuery;
 
 
-    public DataProviderNodeQuery(RdfDataSource dataSource, Supplier<UnaryRelation> conceptSupplier, DataRetriever retriever) {
+    public DataProviderNodeQuery(RdfDataSource dataSource, Supplier<Fragment1> conceptSupplier, DataRetriever retriever) {
         super();
         this.dataSource = dataSource;
         this.conceptSupplier = conceptSupplier;
         this.retriever = retriever;
     }
 
-    public Supplier<UnaryRelation> getConceptSupplier() {
+    public Supplier<Fragment1> getConceptSupplier() {
         return conceptSupplier;
     }
 
@@ -87,7 +87,7 @@ public class DataProviderNodeQuery
 //        System.out.println("fetchFromBackEnd offset: " + query.getOffset());
 
 
-        UnaryRelation concept = conceptSupplier.get();
+        Fragment1 concept = conceptSupplier.get();
         // new ListServiceConcept()
 
 
@@ -157,7 +157,7 @@ public class DataProviderNodeQuery
         System.out.println("sizeInBackEnd - limit: " + query.getLimit());
         System.out.println("sizeInBackEnd - offset: " + query.getOffset());
 
-        UnaryRelation concept = conceptSupplier.get();
+        Fragment1 concept = conceptSupplier.get();
         org.apache.jena.query.Query sparqlQuery = concept.asQuery();
         // org.apache.jena.query.Query sparqlQuery = ElementGeneratorLateral.toQuery(nodeQuery);
         Range<Long> range = SparqlRx.fetchCountQuery(dataSource.asQef(), sparqlQuery, null, null).blockingGet();

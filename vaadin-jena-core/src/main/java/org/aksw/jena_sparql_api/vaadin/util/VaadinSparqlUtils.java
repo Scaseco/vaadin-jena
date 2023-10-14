@@ -14,14 +14,14 @@ import java.util.stream.Stream;
 import org.aksw.commons.util.delegate.Delegated;
 import org.aksw.commons.util.delegate.Unwrappable;
 import org.aksw.commons.util.obj.ObjectUtils;
-import org.aksw.jena_sparql_api.concepts.RelationUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlRdfNode;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlResource;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlSolution;
 import org.aksw.jenax.arq.util.expr.ExprUtils;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
-import org.aksw.jenax.sparql.relation.api.Relation;
+import org.aksw.jenax.sparql.fragment.api.Fragment;
+import org.aksw.jenax.sparql.fragment.impl.FragmentUtils;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QuerySolution;
@@ -62,7 +62,7 @@ public class VaadinSparqlUtils {
             String varName,
             Function<Binding, QuerySolution> customBindingMapper) {
 
-        Relation relation = RelationUtils.fromQuery(query);
+        Fragment relation = FragmentUtils.fromQuery(query);
         varName = varName == null ? relation.toUnaryRelation().getVar().getName() : varName;
 
 
@@ -97,7 +97,7 @@ public class VaadinSparqlUtils {
             String varName,
             Function<Binding, QuerySolution> customBindingMapper) {
 
-        Relation relation = RelationUtils.fromQuery(query);
+        Fragment relation = FragmentUtils.fromQuery(query);
         varName = varName == null ? relation.toUnaryRelation().getVar().getName() : varName;
         DataProvider<T, Expr> dataProvider = new DataProviderSparqlRdfNode<>(relation, qef, rdfNodeClass, varName, customBindingMapper);
 
@@ -268,7 +268,7 @@ public class VaadinSparqlUtils {
     }
 
     public static DataProvider<Binding, Expr> createDataProvider(QueryExecutionFactoryQuery qef, Query query, boolean alwaysDistinct) {
-        Relation relation = RelationUtils.fromQuery(query);
+        Fragment relation = FragmentUtils.fromQuery(query);
         DataProviderSparqlBinding coreDataProvider = new DataProviderSparqlBinding(relation, qef);
         coreDataProvider.setAlwaysDistinct(alwaysDistinct);
         DataProvider<Binding, Expr> dataProvider = wrapDataProviderWithFilter(coreDataProvider);
@@ -276,7 +276,7 @@ public class VaadinSparqlUtils {
     }
 
     public static DataProvider<QuerySolution, Expr> createDataProviderQs(QueryExecutionFactoryQuery qef, Query query, boolean alwaysDistinct) {
-        Relation relation = RelationUtils.fromQuery(query);
+        Fragment relation = FragmentUtils.fromQuery(query);
         DataProviderSparqlSolution coreDataProvider = new DataProviderSparqlSolution(relation, qef);
         coreDataProvider.setAlwaysDistinct(alwaysDistinct);
         DataProvider<QuerySolution, Expr> dataProvider = wrapDataProviderWithFilter(coreDataProvider);

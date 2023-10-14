@@ -1,11 +1,11 @@
 package org.aksw.vaadin.app.demo.view.tablemapper;
 
-import org.aksw.jena_sparql_api.concepts.Concept;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
 import org.aksw.jenax.dataaccess.sparql.polyfill.datasource.RdfDataSourceWithBnodeRewrite;
-import org.aksw.jenax.sparql.relation.api.UnaryRelation;
+import org.aksw.jenax.sparql.fragment.api.Fragment1;
+import org.aksw.jenax.sparql.fragment.impl.Concept;
 import org.aksw.jenax.vaadin.component.grid.sparql.TableMapperComponent;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.vaadin.app.demo.MainLayout;
@@ -27,7 +27,7 @@ public class TableMapperView
     public TableMapperView(LabelService<Node, String> labelService) {
 
         // QueryExecutionFactoryQuery qef = query -> RDFConnection.connect("http://localhost:8642/sparql").query(query);
-        UnaryRelation baseConcept = new Concept(ElementUtils.createElementTriple(Vars.x, Vars.y, Vars.z), Vars.x);
+        Fragment1 baseConcept = new Concept(ElementUtils.createElementTriple(Vars.x, Vars.y, Vars.z), Vars.x);
 
         RdfDataSource base = () -> RDFConnection.connect("http://localhost:8642/sparql");
 

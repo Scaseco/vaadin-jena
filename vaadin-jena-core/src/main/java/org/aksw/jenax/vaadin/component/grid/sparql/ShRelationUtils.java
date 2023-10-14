@@ -3,7 +3,7 @@ package org.aksw.jenax.vaadin.component.grid.sparql;
 import org.aksw.facete.v3.api.TreeData;
 import org.aksw.jenax.model.shacl.domain.ShNodeShape;
 import org.aksw.jenax.path.core.FacetPath;
-import org.aksw.jenax.sparql.relation.api.UnaryRelation;
+import org.aksw.jenax.sparql.fragment.api.Fragment1;
 import org.apache.jena.rdf.model.Resource;
 
 /** FIXME Add to shacl, relations or a new module (shacl + relations) */
@@ -29,11 +29,11 @@ public class ShRelationUtils {
      * @param relation
      * @return
      */
-    public static Resource toShTarget(Resource shape, UnaryRelation relation) {
+    public static Resource toShTarget(Resource shape, Fragment1 relation) {
         return null;
     }
 
-    public static ShNodeShape toShacl(UnaryRelation relation, TreeData<FacetPath> facetTree) {
+    public static ShNodeShape toShacl(Fragment1 relation, TreeData<FacetPath> facetTree) {
         return null;
     }
 }

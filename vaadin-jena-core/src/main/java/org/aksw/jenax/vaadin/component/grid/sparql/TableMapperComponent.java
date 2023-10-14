@@ -21,7 +21,6 @@ import org.aksw.commons.util.obj.Enriched;
 import org.aksw.facete.v4.impl.ElementGenerator;
 import org.aksw.facete.v4.impl.MappedQuery;
 import org.aksw.jena_sparql_api.algebra.expr.transform.ExprTransformVirtualBnodeUris;
-import org.aksw.jena_sparql_api.concepts.ConceptUtils;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderNodeQuery;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataRetriever;
@@ -41,7 +40,8 @@ import org.aksw.jenax.facete.treequery2.impl.NodeQueryImpl;
 import org.aksw.jenax.model.shacl.domain.ShNodeShape;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
-import org.aksw.jenax.sparql.relation.api.UnaryRelation;
+import org.aksw.jenax.sparql.fragment.api.Fragment1;
+import org.aksw.jenax.sparql.fragment.impl.ConceptUtils;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.vaadin.common.component.util.ConfirmDialogUtils;
 import org.aksw.vaadin.common.component.util.NotificationUtils;
@@ -124,7 +124,7 @@ public class TableMapperComponent
 
     VerticalLayout sparqlGridContainer = new VerticalLayout();
 
-    protected UnaryRelation baseConcept;
+    protected Fragment1 baseConcept;
 
 //    public TableMapperComponent(RdfDataSource dataSource, UnaryRelation baseConcept, LabelService<Node, String> labelService) {
 //
@@ -158,7 +158,7 @@ public class TableMapperComponent
 //        initComponent();
 //    }
 
-    public TableMapperComponent(RdfDataSource dataSource, UnaryRelation baseConcept, LabelService<Node, String> labelService) {
+    public TableMapperComponent(RdfDataSource dataSource, Fragment1 baseConcept, LabelService<Node, String> labelService) {
         this.dataSource = dataSource;
         this.baseConcept = baseConcept;
         this.labelService = labelService;
@@ -512,7 +512,7 @@ public class TableMapperComponent
     }
 
     public static Grid<Binding> buildGrid(
-            RdfDataSource dataSource, UnaryRelation baseConcept, TreeData<FacetPath> treeData,
+            RdfDataSource dataSource, Fragment1 baseConcept, TreeData<FacetPath> treeData,
             Predicate<FacetPath> isVisible, LabelService<Node, String> labelService)
     {
         Grid<Binding> sparqlGrid = new Grid<>();
@@ -566,7 +566,7 @@ public class TableMapperComponent
     // TODO How to abstract the sparql grid for reuse?
     public static Grid<Binding> createSparqlGrid(
             RdfDataSource dataSource,
-            UnaryRelation baseConcept,
+            Fragment1 baseConcept,
             TreeDataProvider<FacetPath> treeDataProvider,
             Map<FacetPath, Boolean> pathToVisibility,
             LabelService<Node, String> labelMgr
@@ -687,7 +687,7 @@ System.out.println(fpm.allocate(nq
         RdfDataSource dataSource = RdfDataSourceWithBnodeRewrite.wrapWithAutoBnodeProfileDetection(rdfDataSourceRaw);
         // QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(rdfDataSource);
 
-        Supplier<UnaryRelation> conceptSupplier = () -> ConceptUtils.createSubjectConcept();
+        Supplier<Fragment1> conceptSupplier = () -> ConceptUtils.createSubjectConcept();
         DataRetriever retriever = new DataRetriever(dataSource, entityClassifier);
 
 
