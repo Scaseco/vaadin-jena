@@ -328,7 +328,7 @@ public class ResourceEditor
 
         // Query resourceQuery = QueryFactory.create("SELECT ?s { { SELECT DISTINCT ?s { ?s ?p ?o } LIMIT 5 } }");
         Query resourceQuery = QueryFactory.create("SELECT ?o { BIND(<http://dcat.linkedgeodata.org/dataset/osm-bremen-2018-04-04> AS ?o) }");
-        Fragment1 resourceRelation = FragmentUtils.fromQuery(resourceQuery).toUnaryRelation();
+        Fragment1 resourceRelation = FragmentUtils.fromQuery(resourceQuery).toFragment1();
 
 
         Fragment propertyRelation = pathToRelation(breadcrumb.getModel().get());
@@ -388,7 +388,7 @@ public class ResourceEditor
             Fragment2 rel = pathToRelation(pp);
             Fragment1 newRel =
                     rel.prependOn(rel.getSourceVar()).with(resourceRelation)
-                    .project(rel.getTargetVar()).toUnaryRelation();
+                    .project(rel.getTargetVar()).toFragment1();
             // UnaryRelation newRel = resourceRelation.join().with(rel).toUnaryRelation();
 
             System.out.println("Combined concept: " + newRel);

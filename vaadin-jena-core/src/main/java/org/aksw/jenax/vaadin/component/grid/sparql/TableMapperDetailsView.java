@@ -123,13 +123,13 @@ public class TableMapperDetailsView
 
 
         FacetNode fn = fq.root().traverse(activePath);
-        Fragment1 rel = fn.availableValues().baseRelation().toUnaryRelation();
+        Fragment1 rel = fn.availableValues().baseRelation().toFragment1();
         Query query = rel.toQuery();
         query.setDistinct(true);
 
         // VaadinSparqlUtils.setQueryForGridRdfNode(valueGrid, qef, query, RDFNode.class, null, null);
         Fragment relation = FragmentUtils.fromQuery(query);
-        String varName = relation.toUnaryRelation().getVar().getName();
+        String varName = relation.toFragment1().getVar().getName();
         DataProviderSparqlRdfNode<RDFNode> dataProvider = new DataProviderSparqlRdfNode<>(relation, dataSource.asQef(), RDFNode.class, varName, null);
         dataProvider.setAlwaysDistinct(true);
 

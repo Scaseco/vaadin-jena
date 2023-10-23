@@ -31,6 +31,13 @@
 			<groupId>com.vaadin</groupId>
 			<artifactId>leaflet4vaadin</artifactId>
 			<version>0.5.0</version>
+				<exclusions>
+					<!-- Should use 'vaadin-core'; 'vaadin' includes commercial components -->
+					<exclusion>
+					<groupId>com.vaadin</groupId>
+					<artifactId>vaadin</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- <dependency> <groupId>org.aksw.commons</groupId> <artifactId>aksw-commons-rx-ex</artifactId> 

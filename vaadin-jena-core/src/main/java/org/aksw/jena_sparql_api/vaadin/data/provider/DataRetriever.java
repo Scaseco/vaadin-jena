@@ -12,7 +12,6 @@ import java.util.Map.Entry;
 import org.aksw.commons.rx.lookup.LookupService;
 import org.aksw.commons.util.obj.Enriched;
 import org.aksw.jena_sparql_api.lookup.LookupServiceSparqlConstructQuads;
-import org.aksw.jena_sparql_api.mapper.jpa.criteria.expr.VPath;
 import org.aksw.jena_sparql_api.rx.entity.engine.EntityQueryRx;
 import org.aksw.jena_sparql_api.rx.entity.model.EntityBaseQuery;
 import org.aksw.jena_sparql_api.rx.entity.model.EntityGraphFragment;
@@ -46,6 +45,8 @@ import org.apache.jena.sparql.expr.aggregate.AggMin;
 import org.apache.jena.sparql.modify.request.QuadAcc;
 import org.apache.jena.sparql.syntax.Element;
 import org.apache.jena.sparql.syntax.Template;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -56,6 +57,8 @@ import io.reactivex.rxjava3.core.Flowable;
 public class DataRetriever
     implements LookupService<Node, Enriched<RDFNode>>
 {
+    protected Logger logger = LoggerFactory.getLogger(DataRetriever.class);
+
     protected EntityClassifier entityClassifier; //  = new EntityClassifier(Arrays.asList(Vars.s));
 
     /** A mapping of classifier id to NodeQuery in order to fetch the appropriate data */
@@ -106,11 +109,8 @@ public class DataRetriever
 //
 //        Dataset ds = DatasetFactory.create();
 //        rawQuads.forEach(ds.asDatasetGraph()::add);
-//
 //        List<ResourceInDataset> entries = FlowOfRdfNodesInDatasetsOps.naturalResources(ds).map(r -> r.as()).toList().blockingGet();
-
-        //RDFNodeInDatasetUtils.na
-
+//        RDFNodeInDatasetUtils.na
 
         // FIXME I think the concept with EntityQueryRx was that the 'result set' is a set of RDF resources whose properties can be traversed.
         Multimap<Node, Node> entityToClasses = // EntityQueryRx.execConstructEntitiesNg(qef::createQueryExecution, basic)
@@ -119,27 +119,25 @@ public class DataRetriever
 
 //		Multimap<Node, Node> entityToClasses = // EntityQueryRx.execConstructEntitiesNg(qef::createQueryExecution, basic)
 //				rawQuads.stream().collect(Multimaps.toMultimap(Quad::getGraph, Quad::getObject, HashMultimap::create));
-
-
         // ListMultimap<Node, Node> ll = ArrayListMultimap.create();
         // entityToClasses.forEach(ll::putAll);
         Multimap<Node, Node> classToEntities = Multimaps.invertFrom(entityToClasses, HashMultimap.create());
-
-
         Collection<Node> detectedClasses = new HashSet<>(entityToClasses.values());
 
-        System.err.println("Detected classes: " + detectedClasses);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Detected classes: " + detectedClasses);
+        }
 
         // .forEach(quad -> System.out.println(quad));
         // TODO Create a Multimap<Node, Node> entityToClasses
-
         // For each detected class perform the lookups with the respective node sets
-
         // for (Node classification : detectedClasses) {
         for (Entry<Node, Collection<Node>> e : classToEntities.asMap().entrySet()) {
             Node classification = e.getKey();
             Collection<Node> entities = e.getValue();
-            System.err.println("Entities: " + entities);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Entities: " + entities);
+            }
             NodeQuery nodeQuery = classToQuery.get(classification);
             if (nodeQuery != null) {
                 Var rootVar = Vars.s;
@@ -149,7 +147,9 @@ public class DataRetriever
                 query.setConstructTemplate(new Template(new QuadAcc(Arrays.asList(Quad.create(rootVar, Vars.x, Vars.y, Vars.z)))));
                 query.setQueryConstructType();
                 query.setQueryPattern(elt);
-                System.err.println(query);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Generated Query: " + query);
+                }
                 LookupService<Node, DatasetOneNg> ls = new LookupServiceSparqlConstructQuads(dataSource.asQef(), query)
                         .partition(30);
                 Map<Node, RDFNode> data = ls
@@ -179,7 +179,9 @@ public class DataRetriever
                 }
                 // System.out.println("Data: " + data);
             } else {
-                System.err.println("No query for class: " + classification);
+                if (logger.isWarnEnabled()) {
+                    logger.warn("No query registered for classification: " + classification);
+                }
             }
             // nodeQuery
         }

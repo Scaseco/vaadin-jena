@@ -20,7 +20,7 @@ import org.aksw.jena_sparql_api.schema.ShapedNode;
 import org.aksw.jena_sparql_api.schema.ShapedProperty;
 import org.aksw.jenax.path.core.PathNode;
 import org.aksw.jenax.path.datatype.RDFDatatypePPath;
-import org.aksw.jenax.sparql.fragment.impl.Concept;
+import org.aksw.jenax.sparql.fragment.api.Fragment1;
 import org.aksw.jenax.sparql.fragment.impl.ConceptUtils;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
@@ -45,7 +45,7 @@ public class HierarchicalDataProviderForShacl
     public static final Node MORE_MATCHES = NodeFactory.createBlankNode("MORE_MATCHES");
 
     // protected ShapedNode rootNode;
-    protected MapService<Concept, Node, ShapedNode> root;
+    protected MapService<Fragment1, Node, ShapedNode> root;
     // protected Set<NodeSchema> rootSchemas;
     //protected SparqlQueryConnection conn;
     protected boolean showEmptyProperties = true;
@@ -59,7 +59,7 @@ public class HierarchicalDataProviderForShacl
 //        this(root, null);
 //    }
 
-    public HierarchicalDataProviderForShacl(MapService<Concept, Node, ShapedNode> root, GraphChange graphEditorModel) {
+    public HierarchicalDataProviderForShacl(MapService<Fragment1, Node, ShapedNode> root, GraphChange graphEditorModel) {
         super();
         this.root = root;
         this.graphEditorModel = graphEditorModel;
@@ -121,7 +121,7 @@ public class HierarchicalDataProviderForShacl
             return Stream.empty();
         }
 
-        MapService<Concept, Node, ShapedNode> current = root;
+        MapService<Fragment1, Node, ShapedNode> current = root;
 
 
         // Resolve the node shape for the final resource in the path
@@ -146,8 +146,8 @@ public class HierarchicalDataProviderForShacl
 
                         ShapedProperty sp = map.get(path);
                         if (sp == null) {
-                            ListService<Concept, ShapedNode> ls = new ListServiceFromList<>(Collections.emptyList(), (k, v) -> true);
-                            MapServiceFromListService<Concept, ShapedNode, Node, ShapedNode> ms = new MapServiceFromListService<>(ls, ShapedNode::getSourceNode, x -> x);
+                            ListService<Fragment1, ShapedNode> ls = new ListServiceFromList<>(Collections.emptyList(), (k, v) -> true);
+                            MapServiceFromListService<Fragment1, ShapedNode, Node, ShapedNode> ms = new MapServiceFromListService<>(ls, ShapedNode::getSourceNode, x -> x);
 
                             current = ms;
                         } else {

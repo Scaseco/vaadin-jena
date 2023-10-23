@@ -63,7 +63,7 @@ public class VaadinSparqlUtils {
             Function<Binding, QuerySolution> customBindingMapper) {
 
         Fragment relation = FragmentUtils.fromQuery(query);
-        varName = varName == null ? relation.toUnaryRelation().getVar().getName() : varName;
+        varName = varName == null ? relation.toFragment1().getVar().getName() : varName;
 
 
         DataProvider<T, Expr> dataProvider = new DataProviderSparqlResource<>(relation, qef, rdfNodeClass, varName, customBindingMapper);
@@ -98,7 +98,7 @@ public class VaadinSparqlUtils {
             Function<Binding, QuerySolution> customBindingMapper) {
 
         Fragment relation = FragmentUtils.fromQuery(query);
-        varName = varName == null ? relation.toUnaryRelation().getVar().getName() : varName;
+        varName = varName == null ? relation.toFragment1().getVar().getName() : varName;
         DataProvider<T, Expr> dataProvider = new DataProviderSparqlRdfNode<>(relation, qef, rdfNodeClass, varName, customBindingMapper);
 
         grid.setDataProvider(dataProvider);

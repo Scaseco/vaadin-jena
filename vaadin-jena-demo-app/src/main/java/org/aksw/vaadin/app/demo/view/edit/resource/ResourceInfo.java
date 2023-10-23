@@ -25,7 +25,7 @@ import org.aksw.jena_sparql_api.lookup.ListPaginatorSparql;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
-import org.aksw.jenax.dataaccess.sparql.execution.query.QueryExecutionDecoratorBase;
+import org.aksw.jenax.dataaccess.sparql.execution.query.QueryExecutionWrapperBase;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.Query;
@@ -84,7 +84,7 @@ public class ResourceInfo {
 
                 QueryExecutionFactoryQuery qef = q -> {
                     RDFConnection conn = rdfDataSource.getConnection();
-                    return new QueryExecutionDecoratorBase<QueryExecution>(conn.query(q)) {
+                    return new QueryExecutionWrapperBase<QueryExecution>(conn.query(q)) {
                         @Override
                         public void close() {
                             try {

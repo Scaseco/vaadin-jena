@@ -27,7 +27,7 @@ import org.aksw.jena_sparql_api.rdf.collections.NodeMappers;
 import org.aksw.jena_sparql_api.schema.ShapedNode;
 import org.aksw.jenax.arq.util.triple.TripleUtils;
 import org.aksw.jenax.path.datatype.RDFDatatypePPath;
-import org.aksw.jenax.sparql.fragment.impl.Concept;
+import org.aksw.jenax.sparql.fragment.api.Fragment1;
 import org.aksw.vaadin.common.bind.VaadinBindUtils;
 import org.aksw.vaadin.component.rdf_term_editor.RdfTermEditor;
 import org.aksw.vaadin.datashape.provider.DataProviderForPrefixBasedTypeAhead;
@@ -67,8 +67,8 @@ public class ShaclTreeGrid {
             GraphChange graphEditorModel,
             List<ShapedNode> rootNodes,
             LookupService<Node, String> labelService) {
-        ListService<Concept, ShapedNode> ls = new ListServiceFromList<>(rootNodes, (k, v) -> true);
-        MapServiceFromListService<Concept, ShapedNode, Node, ShapedNode> ms = new MapServiceFromListService<>(ls, ShapedNode::getSourceNode, x -> x);
+        ListService<Fragment1, ShapedNode> ls = new ListServiceFromList<>(rootNodes, (k, v) -> true);
+        MapServiceFromListService<Fragment1, ShapedNode, Node, ShapedNode> ms = new MapServiceFromListService<>(ls, ShapedNode::getSourceNode, x -> x);
 
 
         TreeGrid<Path<Node>> treeGrid = new TreeGrid<>();
