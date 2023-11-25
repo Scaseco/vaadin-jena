@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>org.aksw.scaseco.vaadin</groupId>
 		<artifactId>vaadin-jena-parent</artifactId>
-		<version>4.9.0-1-SNAPSHOT</version>
+		<version>4.10.0-1-SNAPSHOT</version>
 	</parent>
 	<dependencies>
 		<dependency>
