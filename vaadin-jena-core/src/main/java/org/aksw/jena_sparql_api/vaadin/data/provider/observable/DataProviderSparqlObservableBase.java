@@ -18,9 +18,9 @@ import org.apache.jena.sparql.expr.Expr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.jsonldjava.shaded.com.google.common.primitives.Ints;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
+import com.google.common.primitives.Ints;
 import com.vaadin.flow.data.provider.AbstractBackEndDataProvider;
 import com.vaadin.flow.data.provider.Query;
 

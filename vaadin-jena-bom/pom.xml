@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.aksw.scaseco.vaadin</groupId>
 	<artifactId>vaadin-jena-bom</artifactId>
-	<version>4.10.0-1-SNAPSHOT</version>
+	<version>5.0.0-1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<!-- <name>Jena SPARQL API - Vaadin - Parent</name> -->
 	<!-- <parent> <groupId>org.aksw.jena-sparql-api</groupId>
@@ -15,12 +15,12 @@
 		<vaadin.version>14.10.1</vaadin.version>
 		<spring-boot.version>2.3.3.RELEASE</spring-boot.version>
 		<jackson.version>2.10.3</jackson.version>
-		<jenax.version>4.10.0-1-SNAPSHOT</jenax.version>
+		<jenax.version>5.0.0-1-SNAPSHOT</jenax.version>
 		<aksw-commons.version>0.9.8-SNAPSHOT</aksw-commons.version>
 		<!-- <facete3.version>1.2.0-SNAPSHOT</facete3.version> -->
-		<slf4j.version>1.8.0-beta4</slf4j.version>
-		<log4j.version>2.17.2</log4j.version>
-		<maven.compiler.release>11</maven.compiler.release>
+		<slf4j.version>2.0.9</slf4j.version>
+		<log4j.version>2.21.0</log4j.version>
+		<maven.compiler.release>17</maven.compiler.release>
 		<file.encoding>UTF-8</file.encoding>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -35,7 +35,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.8.1</version>
+					<version>3.11.0</version>
 					<configuration>
 						<!-- <source>${maven.compiler.source}</source>
 						<target>${maven.compiler.target}</target> -->
@@ -96,6 +96,21 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-bom</artifactId>
+				<version>${slf4j.version}</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-bom</artifactId>
+				<version>${log4j.version}</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
+
+			<dependency>
 				<groupId>org.aksw.scaseco.vaadin</groupId>
 				<artifactId>vaadin-jena-core</artifactId>
 				<version>${project.version}</version>
@@ -137,16 +152,11 @@
 				<artifactId>commons-lang3</artifactId>
 				<version>3.12.0</version>
 			</dependency>
-			<dependency>
-				<groupId>org.apache.logging.log4j</groupId>
-				<artifactId>log4j-slf4j18-impl</artifactId>
-				<version>${log4j.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.slf4j</groupId>
-				<artifactId>slf4j-api</artifactId>
-				<version>${slf4j.version}</version>
-			</dependency>
+			<!--			<dependency>-->
+			<!--				<groupId>org.apache.logging.log4j</groupId>-->
+			<!--				<artifactId>log4j-slf4j18-impl</artifactId>-->
+			<!--				<version>${log4j.version}</version>-->
+			<!--			</dependency>-->
 			<dependency>
 				<groupId>org.vaadin.gatanaso</groupId>
 				<artifactId>multiselect-combo-box-flow</artifactId>

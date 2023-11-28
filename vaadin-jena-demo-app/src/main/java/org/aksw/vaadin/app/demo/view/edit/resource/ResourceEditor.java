@@ -34,7 +34,6 @@ import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
 import org.aksw.jenax.dataaccess.sparql.factory.dataengine.RdfDataEngineFromDataset;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactory;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryDataset;
-import org.aksw.jenax.path.core.PathOpsPP;
 import org.aksw.jenax.path.core.PathPP;
 import org.aksw.jenax.sparql.fragment.api.Fragment;
 import org.aksw.jenax.sparql.fragment.api.Fragment1;
@@ -508,7 +507,7 @@ public class ResourceEditor
                     r = null;
                 } else {
 
-                    r = node.toString(false);
+                    r = node.toString();
                 }
 //                } else if (node.isLiteral()) {
 //                    r = node.getLiteralValue();

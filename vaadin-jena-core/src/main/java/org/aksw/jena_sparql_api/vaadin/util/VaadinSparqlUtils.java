@@ -110,7 +110,7 @@ public class VaadinSparqlUtils {
               if (node == null) {
                   r = null;
               } else {
-                  r = node.toString(false);
+                  r = node.toString();
               }
 //              } else if (node.isLiteral()) {
 //                  r = node.getLiteralLexicalForm();
@@ -154,7 +154,7 @@ public class VaadinSparqlUtils {
                 if (node == null) {
                     r = null;
                 } else {
-                    r = node.toString(false);
+                    r = node.toString();
                 }
 //                } else if (node.isLiteral()) {
 //                    r = node.getLiteralValue();
@@ -213,7 +213,7 @@ public class VaadinSparqlUtils {
                 if (node == null) {
                     r = null;
                 } else {
-                    r = node.toString(false);
+                    r = node.toString();
                 }
 //                } else if (node.isLiteral()) {
 //                    r = node.getLiteralValue();
@@ -319,7 +319,7 @@ public class VaadinSparqlUtils {
                 if (node == null) {
                     r = null;
                 } else {
-                    r = node.toString(false);
+                    r = node.toString();
                 }
 //                } else if (node.isLiteral()) {
 //                    r = node.getLiteralValue();
