@@ -18,14 +18,14 @@
 		<version>5.0.0-1-SNAPSHOT</version>
 	</parent>
 
-
 	<dependencies>
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<!-- Replace artifactId with vaadin-core to use only free components -->
 			<artifactId>vaadin-core</artifactId>
 			<exclusions>
-				<!-- Webjars are only needed when running in Vaadin 13 compatibility 
+				<!-- Webjars are only needed when running in Vaadin 13
+				compatibility 
 					mode -->
 				<exclusion>
 					<groupId>com.vaadin.webjar</groupId>
@@ -51,6 +51,10 @@
 					<groupId>org.webjars.bowergithub.webcomponents</groupId>
 					<artifactId>*</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -72,7 +76,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
-			<version>${spring-boot.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
@@ -81,11 +84,13 @@
 			</exclusions>
 		</dependency>
 
-		<!-- <dependency> <groupId>org.springframework.boot</groupId> <artifactId>spring-boot-devtools</artifactId> 
-			<version>${spring-boot.version}</version> <optional>true</optional> <scope>runtime</scope> 
+		<!-- <dependency> <groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-devtools</artifactId> 
+			<version>${spring-boot.version}</version> <optional>true</optional>
+		<scope>runtime</scope> 
 			</dependency> -->
 
-<!--
+		<!--
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -93,13 +98,16 @@
 			<optional>true</optional>
 		</dependency>
 -->
-  
+
+		<dependency>
+			<groupId>jakarta.xml.bind</groupId>
+			<artifactId>jakarta.xml.bind-api</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-			<version>${spring-boot.version}</version>
 		</dependency>
-
 
 		<dependency>
 			<groupId>org.aksw.scaseco.vaadin</groupId>
@@ -109,6 +117,11 @@
 		<dependency>
 			<groupId>org.aksw.scaseco.vaadin</groupId>
 			<artifactId>vaadin-jena-shacl-editor</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
 		</dependency>
 
 
@@ -122,8 +135,10 @@
 		</dependency>
 
 
-		<!-- <dependency> <groupId>org.springframework.boot</groupId> <artifactId>spring-boot-devtools</artifactId> 
-			<version>${spring-boot.version}</version> <optional>true</optional> <scope>runtime</scope> 
+		<!-- <dependency> <groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-devtools</artifactId> 
+			<version>${spring-boot.version}</version> <optional>true</optional>
+		<scope>runtime</scope> 
 			</dependency> -->
 
 
@@ -146,7 +161,8 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- <dependency> <groupId>org.aksw.jena-sparql-api</groupId> <artifactId>jena-sparql-api-resources-test-config</artifactId> 
+		<!-- <dependency> <groupId>org.aksw.jena-sparql-api</groupId>
+		<artifactId>jena-sparql-api-resources-test-config</artifactId> 
 			<scope>test</scope> </dependency> -->
 
 	</dependencies>
@@ -158,7 +174,8 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<version>${spring-boot.version}</version>
-				<!-- Clean build and startup time for Vaadin apps sometimes may exceed 
+				<!-- Clean build and startup time for Vaadin apps sometimes may
+				exceed 
 					the default Spring Boot's 30sec timeout. -->
 				<configuration>
 					<wait>500</wait>
@@ -167,7 +184,8 @@
 				</configuration>
 			</plugin>
 
-			<!-- Take care of synchronizing java dependencies and imports in package.json 
+			<!-- Take care of synchronizing java dependencies and imports in
+			package.json 
 				and main.js files. It also creates webpack.config.js if not exists yet. -->
 			<plugin>
 				<groupId>com.vaadin</groupId>
@@ -268,7 +286,8 @@
 						</executions>
 					</plugin>
 
-					<!-- Runs the integration tests (*IT) after the server is started -->
+					<!-- Runs the integration tests (*IT) after the server is
+					started -->
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-failsafe-plugin</artifactId>
@@ -284,8 +303,10 @@
 							<trimStackTrace>false</trimStackTrace>
 							<enableAssertions>true</enableAssertions>
 							<systemPropertyVariables>
-								<!-- Pass location of downloaded webdrivers to the tests -->
-								<webdriver.chrome.driver>${webdriver.chrome.driver}</webdriver.chrome.driver>
+								<!-- Pass location of downloaded webdrivers to
+								the tests -->
+								<webdriver.chrome.driver>
+									${webdriver.chrome.driver}</webdriver.chrome.driver>
 							</systemPropertyVariables>
 						</configuration>
 					</plugin>

@@ -9,9 +9,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 @SpringBootApplication
 // @ServletComponentScan // Enable for custom servlets
 // @ComponentScan("org.aksw.vaadin.app.demo")
-public class MainAppComponentDemoVaadin
-    extends SpringBootServletInitializer
-{
+public class MainAppComponentDemoVaadin extends SpringBootServletInitializer {
     public static void main(String[] args) {
 
         ConfigurableApplicationContext cxt = new SpringApplicationBuilder()
