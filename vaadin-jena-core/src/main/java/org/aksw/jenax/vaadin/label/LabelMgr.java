@@ -13,8 +13,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.aksw.commons.rx.lookup.LookupService;
 import org.slf4j.Logger;
@@ -300,6 +298,7 @@ public class LabelMgr<R, L>
      * @param resources
      * @param callback
      */
+    @Override
     @SuppressWarnings("unchecked")
     public <X> void register(X component, Set<R> resources, BiConsumer<? super X, Map<R, L>> callback) {
         State<R, L> entry;

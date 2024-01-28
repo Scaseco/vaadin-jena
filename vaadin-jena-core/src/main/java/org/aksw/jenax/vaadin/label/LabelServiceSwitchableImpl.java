@@ -1,4 +1,4 @@
-package org.aksw.vaadin.app.demo;
+package org.aksw.jenax.vaadin.label;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,31 +8,40 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 
 import org.aksw.commons.rx.lookup.LookupService;
-import org.aksw.jenax.vaadin.label.LabelService;
-import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
 
-public class LabelServiceSwitchable<R, L>
-    implements LabelService<R, L>
+/**
+ * Label service implementation that maintains a list of lookup services for label retrieval.
+ * Only one retriever is active.
+ * Using {@link #next()} makes the next retriever in the list active.
+ * Subsequent label retrieval with a new active retriever is triggered using {@link #refreshAll()}.
+ *
+ * @param <R>
+ * @param <L>
+ */
+public class LabelServiceSwitchableImpl<R, L>
+    implements LabelServiceSwitchable<R, L>
 {
     protected VaadinLabelMgr<R, L> delegate;
     protected List<LookupService<R, L>> lookupServices;
     protected int currentIdx;
 
-    public LabelServiceSwitchable(VaadinLabelMgr<R, L> delegate) {
+    public LabelServiceSwitchableImpl(VaadinLabelMgr<R, L> delegate) {
         this(delegate, new ArrayList<>(), 0);
     }
 
-    public LabelServiceSwitchable(VaadinLabelMgr<R, L> delegate, List<LookupService<R, L>> services, int currentIdx) {
+    public LabelServiceSwitchableImpl(VaadinLabelMgr<R, L> delegate, List<LookupService<R, L>> services, int currentIdx) {
         super();
         this.delegate = delegate;
         this.lookupServices = services;
         this.currentIdx = currentIdx;
     }
 
+    @Override
     public List<LookupService<R, L>> getLookupServices() {
         return lookupServices;
     }
 
+    @Override
     public void next() {
         ++currentIdx;
         if (currentIdx >= lookupServices.size()) {
@@ -49,6 +58,7 @@ public class LabelServiceSwitchable<R, L>
         delegate.setLookupService(activeLooupService);
     }
 
+    @Override
     public void refreshAll() {
         delegate.refreshAll();
     }

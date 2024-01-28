@@ -11,7 +11,9 @@ import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactories;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.dataaccess.sparql.polyfill.datasource.RdfDataSourceWithBnodeRewrite;
-import org.aksw.jenax.vaadin.label.VaadinRdfLabelMgrImpl;
+import org.aksw.jenax.vaadin.label.LabelServiceSwitchable;
+import org.aksw.jenax.vaadin.label.LabelServiceSwitchableImpl;
+import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdfconnection.RDFConnection;
@@ -39,9 +41,9 @@ public class ConfigComponentDemoVaadin {
         LookupService<Node, String> ls2 = keys -> Flowable.fromIterable(keys).map(k -> Map.entry(k, Objects.toString(k)));
 
 
-        VaadinRdfLabelMgrImpl labelMgr = new VaadinRdfLabelMgrImpl(ls1);
+        VaadinLabelMgr<Node, String> labelMgr = new VaadinLabelMgr<>(ls1);
 
-        LabelServiceSwitchable<Node, String> result = new LabelServiceSwitchable<>(labelMgr);
+        LabelServiceSwitchable<Node, String> result = new LabelServiceSwitchableImpl<>(labelMgr);
         result.getLookupServices().addAll(Arrays.asList(ls1, ls2));
 
         return result;

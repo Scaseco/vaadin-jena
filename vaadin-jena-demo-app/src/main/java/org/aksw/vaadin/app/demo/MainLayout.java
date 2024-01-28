@@ -1,29 +1,12 @@
 package org.aksw.vaadin.app.demo;
 
-import java.util.Map;
-import java.util.Objects;
-
-import org.aksw.commons.rx.lookup.LookupService;
-import org.aksw.facete.v3.api.FacetedQuery;
-import org.aksw.facete.v3.impl.FacetedQueryImpl;
-import org.aksw.jena_sparql_api.common.DefaultPrefixes;
-import org.aksw.jenax.dataaccess.LabelUtils;
-import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
-import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactories;
-import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
-import org.aksw.jenax.dataaccess.sparql.polyfill.datasource.RdfDataSourceWithBnodeRewrite;
-import org.aksw.jenax.vaadin.label.LabelService;
-import org.aksw.jenax.vaadin.label.VaadinRdfLabelMgrImpl;
+import org.aksw.jenax.vaadin.label.LabelServiceSwitchable;
 import org.aksw.vaadin.app.demo.view.edit.resource.ResourceEditorView;
 import org.aksw.vaadin.app.demo.view.label.LabelView;
 import org.aksw.vaadin.app.demo.view.shaclgrid.ShaclGridView;
 import org.aksw.vaadin.app.demo.view.tablemapper.TableMapperView;
 import org.aksw.vaadin.app.demo.view.welcome.LandingPageView;
 import org.apache.jena.graph.Node;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdfconnection.RDFConnection;
-import org.apache.jena.rdfconnection.SparqlQueryConnection;
-import org.apache.jena.vocabulary.RDFS;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.vaadin.flow.component.UI;
@@ -43,8 +26,6 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
-
-import io.reactivex.rxjava3.core.Flowable;
 
 @Route("")
 @PWA(name = "Semantic Components Vaadin Demonstrator", shortName = "Scaseco Demo",
