@@ -24,67 +24,66 @@ import com.vaadin.flow.data.selection.SelectionListener;
 
 public class Leaflet4VaadinJenaUtils {
 
-	public static LatLng extractLatLng(Node node) {
-		GeometryWrapper w = GeometryWrapper.extract(node);
-		Geometry geom = w.getParsingGeometry();
-		return Leaflet4VaadinJtsUtils.extractLatLng(geom);
-	}
+    public static LatLng extractLatLng(Node node) {
+        GeometryWrapper w = GeometryWrapper.extract(node);
+        Geometry geom = w.getParsingGeometry();
+        return Leaflet4VaadinJtsUtils.extractLatLng(geom);
+    }
 
-	/**
-	 * Create a generic listener on a grid of bindings that adds any geometry data in the selection
-	 * to a map and zooms the map to the bounding box of all detected geometries
-	 *
-	 * @param <C>
-	 * @param map
-	 * @param group
-	 * @return
-	 */
-	public static <C extends Component> SelectionListener<C, Binding> createGridListener(LeafletMap map, LayerGroup group) {
-	    return ev -> {
-	        group.clearLayers();
-	
-	        List<Geometry> detectedGeometries = new ArrayList<>();
-	
-	        for (Binding b : ev.getAllSelectedItems()) {
-	            Iterator<Var> it = b.vars();
-	            while (it.hasNext()) {
-	                Var v = it.next();
-	                Node node = b.get(v);
-	
-	                Geometry geom = GeometryWrapperUtils.extractWgs84GeometryOrNull(node);
-	                if (geom != null) {
-	                    detectedGeometries.add(geom);
-	                }
-	            }
-	        }
-	
-	        for (Geometry geom : detectedGeometries) {
-	            GeoJSON geoJson = GeoJsonJtsUtils.toGeoJson(geom);
-	            geoJson.addTo(group);
-	
-	        }
-	
-	        if (!detectedGeometries.isEmpty()) {
-	            LatLngBounds bounds = Leaflet4VaadinJtsUtils.convert(JtsUtils.envelope(detectedGeometries));
-	            map.flyToBounds(bounds);
-	        }
-	    };
-	}
+    /**
+     * Create a generic listener on a grid of bindings that adds any geometry data in the selection
+     * to a map and zooms the map to the bounding box of all detected geometries
+     *
+     * @param <C>
+     * @param map
+     * @param group
+     * @return
+     */
+    public static <C extends Component> SelectionListener<C, Binding> createGridListener(LeafletMap map, LayerGroup group) {
+        return ev -> {
+            group.clearLayers();
 
-	public static LatLngBounds evelope(Node ... nodes) {
-		return Leaflet4VaadinJenaUtils.evelope(Arrays.asList(nodes));
-	}
+            List<Geometry> detectedGeometries = new ArrayList<>();
 
-	public static LatLngBounds evelope(Collection<Node> nodes) {
-		List<Geometry> geoms = GeometryWrapperUtils.nodesToGeoms(nodes);
-	    LatLngBounds result = Leaflet4VaadinJtsUtils.convert(JtsUtils.envelope(geoms));
-	    return result;
-	}
+            for (Binding b : ev.getAllSelectedItems()) {
+                Iterator<Var> it = b.vars();
+                while (it.hasNext()) {
+                    Var v = it.next();
+                    Node node = b.get(v);
 
-	public static LatLngBounds getWgs84Envelope(GeometryWrapper gw) {
-		Envelope envelope = GeometryWrapperUtils.toWgs84(gw).getXYGeometry().getEnvelopeInternal();
-	    LatLngBounds result = Leaflet4VaadinJtsUtils.convert(envelope);
-	    return result;
-	}
+                    Geometry geom = GeometryWrapperUtils.extractWgs84GeometryOrNull(node);
+                    if (geom != null) {
+                        detectedGeometries.add(geom);
+                    }
+                }
+            }
 
+            for (Geometry geom : detectedGeometries) {
+                GeoJSON geoJson = GeoJsonJtsUtils.toGeoJson(geom);
+                geoJson.addTo(group);
+
+            }
+
+            if (!detectedGeometries.isEmpty()) {
+                LatLngBounds bounds = Leaflet4VaadinJtsUtils.convert(JtsUtils.envelope(detectedGeometries));
+                map.flyToBounds(bounds);
+            }
+        };
+    }
+
+    public static LatLngBounds evelope(Node ... nodes) {
+        return Leaflet4VaadinJenaUtils.evelope(Arrays.asList(nodes));
+    }
+
+    public static LatLngBounds evelope(Collection<Node> nodes) {
+        List<Geometry> geoms = GeometryWrapperUtils.nodesToGeoms(nodes);
+        LatLngBounds result = Leaflet4VaadinJtsUtils.convert(JtsUtils.envelope(geoms));
+        return result;
+    }
+
+    public static LatLngBounds getWgs84Envelope(GeometryWrapper gw) {
+        Envelope envelope = GeometryWrapperUtils.toWgs84(gw).getXYGeometry().getEnvelopeInternal();
+        LatLngBounds result = Leaflet4VaadinJtsUtils.convert(envelope);
+        return result;
+    }
 }
