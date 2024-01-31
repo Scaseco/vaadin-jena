@@ -3,6 +3,7 @@ package org.aksw.vaadin.jena.geo;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.jena.geosparql.implementation.GeometryWrapper;
@@ -27,6 +28,17 @@ import com.vaadin.flow.data.selection.SelectionListener;
  *
  */
 public class Leaflet4VaadinUtils {
+    public static Set<Geometry> addBindingsToLayer(LeafletMap map, LayerGroup group, Binding binding) {
+        return addBindingsToLayer(map, group, List.of(binding));
+    }
+
+    public static Set<Geometry> addBindingsToLayer(LeafletMap map, LayerGroup group, Collection<Binding> bindings) {
+        Set<Geometry> detectedGeometries = new LinkedHashSet<>();
+        for (Binding b : bindings) {
+            addBindingToLayer(group, b, detectedGeometries);
+        }
+        return detectedGeometries;
+    }
 
     public static void addBindingToLayer(LayerGroup group, Binding b, Set<Geometry> detectedGeometries) {
         Iterator<Var> it = b.vars();
@@ -88,11 +100,7 @@ public class Leaflet4VaadinUtils {
     }
 
     public static void addAndFly(LeafletMap map, LayerGroup group, Collection<Binding> bindings) {
-        Set<Geometry> detectedGeometries = new LinkedHashSet<>();
-        for (Binding b : bindings) {
-            addBindingToLayer(group, b, detectedGeometries);
-        }
-
+        Set<Geometry> detectedGeometries = addBindingsToLayer(map, group, bindings);
         if (!detectedGeometries.isEmpty()) {
             LatLngBounds bounds = JtsUtils.convert(JtsUtils.envelope(detectedGeometries));
             map.flyToBounds(bounds);
