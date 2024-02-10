@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>vaadin-jena-geo</artifactId>
+	<artifactId>vaadin-jena-leaflet4vaadin</artifactId>
 	<packaging>jar</packaging>
 
 
@@ -31,16 +31,18 @@
 			<groupId>com.vaadin</groupId>
 			<artifactId>leaflet4vaadin</artifactId>
 			<version>0.5.0</version>
-				<exclusions>
-					<!-- Should use 'vaadin-core'; 'vaadin' includes commercial components -->
-					<exclusion>
+			<exclusions>
+				<!-- Should use 'vaadin-core'; 'vaadin' includes commercial
+				components -->
+				<exclusion>
 					<groupId>com.vaadin</groupId>
 					<artifactId>vaadin</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
 
-		<!-- <dependency> <groupId>org.aksw.commons</groupId> <artifactId>aksw-commons-rx-ex</artifactId> 
+		<!-- <dependency> <groupId>org.aksw.commons</groupId>
+		<artifactId>aksw-commons-rx-ex</artifactId> 
 			</dependency> -->
 		<dependency>
 			<groupId>com.vaadin</groupId>
@@ -48,7 +50,8 @@
 			<artifactId>vaadin-core</artifactId>
 			<scope>provided</scope>
 			<exclusions>
-				<!-- Webjars are only needed when running in Vaadin 13 compatibility 
+				<!-- Webjars are only needed when running in Vaadin 13
+				compatibility 
 					mode -->
 				<exclusion>
 					<groupId>com.vaadin.webjar</groupId>

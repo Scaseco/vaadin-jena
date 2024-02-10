@@ -38,9 +38,11 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.E_Str;
+import org.apache.jena.sparql.expr.E_StrSubstring;
 import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.expr.ExprAggregator;
 import org.apache.jena.sparql.expr.ExprVar;
+import org.apache.jena.sparql.expr.NodeValue;
 import org.apache.jena.sparql.expr.aggregate.AggMin;
 import org.apache.jena.sparql.modify.request.QuadAcc;
 import org.apache.jena.sparql.syntax.Element;
@@ -92,8 +94,11 @@ public class DataRetriever
         Fragment1 concept = Concept.createFilteredSubjects(Vars.s, nodes);
         EntityBaseQuery ebq = new EntityBaseQuery(Collections.singletonList(Vars.s), new EntityTemplateImpl(), concept.asQuery());
 
+        int maxSortKeyLen = 64;
         Expr partitionSortExpr = new ExprAggregator(Var.alloc("dummy"),
-                new AggMin(new E_Str(new ExprVar(Vars.o))));
+                new AggMin(new E_StrSubstring(
+                        new E_Str(new ExprVar(Vars.o)),
+                        NodeValue.makeInteger(1), NodeValue.makeInteger(maxSortKeyLen))));
         ebq.getPartitionOrderBy().add(new SortCondition(partitionSortExpr, org.apache.jena.query.Query.ORDER_ASCENDING));
 
 

@@ -124,7 +124,11 @@ public class DataProviderNodeQuery
         // logger.info
         System.err.println("GOT NODES " + (Sets.newHashSet(nodes).size() + " / " + nodes.size()) + " - " + nodes);
 
-        Map<Node, Enriched<RDFNode>> data = retriever.fetchMap(nodes);
+        int BULK_SIZE = 10;
+
+        Map<Node, Enriched<RDFNode>> data = retriever
+                .partition(BULK_SIZE)
+                .fetchMap(nodes);
 
         Collection<RDFNode> result;
         if (false) {

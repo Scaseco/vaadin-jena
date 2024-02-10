@@ -5,6 +5,7 @@ import java.util.stream.Stream;
 
 import org.aksw.commons.util.range.CountInfo;
 import org.aksw.commons.util.range.RangeUtils;
+import org.aksw.jenax.arq.util.syntax.QueryGenerationUtils;
 import org.aksw.jenax.arq.util.syntax.QueryUtils;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.sparql.fragment.api.Fragment;
@@ -15,6 +16,8 @@ import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.syntax.ElementData;
+import org.apache.jena.sparql.syntax.ElementFilter;
+import org.apache.jena.sparql.syntax.ElementSubQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -163,7 +166,15 @@ public abstract class DataProviderSparqlBase<T>
         result = result.cloneQuery();
 
         if (expr != null) {
-            QueryUtils.injectFilter(result, expr);
+            // QueryUtils.injectFilter(result, expr);
+            // In general we need to wrap the query
+            // FIXME Breaks for non-select queries!
+            org.apache.jena.query.Query outerQuery = new org.apache.jena.query.Query();
+            outerQuery.setQuerySelectType();
+            outerQuery.setQueryResultStar(true);
+            outerQuery.setQueryPattern(new ElementSubQuery(result));
+            QueryUtils.injectFilter(outerQuery, expr);
+            result = outerQuery;
         }
 
         return result;

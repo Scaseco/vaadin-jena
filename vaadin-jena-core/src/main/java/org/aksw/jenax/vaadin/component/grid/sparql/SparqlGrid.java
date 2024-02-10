@@ -3,7 +3,6 @@ package org.aksw.jenax.vaadin.component.grid.sparql;
 import java.io.Serializable;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -19,18 +18,14 @@ import org.aksw.commons.collections.trees.TreeUtils;
 import org.aksw.commons.util.stream.CollapseRunsSpec;
 import org.aksw.commons.util.stream.StreamOperatorCollapseRuns;
 import org.aksw.facete.v4.impl.MappedQuery;
-import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
+import org.aksw.jena_sparql_api.vaadin.util.GridLike;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
-import org.aksw.jenax.arq.util.expr.ExprUtils;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.facete.treequery2.api.ScopedFacetPath;
 import org.aksw.jenax.path.core.FacetPath;
-import org.aksw.jenax.sparql.fragment.api.Fragment;
-import org.aksw.jenax.sparql.fragment.impl.FragmentUtils;
 import org.aksw.jenax.vaadin.label.LabelMgr;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
-import org.aksw.vaadin.common.provider.util.DataProviderWrapperBase;
 import org.apache.jena.graph.Node;
 import org.apache.jena.query.Query;
 import org.apache.jena.riot.out.NodeFmtLib;
@@ -42,7 +37,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Streams;
 import com.google.common.graph.Traverser;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.HeaderRow.HeaderCell;
@@ -99,7 +93,7 @@ public class SparqlGrid {
 
 
     public static void setQueryForGridBinding(
-            Grid<Binding> grid,
+            GridLike<Binding> grid,
             QueryExecutionFactoryQuery qef,
             LabelService<Node, String> labelMgr,
             MappedQuery mappedQuery
@@ -159,7 +153,7 @@ public class SparqlGrid {
      *
      */
     public static <T> Multimap<T, HeaderCell> setupHeaders(
-            Grid<Binding> grid,
+            GridLike<Binding> grid,
             HeaderRow primaryHeaderRow,
             Function<T, T> getParent,
             List<Entry<Column<?>, T>> leafs) {
@@ -259,7 +253,7 @@ public class SparqlGrid {
     }
 
     public static <T> Multimap<T, HeaderCell> setupHeadersOld(
-            Grid<Binding> grid,
+            GridLike<Binding> grid,
             HeaderRow primaryHeaderRow,
             Function<T, T> getParent,
             List<Entry<Column<?>, T>> leafs) {

@@ -38,7 +38,6 @@ import org.apache.jena.sparql.expr.NodeValue;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.HeaderRow.HeaderCell;
@@ -55,7 +54,7 @@ import com.vaadin.flow.function.SerializableFunction;
 public class VaadinSparqlUtils {
 
     public static <T extends Resource> void setQueryForGridResource(
-            Grid<T> grid,
+            GridLike<T> grid,
             QueryExecutionFactoryQuery qef,
             Query query,
             Class<T> rdfNodeClass,
@@ -90,7 +89,7 @@ public class VaadinSparqlUtils {
     }
 
     public static <T extends RDFNode> void setQueryForGridRdfNode(
-            Grid<T> grid,
+            GridLike<T> grid,
             QueryExecutionFactoryQuery qef,
             Query query,
             Class<T> rdfNodeClass,
@@ -126,7 +125,7 @@ public class VaadinSparqlUtils {
     }
 
     public static void setQueryForGridSolution(
-            Grid<QuerySolution> grid,
+            GridLike<QuerySolution> grid,
             HeaderRow headerRow,
             QueryExecutionFactoryQuery qef,
             Query query,
@@ -172,14 +171,12 @@ public class VaadinSparqlUtils {
     }
 
     public static void setQueryForGridBinding(
-            Grid<Binding> grid,
+            GridLike<Binding> grid,
             HeaderRow headerRow,
             QueryExecutionFactoryQuery qef,
             Query query) {
         setQueryForGridBinding(grid, headerRow, qef, query, null);
     }
-
-
 
     /** Util method that sets up a view by calling base.withConfigurableFilter() */
     public static <T> DataProvider<T, Expr> withSparqlFilter(DataProvider<T, Expr> base) {
@@ -192,7 +189,7 @@ public class VaadinSparqlUtils {
     }
 
     public static void setQueryForGridBinding(
-            Grid<Binding> grid,
+            GridLike<Binding> grid,
             HeaderRow headerRow,
             DataProviderSparqlBinding dataProviderCore) {
 
@@ -292,7 +289,7 @@ public class VaadinSparqlUtils {
      * @param query
      */
     public static void setQueryForGridBinding(
-            Grid<Binding> grid,
+            GridLike<Binding> grid,
             HeaderRow headerRow,
             QueryExecutionFactoryQuery qef,
             Query query,
@@ -339,7 +336,7 @@ public class VaadinSparqlUtils {
 
 
     public static void setQueryForGridBindingComponent(
-            Grid<Binding> grid,
+            GridLike<Binding> grid,
             HeaderRow headerRow,
             QueryExecutionFactoryQuery qef,
             Query query,
@@ -374,13 +371,13 @@ public class VaadinSparqlUtils {
 
 
     public static Map<Var, TextField> configureGridFilter(
-            Grid<?> grid, HeaderRow filterRow, Collection<Var> vars) {
+            GridLike<?> grid, HeaderRow filterRow, Collection<Var> vars) {
         return configureGridFilter(grid, filterRow, vars, var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
     }
 
     /** Must be called AFTER columns have been added. */
     public static Map<Var, TextField> configureGridFilter(
-            Grid<?> grid, HeaderRow filterRow, Collection<Var> vars, Function<Var, Function<String, Expr>> varToStrToExpr) {
+            GridLike<?> grid, HeaderRow filterRow, Collection<Var> vars, Function<Var, Function<String, Expr>> varToStrToExpr) {
         // HeaderRow filterRow = grid.appendHeaderRow();
 
         Map<Var, TextField> result = new LinkedHashMap<>();
@@ -420,7 +417,7 @@ public class VaadinSparqlUtils {
         return result;
     }
 
-    public static void registerGridFilters(Grid<?> grid, Map<Var, ? extends HasValue<?, String>> filterFields, Function<Var, Function<String, Expr>> varToStrToExpr) {
+    public static void registerGridFilters(GridLike<?> grid, Map<Var, ? extends HasValue<?, String>> filterFields, Function<Var, Function<String, Expr>> varToStrToExpr) {
         DataProvider<?, ?> rawDataProvider = grid.getDataProvider();
         ConfigurableFilterDataProvider<?, Expr, Expr> dataProvider = Unwrappable.unwrap(rawDataProvider, ConfigurableFilterDataProvider.class, true).orElse(null);
 

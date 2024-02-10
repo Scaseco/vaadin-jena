@@ -18,7 +18,8 @@
 		<module>vaadin-jena-core</module>
 		<module>vaadin-jena-rdf-term-editor</module>
 		<module>vaadin-jena-shacl-editor</module>
-		<module>vaadin-jena-geo</module>
+		<module>vaadin-jena-leaflet4vaadin</module>
+		<module>vaadin-jena-leafletflow</module>
 		<module>vaadin-jena-demo-app</module>
 	</modules>
 </project>

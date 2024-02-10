@@ -24,7 +24,7 @@ import org.aksw.jena_sparql_api.algebra.expr.transform.ExprTransformVirtualBnode
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderNodeQuery;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataRetriever;
-import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
+import org.aksw.jena_sparql_api.vaadin.util.Grid2;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinStyleUtils;
 import org.aksw.jenax.arq.datashape.viewselector.EntityClassifier;
 import org.aksw.jenax.arq.util.node.NodeUtils;
@@ -73,7 +73,6 @@ import com.vaadin.flow.component.HasText;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.grid.HeaderRow.HeaderCell;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.grid.dnd.GridDropLocation;
@@ -511,11 +510,11 @@ public class TableMapperComponent
         sparqlGridContainer.add(sparqlGrid);
     }
 
-    public static Grid<Binding> buildGrid(
+    public static Grid2<Binding> buildGrid(
             RdfDataSource dataSource, Fragment1 baseConcept, TreeData<FacetPath> treeData,
             Predicate<FacetPath> isVisible, LabelService<Node, String> labelService)
     {
-        Grid<Binding> sparqlGrid = new Grid<>();
+        Grid2<Binding> sparqlGrid = new Grid2<>();
         sparqlGrid.setMultiSort(true);
         // sparqlGrid.setPageSize(1000);
         sparqlGrid.setWidthFull();
@@ -571,7 +570,7 @@ public class TableMapperComponent
             Map<FacetPath, Boolean> pathToVisibility,
             LabelService<Node, String> labelMgr
     ) {
-        Grid<Binding> sparqlGrid = new Grid<>();
+        Grid2<Binding> sparqlGrid = new Grid2<>();
         // sparqlGrid.setPageSize(1000);
         sparqlGrid.setWidthFull();
         sparqlGrid.setColumnReorderingAllowed(true);

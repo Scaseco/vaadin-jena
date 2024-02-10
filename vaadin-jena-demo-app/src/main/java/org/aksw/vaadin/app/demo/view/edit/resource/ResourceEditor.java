@@ -24,6 +24,7 @@ import org.aksw.jena_sparql_api.collection.observable.GraphChange;
 import org.aksw.jena_sparql_api.common.DefaultPrefixes;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBase;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
+import org.aksw.jena_sparql_api.vaadin.util.Grid2;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinComponentUtils;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
 import org.aksw.jenax.arq.util.expr.ExprUtils;
@@ -143,7 +144,7 @@ public class ResourceEditor
     // protected RDFConnection conn;
     protected RdfDataSource rdfDataSource;
 
-    protected Grid<Binding> propertyGrid;
+    protected Grid2<Binding> propertyGrid;
     protected HeaderRow propertyGridHeaderRow;
     protected HeaderRow propertyGridFilterRow;
     protected Binding draggedProperty = null;
@@ -190,7 +191,7 @@ public class ResourceEditor
         splitLayout.setSizeFull();
         splitLayout.setOrientation(Orientation.HORIZONTAL);
 
-        propertyGrid = new Grid<>();
+        propertyGrid = new Grid2<>();
         propertyGrid.setSelectionMode(SelectionMode.MULTI);
         propertyGridHeaderRow = propertyGrid.appendHeaderRow();
         propertyGridFilterRow = propertyGrid.appendHeaderRow();

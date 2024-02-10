@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.aksw.facete.v4.impl.ElementGenerator;
 import org.aksw.facete.v4.impl.MappedQuery;
+import org.aksw.jena_sparql_api.vaadin.util.Grid2;
 import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
 import org.aksw.jenax.dataaccess.sparql.factory.dataengine.RdfDataEngines;
 import org.aksw.jenax.path.core.FacetPath;
@@ -19,7 +20,6 @@ import org.apache.jena.sparql.expr.Expr;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
@@ -32,7 +32,7 @@ public class SparqlGridComponent extends VerticalLayout {
     protected Map<FacetPath, Boolean> pathToVisibility = new HashMap<>();
 
     /** Every reset creates a new instance of the grid! */
-    protected Grid<Binding> sparqlGrid = new Grid<>();
+    protected Grid2<Binding> sparqlGrid = new Grid2<>();
 
     protected Button settingsBtn;
 

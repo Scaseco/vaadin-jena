@@ -18,9 +18,9 @@ import org.aksw.facete.v3.api.FacetedQuery;
 import org.aksw.facete.v4.impl.FacetedRelationQuery;
 import org.aksw.facete.v4.impl.PropertyResolverImpl;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlRdfNode;
+import org.aksw.jena_sparql_api.vaadin.util.Grid2;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
 import org.aksw.jenax.arq.util.node.NodeUtils;
-import org.aksw.jenax.dataaccess.sparql.connection.common.RDFConnections;
 import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactories;
 import org.aksw.jenax.path.core.FacetPath;
@@ -99,8 +99,8 @@ public class TableMapperDetailsView
 
     protected Grid<PredicateRecord> predicateGrid = new Grid<>();
 
-    protected Grid<Binding> functionsGrid = new Grid<>();
-    protected Grid<Binding> virtualPropertiesGrid = new Grid<>();
+    protected Grid2<Binding> functionsGrid = new Grid2<>();
+    protected Grid2<Binding> virtualPropertiesGrid = new Grid2<>();
 
     public FacetPath getActivePath() {
         return activePath;

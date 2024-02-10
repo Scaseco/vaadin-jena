@@ -128,7 +128,12 @@
 			</dependency>
 			<dependency>
 				<groupId>org.aksw.scaseco.vaadin</groupId>
-				<artifactId>vaadin-jena-geo</artifactId>
+				<artifactId>vaadin-jena-leaflet4vaadin</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.aksw.scaseco.vaadin</groupId>
+				<artifactId>vaadin-jena-leafletflow</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
