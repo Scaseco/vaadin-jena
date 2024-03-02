@@ -18,13 +18,13 @@ import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.shared.Registration;
 
 /**
- * Collapses runs of length 'n' of the underlying provider into lists that
- * can be used for multiple elements per row.
+ * A data provider wrapper that batches results into lists of a given size.
+ * Primary use case is pagination, where each page corresponds to a batch.
  *
  * @param <T>
  * @param <F>
  */
-public class DataProviderCollapseRuns<T, F>
+public class DataProviderBatch<T, F>
     implements DataProvider<List<T>, F>
 {
     public static final int DEFAULT_BATCHSIZE = 5;
@@ -42,11 +42,11 @@ public class DataProviderCollapseRuns<T, F>
      * @param dataProvider
      *            the wrapped data provider, not <code>null</code>
      */
-    protected DataProviderCollapseRuns(DataProvider<T, F> dataProvider) {
+    protected DataProviderBatch(DataProvider<T, F> dataProvider) {
         this(dataProvider, DEFAULT_BATCHSIZE);
     }
 
-    protected DataProviderCollapseRuns(DataProvider<T, F> dataProvider, int batchSize) {
+    protected DataProviderBatch(DataProvider<T, F> dataProvider, int batchSize) {
         this.dataProvider = Objects.requireNonNull(dataProvider,
                 "The wrapped data provider cannot be null.");
         setBatchSize(batchSize);

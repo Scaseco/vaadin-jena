@@ -13,11 +13,11 @@ import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.function.SerializablePredicate;
 
 
-public class TestDataProviderCollapseRuns {
+public class TestDataProviderBatch {
     @Test
     public void test() {
         DataProvider<String, SerializablePredicate<String>> core = new ListDataProvider<>(Arrays.asList("a", "b", "c", "d", "e"));
-        DataProvider<List<String>, SerializablePredicate<String>> dp = new DataProviderCollapseRuns<>(core, 2);
+        DataProvider<List<String>, SerializablePredicate<String>> dp = new DataProviderBatch<>(core, 2);
         Query<List<String>, SerializablePredicate<String>> query = new Query<>(0, 50, null, null, null);
 
         List<List<String>> expectedItems = List.of(List.of("a", "b"), List.of("c", "d"), List.of("e"));

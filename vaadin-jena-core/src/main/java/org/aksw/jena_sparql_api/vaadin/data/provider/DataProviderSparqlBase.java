@@ -38,7 +38,11 @@ public abstract class DataProviderSparqlBase<T>
 
     private static final long serialVersionUID = 1L;
 
-    // This feels like a hack - it might be better to have the distinct flag part of the relation but this needs more thought
+    // This feels like a hack - it might be better to have the distinct flag part of the fragment but this needs more thought
+    // Alternatively, the fragment could be a sub-query; but it may still be useful to have an API to
+    // check for specifically
+    // project(distinct(graph-pattern)) and distinct(project(graph-pattern)); yet this could be done with (static)
+    // helper methods.
     protected boolean alwaysDistinct = false;
 
     protected Fragment relation;
