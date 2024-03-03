@@ -6,6 +6,7 @@ import org.aksw.vaadin.app.demo.view.label.LabelView;
 import org.aksw.vaadin.app.demo.view.shaclgrid.ShaclGridView;
 import org.aksw.vaadin.app.demo.view.tablemapper.TableMapperView;
 import org.aksw.vaadin.app.demo.view.welcome.LandingPageView;
+import org.aksw.vaadin.common.component.tab.RouteTabs;
 import org.apache.jena.graph.Node;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -35,7 +36,7 @@ import com.vaadin.flow.theme.lumo.Lumo;
 @CssImport(value = "./styles/vaadin-grid-styles.css", themeFor = "vaadin-grid")
 //@CssImport(value = "./styles/vaadin-tab-styles.css", themeFor = "vaadin-tab")
 @CssImport(value = "./styles/vaadin-select-text-field-styles.css", themeFor = "vaadin-select-text-field")
-@CssImport(value = "./styles/vaadin-select-styles.css", themeFor = "vaadin-select")
+//@CssImport(value = "./styles/vaadin-select-styles.css", themeFor = "vaadin-select")
 @CssImport(value = "./styles/vaadin-text-area-styles.css", themeFor = "vaadin-text-area")
 @CssImport(value = "./styles/flow-component-renderer-styles.css", themeFor = "flow-component-renderer")
 @CssImport(value = "./styles/vaadin-grid-tree-toggle-styles.css", themeFor = "vaadin-grid-tree-toggle")

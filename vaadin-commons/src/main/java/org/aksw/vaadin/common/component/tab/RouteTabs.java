@@ -1,4 +1,4 @@
-package org.aksw.vaadin.app.demo;
+package org.aksw.vaadin.common.component.tab;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +16,9 @@ import com.vaadin.flow.router.RouterLink;
 
 /** Source:https://cookbook.vaadin.com/tabs-with-routes/a */
 public class RouteTabs extends Tabs implements BeforeEnterObserver {
-    private final Map<RouterLink, Tab> routerLinkTabMap = new HashMap<>();
+    private static final long serialVersionUID = 1L;
+
+	private final Map<RouterLink, Tab> routerLinkTabMap = new HashMap<>();
 
     public void add(RouterLink ...routerLinks) {
         for (RouterLink routerLink : routerLinks) {
