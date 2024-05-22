@@ -83,4 +83,7 @@ public interface GridLike<T>
 
     /** @see Grid#addItemDoubleClickListener(ComponentEventListener) */
     Registration addItemDoubleClickListener(ComponentEventListener<ItemDoubleClickEvent<T>> listener);
+
+    /** @see Grid#setAllRowsVisible(boolean) */
+    void setAllRowsVisible(boolean allRowsVisible);
 }

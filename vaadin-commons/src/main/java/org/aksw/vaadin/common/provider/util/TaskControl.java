@@ -9,7 +9,7 @@ public interface TaskControl<S> {
 		void dispose();
 	}
 	
-	String getName();
+	String getLabel();
 	S getSource();
 	void abort();
 	

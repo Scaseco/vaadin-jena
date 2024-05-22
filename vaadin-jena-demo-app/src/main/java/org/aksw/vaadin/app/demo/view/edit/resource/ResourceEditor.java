@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -54,6 +53,7 @@ import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.out.NodeFmtLib;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.binding.BindingFactory;
@@ -144,6 +144,9 @@ public class ResourceEditor
     // protected RDFConnection conn;
     protected RdfDataSource rdfDataSource;
 
+    /** The grid of root items for editing. May include newly created instances and modified instances. */
+    protected Grid<Node> rootGrid;
+
     protected Grid2<Binding> propertyGrid;
     protected HeaderRow propertyGridHeaderRow;
     protected HeaderRow propertyGridFilterRow;
@@ -178,7 +181,7 @@ public class ResourceEditor
 
         // labelMgr =
 
-        Set<Node> nodes = new LinkedHashSet<>(Arrays.asList(NodeFactory.createURI("http://dcat.linkedgeodata.org/dataset/osm-bremen-2018-04-04")));
+        // Set<Node> nodes = new LinkedHashSet<>(Arrays.asList(NodeFactory.createURI("http://dcat.linkedgeodata.org/dataset/osm-bremen-2018-04-04")));
         // subjectConcept = ConceptUtils.createConcept(nodes);
         subjectConcept = ConceptUtils.createSubjectConcept();
 
@@ -187,9 +190,23 @@ public class ResourceEditor
         // QueryExecutionFactoryRangeCache qef = QueryExecutionFactoryRangeCache.create(null, null, 0, null)
 
 
-        SplitLayout splitLayout = new SplitLayout();
-        splitLayout.setSizeFull();
-        splitLayout.setOrientation(Orientation.HORIZONTAL);
+        SplitLayout verticalSplit = new SplitLayout();
+        verticalSplit.setSizeFull();
+        verticalSplit.setOrientation(Orientation.HORIZONTAL);
+
+        Button addRootBtn = new Button(VaadinIcon.PLUS.create());
+
+        addRootBtn.addClickListener(ev -> {
+            rootGrid.setItems(NodeFactory.createURI("http://dcat.linkedgeodata.org/dataset/osm-bremen-2018-04-04"));
+        });
+
+        rootGrid = new Grid<>();
+        rootGrid.addColumn(node -> NodeFmtLib.strNT(node));
+
+        rootGrid.addSelectionListener(ev -> {
+            setActiveRoot(ev.getFirstSelectedItem().orElse(null));
+        });
+
 
         propertyGrid = new Grid2<>();
         propertyGrid.setSelectionMode(SelectionMode.MULTI);
@@ -266,13 +283,12 @@ public class ResourceEditor
 
 
 
-        Button addResourceBtn = new Button(VaadinIcon.PLUS.create());
         // addResourceBtn.add
 
         VerticalLayout resourcePanel = new VerticalLayout();
         resourcePanel.setSizeFull();
         resourcePanel.add(breadcrumb);
-        resourcePanel.add(addResourceBtn);
+        // resourcePanel.add(addResourceBtn);
         resourcePanel.add(resourceGrid);
 
         Button addPropertyButton = new Button(VaadinIcon.PLUS.create());
@@ -289,12 +305,19 @@ public class ResourceEditor
         });
 
 
+        SplitLayout horizontalSplit = new SplitLayout();
+        horizontalSplit.setSizeFull();
+        horizontalSplit.setOrientation(Orientation.VERTICAL);
+        horizontalSplit.addToPrimary(addRootBtn, rootGrid);
+        horizontalSplit.addToSecondary(addPropertyButton, propertyGrid);
 
-        splitLayout.addToPrimary(addPropertyButton, propertyGrid);
+
+        // verticalSplit.addToPrimary(addPropertyButton, propertyGrid);
         // splitLayout.addToPrimary(propertyGrid);
-        splitLayout.addToSecondary(resourcePanel);
+        verticalSplit.addToPrimary(horizontalSplit);
+        verticalSplit.addToSecondary(resourcePanel);
 
-        splitLayout.setSizeFull();
+        verticalSplit.setSizeFull();
         resourceGrid.setSizeFull();
         propertyGrid.setSizeFull();
 
@@ -302,7 +325,7 @@ public class ResourceEditor
         resourceGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
         // propertyGrid.setSelectionMode(SelectionMode.SINGLE);
-        add(splitLayout);
+        add(verticalSplit);
 
         List<Var> propertyTableVars = Arrays.asList(Vars.p, Vars.d);
 
@@ -449,6 +472,11 @@ public class ResourceEditor
 
 
     }
+
+    public void setActiveRoot(Node node) {
+
+    }
+
 
     public static Fragment2 pathToRelation(org.aksw.commons.path.core.Path<P_Path0> path) {
         List<P_Path0> segments = path.getSegments();

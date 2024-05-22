@@ -143,4 +143,10 @@ public interface GridWrapper<T>
     default Registration addItemDoubleClickListener(ComponentEventListener<ItemDoubleClickEvent<T>> listener) {
         return getDelegate().addItemDoubleClickListener(listener);
     }
+
+    /** {@inheritDoc} */
+    @Override
+    default void setAllRowsVisible(boolean allRowsVisible) {
+        getDelegate().setAllRowsVisible(allRowsVisible);
+    }
 }

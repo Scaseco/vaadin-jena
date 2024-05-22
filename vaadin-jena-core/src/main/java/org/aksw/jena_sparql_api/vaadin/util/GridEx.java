@@ -41,6 +41,10 @@ public class GridEx<T>
         this(new Grid<>(beanType, autoCreateColumns));
     }
 
+    protected Query<T, ?> newQuery() {
+        return new Query<>();
+    }
+
     public GridEx(Grid<T> grid) {
         super();
         this.grid = Objects.requireNonNull(grid);
@@ -83,7 +87,9 @@ public class GridEx<T>
         // getContent().add(new VerticalLayout(gridRoot));
 
         dataProviderListener = e -> {
-            if (grid.getDataProvider().size(new Query<>()) == 0) {
+            @SuppressWarnings("rawtypes")
+            Query q = newQuery();
+            if (grid.getDataProvider().size(q) == 0) {
                  warning.removeClassName("hidden");
                 // warning.setVisible(true);
                 // warning.setStyle("display", "")
