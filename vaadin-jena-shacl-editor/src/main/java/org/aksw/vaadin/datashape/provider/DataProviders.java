@@ -7,7 +7,7 @@ import com.vaadin.flow.data.provider.DataProvider;
 
 
 public class DataProviders {
-    public DataProvider<Node, String> forNamespaces(PrefixMapping prefixes) {
+    public static DataProvider<Node, String> forNamespaces(PrefixMapping prefixes) {
         return new DataProviderForPrefixBasedTypeAhead(prefixes);
     }
 }

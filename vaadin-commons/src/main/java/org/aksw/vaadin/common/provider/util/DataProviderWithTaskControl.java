@@ -10,7 +10,11 @@ import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.Query;
 
 
-/** Unfinished. A failed request should trigger an event that can be
+/**
+ * A DataProvider where each request (fetch and count) creates a task
+ * and registers it with a TaskControlRegistry for monitoring.
+ *
+ * TODO A failed request should trigger an event that can be
  * used to call refresh all on the provider; which effectively is a retry.
  */
 public class DataProviderWithTaskControl<T, F>

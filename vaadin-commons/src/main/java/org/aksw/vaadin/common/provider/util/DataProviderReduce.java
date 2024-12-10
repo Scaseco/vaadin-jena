@@ -38,12 +38,12 @@ public class DataProviderReduce<T, F>
 
     @Override
     public int size(Query<Entry<T, T>, F> query) {
-        Query<T, F> q = adapt(query, false);
+        Query<T, F> q = adaptQuery(query, false);
         int result = delegate.size(q);
         return result;
     }
 
-    public static <T, F> Query<T, F> adapt(Query<Entry<T, T>, F> query, boolean offsetMinusOne) {
+    public static <T, F> Query<T, F> adaptQuery(Query<Entry<T, T>, F> query, boolean offsetMinusOne) {
         int offset = query.getOffset();
         if (offset > 0 && offsetMinusOne) {
             --offset;
@@ -54,7 +54,7 @@ public class DataProviderReduce<T, F>
     @Override
     public Stream<Entry<T, T>> fetch(Query<Entry<T, T>, F> query) {
         boolean offsetMinusOne = query.getOffset() > 0;
-        Query<T, F> q = adapt(query, offsetMinusOne);
+        Query<T, F> q = adaptQuery(query, offsetMinusOne);
         Stream<Entry<T, T>> result = StreamUtils.streamToPairs(delegate.fetch(q));
         // If the offset was reduced by 1 then skip the first item
         if (offsetMinusOne) {

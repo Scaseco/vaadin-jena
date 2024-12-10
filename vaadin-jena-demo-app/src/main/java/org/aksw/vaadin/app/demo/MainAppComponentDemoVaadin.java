@@ -1,20 +1,27 @@
 package org.aksw.vaadin.app.demo;
 
-import org.springframework.boot.Banner.Mode;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
+
+import com.vaadin.flow.component.page.AppShellConfigurator;
+import com.vaadin.flow.component.page.Push;
+import com.vaadin.flow.server.PWA;
+import com.vaadin.flow.theme.Theme;
+import com.vaadin.flow.theme.lumo.Lumo;
 
 @SpringBootApplication
-// @ServletComponentScan // Enable for custom servlets
-// @ComponentScan("org.aksw.vaadin.app.demo")
-public class MainAppComponentDemoVaadin extends SpringBootServletInitializer {
+@PWA(name = "Semantic Components Vaadin Demonstrator", shortName = "Scaseco Demo",
+    description = "This is a demonstrator of components for semantic data.")
+@Theme(themeClass = Lumo.class)
+@Push
+public class MainAppComponentDemoVaadin
+    implements AppShellConfigurator
+{
     public static void main(String[] args) {
-
-        ConfigurableApplicationContext cxt = new SpringApplicationBuilder()
-                .bannerMode(Mode.OFF)
-                .sources(MainAppComponentDemoVaadin.class)
-                .run(args);
+        SpringApplication.run(MainAppComponentDemoVaadin.class, args);
+//        ConfigurableApplicationContext cxt = new SpringApplicationBuilder()
+//                .bannerMode(Mode.OFF)
+//                .sources(MainAppComponentDemoVaadin.class)
+//                .run(args);
     }
 }

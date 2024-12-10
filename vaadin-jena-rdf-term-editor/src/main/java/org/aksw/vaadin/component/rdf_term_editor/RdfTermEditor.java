@@ -201,7 +201,7 @@ public class RdfTermEditor
                         ;
                 return dq;
             }
-        }));
+        }), filterText -> filterText);
 
         literalTypeComboBox.setItemLabelGenerator(s -> Optional.ofNullable(s.getURI()).orElse("(null)"));
         literalTypeComboBox.setAllowCustomValue(true);
@@ -230,7 +230,7 @@ public class RdfTermEditor
                         ;
                 return dq;
             }
-        }));
+        }), filterText -> filterText);
 
     }
 

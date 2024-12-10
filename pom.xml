@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.aksw.scaseco.vaadin</groupId>
 		<artifactId>vaadin-jena-bom</artifactId>
-		<version>5.1.0-1-SNAPSHOT</version>
+		<version>5.2.0-1-SNAPSHOT</version>
 		<relativePath>vaadin-jena-bom</relativePath>
 	</parent>
 	
@@ -18,7 +18,7 @@
 		<module>vaadin-jena-core</module>
 		<module>vaadin-jena-rdf-term-editor</module>
 		<module>vaadin-jena-shacl-editor</module>
-		<module>vaadin-jena-leaflet4vaadin</module>
+		<!-- <module>vaadin-jena-leaflet4vaadin</module> -->
 		<module>vaadin-jena-leafletflow</module>
 		<module>vaadin-jena-demo-app</module>
 	</modules>

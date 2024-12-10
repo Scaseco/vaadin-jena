@@ -496,7 +496,7 @@ public class ShaclTreeGrid {
 
 
     public static void addSearchControls(TreeGrid<Path<Node>> treeGrid, NodeState nodeState, Path<Node> path,
-            FlexComponent<?> r) {
+            FlexComponent r) {
         HorizontalLayout filterPanel = new HorizontalLayout();
         TextField propertyFilter = new TextField();
         propertyFilter.setPlaceholder("Filter");

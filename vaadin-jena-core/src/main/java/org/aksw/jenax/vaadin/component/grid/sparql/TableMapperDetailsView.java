@@ -479,7 +479,7 @@ public class TableMapperDetailsView
 
         Component predicatesIcon = VaadinIcon.MENU.create();
         Component valuesIcon = VaadinIcon.TEXT_LABEL.create();
-        Component functionsIcon = VaadinIcon.FUNCION.create();
+        Component functionsIcon = VaadinIcon.FUNCTION.create();
         Component customPredicatesIcon = VaadinIcon.PLUS_CIRCLE.create();
         tabSheet.add(predicatesIcon, predicatesSplitLayout);
         tabSheet.add(valuesIcon, valuesLayout);

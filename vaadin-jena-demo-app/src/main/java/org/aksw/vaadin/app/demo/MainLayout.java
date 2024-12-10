@@ -24,13 +24,13 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.dom.ThemeList;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.PWA;
-import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 
 @Route("")
-@PWA(name = "Semantic Components Vaadin Demonstrator", shortName = "Scaseco Demo",
-        description = "This is a demonstrator of components for semantic data.", enableInstallPrompt = true)
+//@PWA(name = "Semantic Components Vaadin Demonstrator", shortName = "Scaseco Demo",
+//        description = "This is a demonstrator of components for semantic data.")
+//@PWA(name = "Semantic Components Vaadin Demonstrator", shortName = "Scaseco Demo",
+//description = "This is a demonstrator of components for semantic data.", enableInstallPrompt = true)
 @CssImport(value = "./styles/shared-styles.css", include = "lumo-badge")
 @CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
 @CssImport(value = "./styles/vaadin-grid-styles.css", themeFor = "vaadin-grid")
@@ -41,7 +41,7 @@ import com.vaadin.flow.theme.lumo.Lumo;
 @CssImport(value = "./styles/flow-component-renderer-styles.css", themeFor = "flow-component-renderer")
 @CssImport(value = "./styles/vaadin-grid-tree-toggle-styles.css", themeFor = "vaadin-grid-tree-toggle")
 @JsModule("@vaadin/vaadin-lumo-styles/presets/compact.js")
-@Theme(value = Lumo.class)
+//@Theme(value = Lumo.class)
 @JsModule("@vaadin/vaadin-lumo-styles/badge.js")
 //@HtmlImport(value="frontend://bower_components/vaadin-lumo-styles/badge.html")
 public class MainLayout
