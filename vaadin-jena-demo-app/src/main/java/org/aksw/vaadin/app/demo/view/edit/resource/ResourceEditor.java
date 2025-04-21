@@ -30,8 +30,8 @@ import org.aksw.jenax.arq.util.expr.ExprUtils;
 import org.aksw.jenax.arq.util.node.PathUtils;
 import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.dataaccess.LabelUtils;
-import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
-import org.aksw.jenax.dataaccess.sparql.factory.dataengine.RdfDataEngineFromDataset;
+import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
+import org.aksw.jenax.dataaccess.sparql.factory.datasource.RDFDataSources;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactory;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryDataset;
 import org.aksw.jenax.path.core.PathPP;
@@ -142,7 +142,7 @@ public class ResourceEditor
 
 
     // protected RDFConnection conn;
-    protected RdfDataSource rdfDataSource;
+    protected RDFDataSource rdfDataSource;
 
     /** The grid of root items for editing. May include newly created instances and modified instances. */
     protected Grid<Node> rootGrid;
@@ -171,7 +171,8 @@ public class ResourceEditor
         paths.add(PathUtils.createStep(DCAT.downloadURL.asNode(), true));
 
         Dataset dataset = RDFDataMgr.loadDataset("linkedgeodata-2018-04-04.dcat.ttl");
-        RdfDataSource rdfDataSource = RdfDataEngineFromDataset.create(dataset, true);
+        // RDFDataSource rdfDataSource = RdfDataEngineFromDataset.create(dataset, true);
+        RDFDataSource rdfDataSource = RDFDataSources.of(dataset);
 
         QueryExecutionFactory qef = new QueryExecutionFactoryDataset(dataset); // RDFConnection.connect(dataset);
 

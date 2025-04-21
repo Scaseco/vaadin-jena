@@ -7,7 +7,8 @@ import java.util.Objects;
 import org.aksw.commons.rx.lookup.LookupService;
 import org.aksw.jena_sparql_api.common.DefaultPrefixes;
 import org.aksw.jenax.dataaccess.LabelUtils;
-import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
+import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
+import org.aksw.jenax.dataaccess.sparql.factory.datasource.RDFDataSources;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactories;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.dataaccess.sparql.polyfill.datasource.RdfDataSourceWithBnodeRewrite;
@@ -27,10 +28,10 @@ import io.reactivex.rxjava3.core.Flowable;
 public class ConfigComponentDemoVaadin {
     @Bean
     public LabelServiceSwitchable<Node, String> labelService() {
-        RdfDataSource base = () -> RDFConnection.connect("http://localhost:8642/sparql");
+        RDFDataSource base = () -> RDFConnection.connect("http://localhost:8642/sparql");
 
-        RdfDataSource dataSource = base
-                .decorate(RdfDataSourceWithBnodeRewrite::wrapWithAutoBnodeProfileDetection)
+        RDFDataSource dataSource = RDFDataSources.decorate(base,
+                RdfDataSourceWithBnodeRewrite::wrapWithAutoBnodeProfileDetection)
                 // .decorate(RdfDataSourceWithLocalCache::new)
                 ;
 

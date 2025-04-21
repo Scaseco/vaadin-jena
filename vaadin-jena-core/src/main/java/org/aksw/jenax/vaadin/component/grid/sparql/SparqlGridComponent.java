@@ -6,8 +6,8 @@ import java.util.Map;
 import org.aksw.facete.v4.impl.ElementGenerator;
 import org.aksw.facete.v4.impl.MappedQuery;
 import org.aksw.jena_sparql_api.vaadin.util.Grid2;
-import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
-import org.aksw.jenax.dataaccess.sparql.factory.dataengine.RdfDataEngines;
+import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
+import org.aksw.jenax.dataaccess.sparql.factory.datasource.RDFDataSources;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.sparql.fragment.api.Fragment1;
 import org.aksw.jenax.sparql.fragment.impl.ConceptUtils;
@@ -25,7 +25,7 @@ import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 
 public class SparqlGridComponent extends VerticalLayout {
-    protected RdfDataSource dataSource;
+    protected RDFDataSource dataSource;
     protected Fragment1 baseConcept;
     protected LabelService<Node, String> labelMgr;
     protected TreeDataProvider<FacetPath> treeDataProvider = new TreeDataProvider<>(new TreeData<>());
@@ -42,7 +42,7 @@ public class SparqlGridComponent extends VerticalLayout {
 
     public SparqlGridComponent() {
         // Dataset dummy = DatasetFactory.create();
-        this.dataSource = RdfDataEngines.of(DatasetFactory.create()); // new QueryExecutionFactoryDataset();
+        this.dataSource = RDFDataSources.of(DatasetFactory.create()); // new QueryExecutionFactoryDataset();
         this.baseConcept = ConceptUtils.createSubjectConcept();
 
         FacetPath rootPath = FacetPath.newAbsolutePath();
@@ -75,7 +75,7 @@ public class SparqlGridComponent extends VerticalLayout {
         }
     }
 
-    public SparqlGridComponent(RdfDataSource dataSource, Fragment1 baseConcept,
+    public SparqlGridComponent(RDFDataSource dataSource, Fragment1 baseConcept,
             LabelService<Node, String> labelMgr) {
         this();
         this.dataSource = dataSource;
@@ -93,11 +93,11 @@ public class SparqlGridComponent extends VerticalLayout {
 //        this.qef = qef;
 //    }
 
-    public RdfDataSource getDataSource() {
+    public RDFDataSource getDataSource() {
         return dataSource;
     }
 
-    public void setDataSource(RdfDataSource dataSource) {
+    public void setDataSource(RDFDataSource dataSource) {
         this.dataSource = dataSource;
     }
 

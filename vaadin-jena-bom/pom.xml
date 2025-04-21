@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.aksw.scaseco.vaadin</groupId>
 	<artifactId>vaadin-jena-bom</artifactId>
-	<version>5.2.0-1-SNAPSHOT</version>
+	<version>5.5.0-1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<!-- <name>Jena SPARQL API - Vaadin - Parent</name> -->
 	<!-- <parent> <groupId>org.aksw.jena-sparql-api</groupId>
@@ -32,7 +32,7 @@
 		<jakarta.xml.version>4.0.0</jakarta.xml.version>
 
 		<jackson.version>2.16.0</jackson.version>
-		<jenax.version>5.2.0-1-SNAPSHOT</jenax.version>
+		<jenax.version>5.5.0-1-SNAPSHOT</jenax.version>
 		<aksw-commons.version>0.9.9-SNAPSHOT</aksw-commons.version>
 		<!-- <facete3.version>1.2.0-SNAPSHOT</facete3.version> -->
 		<slf4j.version>2.0.9</slf4j.version>

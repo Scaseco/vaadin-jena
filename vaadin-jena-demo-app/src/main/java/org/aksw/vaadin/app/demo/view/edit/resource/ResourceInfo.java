@@ -24,7 +24,7 @@ import org.aksw.commons.rx.lookup.ListPaginator;
 import org.aksw.jena_sparql_api.lookup.ListPaginatorSparql;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.arq.util.var.Vars;
-import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
+import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
 import org.aksw.jenax.dataaccess.sparql.execution.query.QueryExecutionWrapperBase;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
 import org.apache.jena.graph.Node;
@@ -43,13 +43,13 @@ import com.google.common.collect.Range;
 
 public class ResourceInfo {
         protected Node src;
-        protected RdfDataSource rdfDataSource;
+        protected RDFDataSource rdfDataSource;
         // protected Map<Path, Long> pathToCount = new LinkedHashMap<>();
 
         protected Map<Path, ReadableChannelSource<Node[]>> pathToValues = new LinkedHashMap<>();
 
 
-        public ResourceInfo(Node src, RdfDataSource rdfDataSource) {
+        public ResourceInfo(Node src, RDFDataSource rdfDataSource) {
             this.src = Objects.requireNonNull(src);
             this.rdfDataSource = Objects.requireNonNull(rdfDataSource);
         }

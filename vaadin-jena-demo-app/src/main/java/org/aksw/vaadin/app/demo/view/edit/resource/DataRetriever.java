@@ -26,9 +26,8 @@ import org.aksw.jenax.arq.util.node.PathUtils;
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.arq.util.triple.TripleUtils;
 import org.aksw.jenax.arq.util.var.Vars;
-import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
-import org.aksw.jenax.dataaccess.sparql.exec.query.QueryExecFactories;
-import org.aksw.jenax.dataaccess.sparql.factory.dataengine.RdfDataEngineFromDataset;
+import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
+import org.aksw.jenax.dataaccess.sparql.factory.datasource.RDFDataSources;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryOverSparqlQueryConnection;
 import org.aksw.jenax.stmt.core.SparqlStmtMgr;
 import org.apache.jena.graph.Node;
@@ -62,7 +61,7 @@ import com.google.common.collect.Sets;
 
 public class DataRetriever {
 
-    protected RdfDataSource rdfDataSource;
+    protected RDFDataSource rdfDataSource;
     // protected UnaryRelation sourceConcept;
     protected Query metaModelQuery = SparqlStmtMgr.loadQuery("resource-metamodel.rq");
 
@@ -81,7 +80,8 @@ public class DataRetriever {
         Set<Node> nodes = new LinkedHashSet<>(Arrays.asList(NodeFactory.createURI("http://dcat.linkedgeodata.org/dataset/osm-bremen-2018-04-04")));
 
         Dataset dataset = RDFDataMgr.loadDataset("linkedgeodata-2018-04-04.dcat.ttl");
-        RdfDataSource rdfDataSource = RdfDataEngineFromDataset.create(dataset, false);
+        // RDFDataSource rdfDataSource = RdfDataEngineFromDataset.create(dataset, false);
+        RDFDataSource rdfDataSource = RDFDataSources.of(dataset);
 
         DataRetriever retriever = new DataRetriever(rdfDataSource);
 
@@ -92,7 +92,7 @@ public class DataRetriever {
     }
 
 
-    public DataRetriever(RdfDataSource rdfDataSource) {
+    public DataRetriever(RDFDataSource rdfDataSource) {
         this.rdfDataSource = rdfDataSource;
     }
 

@@ -4,7 +4,7 @@ import java.util.function.Supplier;
 
 import org.aksw.commons.util.obj.Enriched;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderNodeQuery;
-import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
+import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
 import org.aksw.jenax.model.shacl.util.ShTemplateRegistry;
 import org.aksw.jenax.sparql.fragment.api.Fragment1;
 import org.aksw.jenax.sparql.fragment.impl.ConceptUtils;
@@ -32,7 +32,7 @@ public class ShaclGridView
     public DataProviderNodeQuery setup() {
         SHFactory.ensureInited();
         Model shaclModel = RDFDataMgr.loadModel("/home/raven/Projects/Eclipse/rmltk-parent/r2rml-resource-shacl/src/main/resources/r2rml.core.shacl.ttl");
-        RdfDataSource dataSource = () -> RDFConnection.connect("http://localhost:8642/sparql");
+        RDFDataSource dataSource = () -> RDFConnection.connect("http://localhost:8642/sparql");
         Supplier<Fragment1> conceptSupplier = () -> ConceptUtils.createSubjectConcept();
 
         return VaadinShaclGridUtils.fromShacl(dataSource, conceptSupplier, shaclModel);

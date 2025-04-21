@@ -30,7 +30,7 @@ import org.aksw.jenax.arq.datashape.viewselector.EntityClassifier;
 import org.aksw.jenax.arq.util.node.NodeUtils;
 import org.aksw.jenax.arq.util.syntax.QueryGenerationUtils;
 import org.aksw.jenax.arq.util.var.Vars;
-import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
+import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
 import org.aksw.jenax.dataaccess.sparql.polyfill.datasource.RdfDataSourceWithBnodeRewrite;
 import org.aksw.jenax.facete.treequery2.api.NodeQuery;
 import org.aksw.jenax.facete.treequery2.api.RelationQuery;
@@ -115,7 +115,7 @@ public class TableMapperComponent
     protected Set<FacetPath> expandedPaths = new HashSet<>();
     protected Map<FacetPath, Boolean> pathToVisibility = new HashMap<>();
 
-    protected RdfDataSource dataSource;
+    protected RDFDataSource dataSource;
     // protected QueryExecutionFactoryQuery qef;
 
 
@@ -157,7 +157,7 @@ public class TableMapperComponent
 //        initComponent();
 //    }
 
-    public TableMapperComponent(RdfDataSource dataSource, Fragment1 baseConcept, LabelService<Node, String> labelService) {
+    public TableMapperComponent(RDFDataSource dataSource, Fragment1 baseConcept, LabelService<Node, String> labelService) {
         this.dataSource = dataSource;
         this.baseConcept = baseConcept;
         this.labelService = labelService;
@@ -511,7 +511,7 @@ public class TableMapperComponent
     }
 
     public static Grid2<Binding> buildGrid(
-            RdfDataSource dataSource, Fragment1 baseConcept, TreeData<FacetPath> treeData,
+            RDFDataSource dataSource, Fragment1 baseConcept, TreeData<FacetPath> treeData,
             Predicate<FacetPath> isVisible, LabelService<Node, String> labelService)
     {
         Grid2<Binding> sparqlGrid = new Grid2<>();
@@ -564,7 +564,7 @@ public class TableMapperComponent
 
     // TODO How to abstract the sparql grid for reuse?
     public static Grid<Binding> createSparqlGrid(
-            RdfDataSource dataSource,
+            RDFDataSource dataSource,
             Fragment1 baseConcept,
             TreeDataProvider<FacetPath> treeDataProvider,
             Map<FacetPath, Boolean> pathToVisibility,
@@ -682,8 +682,8 @@ System.out.println(fpm.allocate(nq
         System.out.println(query);
 
 
-        RdfDataSource rdfDataSourceRaw = () -> RDFConnection.connect("http://localhost:8642/sparql");
-        RdfDataSource dataSource = RdfDataSourceWithBnodeRewrite.wrapWithAutoBnodeProfileDetection(rdfDataSourceRaw);
+        RDFDataSource rdfDataSourceRaw = () -> RDFConnection.connect("http://localhost:8642/sparql");
+        RDFDataSource dataSource = RdfDataSourceWithBnodeRewrite.wrapWithAutoBnodeProfileDetection(rdfDataSourceRaw);
         // QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(rdfDataSource);
 
         Supplier<Fragment1> conceptSupplier = () -> ConceptUtils.createSubjectConcept();

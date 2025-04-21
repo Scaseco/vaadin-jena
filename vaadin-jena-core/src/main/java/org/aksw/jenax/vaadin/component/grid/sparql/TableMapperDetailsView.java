@@ -21,7 +21,7 @@ import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlRdfNode;
 import org.aksw.jena_sparql_api.vaadin.util.Grid2;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
 import org.aksw.jenax.arq.util.node.NodeUtils;
-import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
+import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactories;
 import org.aksw.jenax.path.core.FacetPath;
 import org.aksw.jenax.path.core.FacetStep;
@@ -84,7 +84,7 @@ public class TableMapperDetailsView
     protected TreeDataProvider<FacetPath> treeDataProvider;
 
     // protected RdfDataSource dataSource;
-    protected RdfDataSource dataSource;
+    protected RDFDataSource dataSource;
     protected Fragment1 baseConcept;
     // protected FacetTreeModel model;
     protected FacetPath activePath;
@@ -216,7 +216,7 @@ public class TableMapperDetailsView
 
     // TODO Slider for which predicates to retrieve
 
-    public TableMapperDetailsView(LabelService<Node, String> labelMgr, RdfDataSource dataSource, Fragment1 baseConcept, TreeDataProvider<FacetPath> treeDataProvider) {
+    public TableMapperDetailsView(LabelService<Node, String> labelMgr, RDFDataSource dataSource, Fragment1 baseConcept, TreeDataProvider<FacetPath> treeDataProvider) {
         super();
         this.labelMgr = labelMgr;
         this.dataSource = dataSource;

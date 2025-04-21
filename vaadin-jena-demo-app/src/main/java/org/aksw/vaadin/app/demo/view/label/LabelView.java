@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.aksw.jena_sparql_api.common.DefaultPrefixes;
 import org.aksw.jenax.dataaccess.LabelUtils;
-import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
-import org.aksw.jenax.dataaccess.sparql.factory.dataengine.RdfDataEngineFromDataset;
+import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
+import org.aksw.jenax.dataaccess.sparql.factory.datasource.RDFDataSources;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactory;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryDataset;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
@@ -34,7 +34,8 @@ public class LabelView
         List<Node> subjects = dataset.getDefaultModel().listSubjects().mapWith(RDFNode::asNode).toList();
 
         // Node uri = NodeFactory.createURI("http://dcat.linkedgeodata.org/distribution/osm-bremen-2018-04-04-nodes-public-transport-thing");
-        RdfDataSource rdfDataSource = RdfDataEngineFromDataset.create(dataset, true);
+        // RDFDataSource rdfDataSource = RdfDataEngineFromDataset.create(dataset, true);
+        RDFDataSource rdfDataSource = RDFDataSources.of(dataset);
         QueryExecutionFactory qef = new QueryExecutionFactoryDataset(dataset); // RDFConnection.connect(dataset);
 
 

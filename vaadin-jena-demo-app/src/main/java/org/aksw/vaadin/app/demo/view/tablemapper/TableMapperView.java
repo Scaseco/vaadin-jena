@@ -2,7 +2,8 @@ package org.aksw.vaadin.app.demo.view.tablemapper;
 
 import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.arq.util.var.Vars;
-import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
+import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
+import org.aksw.jenax.dataaccess.sparql.factory.datasource.RDFDataSources;
 import org.aksw.jenax.dataaccess.sparql.polyfill.datasource.RdfDataSourceWithBnodeRewrite;
 import org.aksw.jenax.sparql.fragment.api.Fragment1;
 import org.aksw.jenax.sparql.fragment.impl.Concept;
@@ -29,10 +30,9 @@ public class TableMapperView
         // QueryExecutionFactoryQuery qef = query -> RDFConnection.connect("http://localhost:8642/sparql").query(query);
         Fragment1 baseConcept = new Concept(ElementUtils.createElementTriple(Vars.x, Vars.y, Vars.z), Vars.x);
 
-        RdfDataSource base = () -> RDFConnection.connect("http://localhost:8642/sparql");
+        RDFDataSource base = () -> RDFConnection.connect("http://localhost:8642/sparql");
 
-        RdfDataSource dataSource = base
-                .decorate(RdfDataSourceWithBnodeRewrite::wrapWithAutoBnodeProfileDetection)
+        RDFDataSource dataSource = RDFDataSources.decorate(base, RdfDataSourceWithBnodeRewrite::wrapWithAutoBnodeProfileDetection)
                 // .decorate(RdfDataSourceWithLocalCache::new)
                 ;
 

@@ -6,14 +6,12 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.aksw.commons.util.direction.Direction;
 import org.aksw.commons.util.io.out.OutputStreamUtils;
 import org.aksw.commons.util.obj.Enriched;
 import org.aksw.jena_sparql_api.algebra.expr.transform.ExprTransformVirtualBnodeUris;
@@ -24,19 +22,15 @@ import org.aksw.jenax.arq.datashape.viewselector.EntityClassifier;
 import org.aksw.jenax.arq.util.node.NodeUtils;
 import org.aksw.jenax.arq.util.triple.GraphUtils;
 import org.aksw.jenax.arq.util.var.Vars;
-import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
+import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
 import org.aksw.jenax.facete.treequery2.api.NodeQuery;
-import org.aksw.jenax.facete.treequery2.api.RelationQuery;
 import org.aksw.jenax.facete.treequery2.impl.ElementGeneratorLateral;
-import org.aksw.jenax.facete.treequery2.impl.FacetPathMappingImpl;
 import org.aksw.jenax.facete.treequery2.impl.NodeQueryImpl;
 import org.aksw.jenax.model.shacl.domain.ShNodeShape;
 import org.aksw.jenax.model.shacl.template.domain.HasTemplate;
 import org.aksw.jenax.model.shacl.template.domain.ShaclTemplateTerms;
 import org.aksw.jenax.model.shacl.util.ShPebbleUtils;
 import org.aksw.jenax.model.shacl.util.ShTemplateRegistry;
-import org.aksw.jenax.path.core.FacetPath;
-import org.aksw.jenax.path.core.FacetStep;
 import org.aksw.jenax.sparql.fragment.api.Fragment1;
 import org.aksw.jenax.vaadin.label.LabelService;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
@@ -44,21 +38,13 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
-import org.apache.jena.riot.out.NodeFmtLib;
-import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.graph.GraphFactory;
-import org.apache.jena.sparql.modify.request.QuadAcc;
-import org.apache.jena.sparql.syntax.Element;
-import org.apache.jena.sparql.syntax.Template;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -93,7 +79,7 @@ public class VaadinShaclGridUtils {
         return result;
     }
 
-    public static DataRetriever setupRetriever(RdfDataSource dataSource, Model shaclModel) {
+    public static DataRetriever setupRetriever(RDFDataSource dataSource, Model shaclModel) {
         List<ShNodeShape> nodeShapes = org.aksw.jenax.model.shacl.util.ShUtils.listNodeShapes(shaclModel);
 
         EntityClassifier entityClassifier = new EntityClassifier(Arrays.asList(Vars.s));
@@ -187,7 +173,7 @@ public class VaadinShaclGridUtils {
 
     }
 
-    public static DataProviderNodeQuery fromShacl(RdfDataSource dataSource, Supplier<Fragment1> conceptSupplier, Model shaclModel) {
+    public static DataProviderNodeQuery fromShacl(RDFDataSource dataSource, Supplier<Fragment1> conceptSupplier, Model shaclModel) {
         DataRetriever dataRetriever = setupRetriever(dataSource, shaclModel);
         DataProviderNodeQuery dataProvider = new DataProviderNodeQuery(dataSource, conceptSupplier, dataRetriever);
 

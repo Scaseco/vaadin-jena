@@ -16,7 +16,7 @@ import org.aksw.jena_sparql_api.core.utils.ServiceUtils;
 import org.aksw.jena_sparql_api.lookup.LookupServiceSparqlConstructQuads;
 import org.aksw.jenax.arq.dataset.api.DatasetOneNg;
 import org.aksw.jenax.arq.dataset.impl.ResourceInDatasetImpl;
-import org.aksw.jenax.dataaccess.sparql.datasource.RdfDataSource;
+import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
 import org.aksw.jenax.sparql.fragment.api.Fragment1;
 import org.aksw.jenax.sparql.fragment.impl.ConceptUtils;
 import org.aksw.jenax.sparql.query.rx.SparqlRx;
@@ -43,7 +43,7 @@ public class DataProviderNodeQuery
     protected boolean alwaysDistinct = false;
 
     /** The query execution factory on which to run the queries */
-    protected RdfDataSource dataSource;
+    protected RDFDataSource dataSource;
 
     /** The supplier for the specification of the initial set of RDF terms */
     protected Supplier<Fragment1> conceptSupplier;
@@ -56,7 +56,7 @@ public class DataProviderNodeQuery
     // protected NodeQuery nodeQuery;
 
 
-    public DataProviderNodeQuery(RdfDataSource dataSource, Supplier<Fragment1> conceptSupplier, DataRetriever retriever) {
+    public DataProviderNodeQuery(RDFDataSource dataSource, Supplier<Fragment1> conceptSupplier, DataRetriever retriever) {
         super();
         this.dataSource = dataSource;
         this.conceptSupplier = conceptSupplier;
@@ -67,7 +67,7 @@ public class DataProviderNodeQuery
         return conceptSupplier;
     }
 
-    public RdfDataSource getDataSource() {
+    public RDFDataSource getDataSource() {
         return dataSource;
     }
 
