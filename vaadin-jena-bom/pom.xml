@@ -5,39 +5,27 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.aksw.scaseco.vaadin</groupId>
 	<artifactId>vaadin-jena-bom</artifactId>
-	<version>5.5.0-1-SNAPSHOT</version>
+	<version>6.1.0-1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<!-- <name>Jena SPARQL API - Vaadin - Parent</name> -->
 	<!-- <parent> <groupId>org.aksw.jena-sparql-api</groupId>
 	<artifactId>jena-sparql-api-parent</artifactId> 
 		<version>4.2.0-1-SNAPSHOT</version> </parent> -->
 	<properties>
-		<vaadin.version>24.4.6</vaadin.version>
-		<spring-boot.version>3.3.1</spring-boot.version>
+		<vaadin.version>25.0.6</vaadin.version>
+		<spring-boot.version>4.1.0-M2</spring-boot.version>
 
-		<!-- vaadin 23 still uses javax instead of jakarta -->
-		<!--
-		<vaadin.version>23.5.2</vaadin.version>
-		<spring-boot.version>3.3.1</spring-boot.version>
-		-->
-
-		<!--
-		<vaadin.version>14.10.10</vaadin.version>
-		<spring-boot.version>2.7.18</spring-boot.version>
-		-->
-
-
-		<!--		<spring-boot.version>3.2.0</spring-boot.version>-->
-		<!--		<spring.version>6.1.1</spring.version>-->
 		<jakarta.xml.version>4.0.0</jakarta.xml.version>
+		<jackson.version>2.21.1</jackson.version>
 
-		<jackson.version>2.16.0</jackson.version>
-		<jenax.version>5.5.0-1-SNAPSHOT</jenax.version>
-		<aksw-commons.version>0.9.9-SNAPSHOT</aksw-commons.version>
-		<!-- <facete3.version>1.2.0-SNAPSHOT</facete3.version> -->
-		<slf4j.version>2.0.9</slf4j.version>
-		<log4j.version>2.21.0</log4j.version>
-		<maven.compiler.release>17</maven.compiler.release>
+		<jenax.version>6.1.0-1-SNAPSHOT</jenax.version>
+		<aksw-commons.version>0.9.11-SNAPSHOT</aksw-commons.version>
+		<slf4j.version>2.0.17</slf4j.version>
+		<log4j.version>2.25.1</log4j.version>
+
+		<junit.version>6.0.3</junit.version>
+
+		<maven.compiler.release>21</maven.compiler.release>
 		<file.encoding>UTF-8</file.encoding>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -113,19 +101,53 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
+				<groupId>com.vaadin</groupId>
+				<artifactId>vaadin-bom</artifactId>
+				<version>${vaadin.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${spring-boot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.aksw.jenax</groupId>
+				<artifactId>jenax-bom</artifactId>
+				<version>${jenax.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.aksw.commons</groupId>
+				<artifactId>aksw-commons-bom</artifactId>
+				<version>${aksw-commons.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-bom</artifactId>
 				<version>${slf4j.version}</version>
-				<scope>import</scope>
 				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
+
 			<dependency>
 				<groupId>org.apache.logging.log4j</groupId>
 				<artifactId>log4j-bom</artifactId>
 				<version>${log4j.version}</version>
-				<scope>import</scope>
 				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
+
 			<!--			<dependency>-->
 			<!--				<groupId>org.springframework</groupId>-->
 			<!--				<artifactId>spring-framework-bom</artifactId>-->
@@ -160,6 +182,12 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>org.aksw.scaseco.vaadin</groupId>
+				<artifactId>vaadin-jena-leafletflow</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
 				<groupId>org.claspina</groupId>
 				<artifactId>confirm-dialog</artifactId>
 				<version>2.0.0</version>
@@ -174,17 +202,19 @@
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-databind</artifactId>
 				<version>${jackson.version}</version>
+				<!--				<version>${jackson.version}</version>-->
 			</dependency>
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-annotations</artifactId>
-				<version>${jackson.version}</version>
+				<version>3.0-rc5</version>
+				<!--				<version>${jackson.version}</version>-->
 			</dependency>
 			<!-- commons-lang3 version fixes -->
 			<dependency>
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-lang3</artifactId>
-				<version>3.12.0</version>
+				<version>3.20.0</version>
 			</dependency>
 			<dependency>
 				<groupId>jakarta.xml.bind</groupId>
@@ -197,95 +227,31 @@
 			<!--				<artifactId>log4j-slf4j18-impl</artifactId>-->
 			<!--				<version>${log4j.version}</version>-->
 			<!--			</dependency>-->
+			<!--
 			<dependency>
 				<groupId>org.vaadin.gatanaso</groupId>
 				<artifactId>multiselect-combo-box-flow</artifactId>
-				<version>3.0.2</version>
+				<version>4.0.0-rc2</version>
 			</dependency>
+-->
 			<dependency>
 				<groupId>org.aksw.scaseco.vaadin</groupId>
 				<artifactId>vaadin-commons</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.aksw.commons</groupId>
-				<artifactId>aksw-commons-rx-ex</artifactId>
-				<version>${aksw-commons.version}</version>
-			</dependency>
-			<!-- <dependency> -->
-			<!-- <groupId>org.aksw.commons</groupId> -->
-			<!-- <artifactId>aksw-commons-paths</artifactId> -->
-			<!-- <version>${aksw-commons.version}</version> -->
-			<!-- </dependency> -->
-			<dependency>
-				<groupId>org.aksw.jenax</groupId>
-				<artifactId>jenax-arq-relations</artifactId>
-				<version>${jenax.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.aksw.jenax</groupId>
-				<artifactId>jenax-arq-rx</artifactId>
-				<version>${jenax.version}</version>
-			</dependency>
-			<!-- Needed for GeometryWrapperUtils; there should be a more fine
-			grained 
-				module for geo stuff -->
-			<dependency>
-				<groupId>org.aksw.jenax</groupId>
-				<artifactId>jenax-arq-plugins-bundle</artifactId>
-				<version>${jenax.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.aksw.jenax</groupId>
-				<artifactId>jenax-facete-impl</artifactId>
-				<version>${jenax.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.aksw.jenax</groupId>
-				<artifactId>jenax-arq-datapaths</artifactId>
-				<version>${jenax.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.aksw.jenax</groupId>
-				<artifactId>jenax-arq-datashapes</artifactId>
-				<version>${jenax.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>4.12</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.aksw.jenax</groupId>
-				<artifactId>jenax-resources-test-config</artifactId>
-				<version>${jenax.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<!-- <dependency> <groupId>org.aksw.jena-sparql-api</groupId>
-			<artifactId>jena-sparql-api-sparql-ext</artifactId> 
-				</dependency> -->
-			<!-- <dependency> -->
-			<!-- <groupId>org.springframework.boot</groupId> -->
-			<!-- <artifactId>spring-boot-starter-parent</artifactId> -->
-			<!-- <version>2.2.0.RELEASE</version> -->
-			<!-- </dependency> -->
-			<dependency>
-				<groupId>com.vaadin</groupId>
-				<artifactId>vaadin-bom</artifactId>
-				<version>${vaadin.version}</version>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>${junit.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
 
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-dependencies</artifactId>
-				<version>${spring-boot.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-
+			<!--			<dependency>-->
+			<!--				<groupId>junit</groupId>-->
+			<!--				<artifactId>junit</artifactId>-->
+			<!--				<version>4.12</version>-->
+			<!--			</dependency>-->
 		</dependencies>
 	</dependencyManagement>
 	<distributionManagement>

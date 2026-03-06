@@ -1,0 +1,20 @@
+server:
+  port: 8000
+
+# Ensure application is run in Vaadin 14/npm mode
+vaadin:
+  compatibility-mode: false
+  devmode:
+    usage-statistics:
+      enabled: false
+
+logging:
+  level:
+    org.atmosphere: warn
+
+spring:
+  main:
+    banner-mode: off
+  cloud:
+    refresh:
+      enabled: true

@@ -7,6 +7,27 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.google.common.math.LongMath;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.Grid.Column;
+import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
+import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.data.provider.hierarchy.TreeData;
+import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
+import com.vaadin.flow.data.value.ValueChangeMode;
+
 import org.aksw.commons.collections.generator.Generator;
 import org.aksw.commons.collections.generator.GeneratorBlacklist;
 import org.aksw.commons.collections.generator.GeneratorFromFunction;
@@ -19,6 +40,7 @@ import org.aksw.facete.v4.impl.FacetedRelationQuery;
 import org.aksw.facete.v4.impl.PropertyResolverImpl;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlRdfNode;
 import org.aksw.jena_sparql_api.vaadin.util.Grid2;
+import org.aksw.jena_sparql_api.vaadin.util.GridWrapperBase;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
 import org.aksw.jenax.arq.util.node.NodeUtils;
 import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
@@ -41,27 +63,6 @@ import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.vaadin.addons.componentfactory.PaperSlider;
-
-import com.google.common.math.LongMath;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.Grid.Column;
-import com.vaadin.flow.component.grid.HeaderRow;
-import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.splitlayout.SplitLayout;
-import com.vaadin.flow.component.tabs.Tabs;
-import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.provider.ListDataProvider;
-import com.vaadin.flow.data.provider.hierarchy.TreeData;
-import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
-import com.vaadin.flow.data.value.ValueChangeMode;
 
 /**
  * Options for how to derive a set of predicates from a given set of subjects.
@@ -419,7 +420,7 @@ public class TableMapperDetailsView
             .setKey(fnVar.getName()); // Column key must match the var name for configureGridFilter
 
             HeaderRow filterRow = functionsGrid.appendHeaderRow();
-            VaadinSparqlUtils.configureGridFilter(functionsGrid, filterRow, query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
+            VaadinSparqlUtils.configureGridFilter(GridWrapperBase.wrap(functionsGrid), filterRow, query.getProjectVars(), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
             functionsLayout.add(functionsGrid);
 
         }
@@ -470,7 +471,7 @@ public class TableMapperDetailsView
             .setKey(iriVar.getName()); // Column key must match the var name for configureGridFilter
 
             HeaderRow filterRow = virtualPropertiesGrid.appendHeaderRow();
-            VaadinSparqlUtils.configureGridFilter(virtualPropertiesGrid, filterRow, Collections.singleton(iriVar), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
+            VaadinSparqlUtils.configureGridFilter(GridWrapperBase.wrap(virtualPropertiesGrid), filterRow, Collections.singleton(iriVar), var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
             virtualPropertiesLayout.add(virtualPropertiesGrid);
         }
 

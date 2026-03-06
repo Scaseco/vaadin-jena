@@ -7,11 +7,10 @@
 	<artifactId>vaadin-commons</artifactId>
 	<packaging>jar</packaging>
 
-
 	<parent>
 		<groupId>org.aksw.scaseco.vaadin</groupId>
 		<artifactId>vaadin-jena-parent</artifactId>
-		<version>5.5.0-1-SNAPSHOT</version>
+		<version>6.1.0-1-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -39,34 +38,6 @@
 			<!-- Replace artifactId with vaadin-core to use only free components -->
 			<artifactId>vaadin-core</artifactId>
 			<scope>provided</scope>
-			<exclusions>
-				<!-- Webjars are only needed when running in Vaadin 13 compatibility 
-					mode -->
-				<exclusion>
-					<groupId>com.vaadin.webjar</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.webjars.bowergithub.insites</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.webjars.bowergithub.polymer</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.webjars.bowergithub.polymerelements</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.webjars.bowergithub.vaadin</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.webjars.bowergithub.webcomponents</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<!-- Unit Testing -->

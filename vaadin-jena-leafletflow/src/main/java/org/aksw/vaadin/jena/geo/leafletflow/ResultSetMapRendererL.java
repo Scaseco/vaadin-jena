@@ -25,6 +25,7 @@ import software.xdev.vaadin.maps.leaflet.layer.LLayerGroup;
 import software.xdev.vaadin.maps.leaflet.layer.vector.LPath;
 import software.xdev.vaadin.maps.leaflet.layer.vector.LPolylineOptions;
 import software.xdev.vaadin.maps.leaflet.map.LMap;
+import software.xdev.vaadin.maps.leaflet.map.LMapZoomPanOptions;
 
 public class ResultSetMapRendererL {
     public static Set<Geometry> addBindingsToLayer(JtsToLMapConverter converter, LLayerGroup group, Binding binding) {
@@ -111,7 +112,7 @@ public class ResultSetMapRendererL {
         Set<Geometry> detectedGeometries = addBindingsToLayer(converter, group, bindings);
         if (!detectedGeometries.isEmpty()) {
             LLatLngBounds bounds = converter.convert(JtsUtils.envelope(detectedGeometries));
-            map.flyToBounds(bounds);
+            map.flyToBounds(bounds, new LMapZoomPanOptions().withDuration(0.5));
             // Setting options is currently broken:
             //   https://github.com/xdev-software/vaadin-maps-leaflet-flow/issues/330
 //            LMapZoomPanOptions opts = new LMapZoomPanOptions();

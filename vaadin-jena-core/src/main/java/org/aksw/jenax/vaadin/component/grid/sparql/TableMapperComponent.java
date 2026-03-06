@@ -21,6 +21,7 @@ import org.aksw.commons.util.obj.Enriched;
 import org.aksw.facete.v4.impl.ElementGenerator;
 import org.aksw.facete.v4.impl.MappedQuery;
 import org.aksw.jena_sparql_api.algebra.expr.transform.ExprTransformVirtualBnodeUris;
+import org.aksw.jena_sparql_api.algebra.expr.transform.ExprTransformVirtualBnodeUris.BnodeRewriteMode;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderNodeQuery;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataRetriever;
@@ -31,7 +32,7 @@ import org.aksw.jenax.arq.util.node.NodeUtils;
 import org.aksw.jenax.arq.util.syntax.QueryGenerationUtils;
 import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
-import org.aksw.jenax.dataaccess.sparql.polyfill.datasource.RdfDataSourceWithBnodeRewrite;
+import org.aksw.jenax.dataaccess.sparql.polyfill.datasource.RDFDataSourceWithBnodeRewrite;
 import org.aksw.jenax.facete.treequery2.api.NodeQuery;
 import org.aksw.jenax.facete.treequery2.api.RelationQuery;
 import org.aksw.jenax.facete.treequery2.impl.ElementGeneratorLateral;
@@ -683,13 +684,11 @@ System.out.println(fpm.allocate(nq
 
 
         RDFDataSource rdfDataSourceRaw = () -> RDFConnection.connect("http://localhost:8642/sparql");
-        RDFDataSource dataSource = RdfDataSourceWithBnodeRewrite.wrapWithAutoBnodeProfileDetection(rdfDataSourceRaw);
+        RDFDataSource dataSource = RDFDataSourceWithBnodeRewrite.wrapWithAutoBnodeProfileDetection(rdfDataSourceRaw, BnodeRewriteMode.FULL);
         // QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(rdfDataSource);
 
         Supplier<Fragment1> conceptSupplier = () -> ConceptUtils.createSubjectConcept();
         DataRetriever retriever = new DataRetriever(dataSource, entityClassifier);
-
-
 
         for (ShNodeShape nodeShape : nodeShapes) {
             Node nodeShapeNode = nodeShape.asNode();
@@ -701,8 +700,6 @@ System.out.println(fpm.allocate(nq
             NodeQuery nqq = NodeQueryImpl.newRoot();
 
             ElementGeneratorLateral.toNodeQuery(nqq, nodeShape);
-
-
             retriever.getClassToQuery().put(nodeShapeNode, nqq);
         }
 

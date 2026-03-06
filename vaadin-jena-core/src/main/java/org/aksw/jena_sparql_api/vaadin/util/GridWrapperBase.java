@@ -9,6 +9,7 @@ import com.vaadin.flow.component.grid.Grid;
 public class GridWrapperBase<T>
     implements GridWrapper<T>
 {
+    private static final long serialVersionUID = 1L;
     protected Grid<T> grid;
 
     public GridWrapperBase(Grid<T> grid) {
@@ -19,5 +20,9 @@ public class GridWrapperBase<T>
     @Override
     public Grid<T> getDelegate() {
         return grid;
+    }
+
+    public static <T> GridWrapper<T> wrap(Grid<T> grid) {
+        return new GridWrapperBase<>(grid);
     }
 }

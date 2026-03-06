@@ -1,5 +1,19 @@
 package org.aksw.vaadin.app.demo;
 
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.applayout.AppLayout;
+import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.dom.ThemeList;
+import com.vaadin.flow.router.Layout;
+import com.vaadin.flow.theme.lumo.Lumo;
+
 import org.aksw.jenax.vaadin.label.LabelServiceSwitchable;
 import org.aksw.vaadin.app.demo.view.edit.resource.ResourceEditorView;
 import org.aksw.vaadin.app.demo.view.label.LabelView;
@@ -10,40 +24,33 @@ import org.aksw.vaadin.common.component.tab.RouteTabs;
 import org.apache.jena.graph.Node;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.applayout.AppLayout;
-import com.vaadin.flow.component.applayout.DrawerToggle;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.dependency.CssImport;
-import com.vaadin.flow.component.dependency.JsModule;
-import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.tabs.Tabs;
-import com.vaadin.flow.dom.ThemeList;
-import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.Lumo;
-
-@Route("")
+// @Route("")
 //@PWA(name = "Semantic Components Vaadin Demonstrator", shortName = "Scaseco Demo",
 //        description = "This is a demonstrator of components for semantic data.")
 //@PWA(name = "Semantic Components Vaadin Demonstrator", shortName = "Scaseco Demo",
 //description = "This is a demonstrator of components for semantic data.", enableInstallPrompt = true)
-@CssImport(value = "./styles/shared-styles.css", include = "lumo-badge")
-@CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
-@CssImport(value = "./styles/vaadin-grid-styles.css", themeFor = "vaadin-grid")
-//@CssImport(value = "./styles/vaadin-tab-styles.css", themeFor = "vaadin-tab")
-@CssImport(value = "./styles/vaadin-select-text-field-styles.css", themeFor = "vaadin-select-text-field")
-//@CssImport(value = "./styles/vaadin-select-styles.css", themeFor = "vaadin-select")
-@CssImport(value = "./styles/vaadin-text-area-styles.css", themeFor = "vaadin-text-area")
-@CssImport(value = "./styles/flow-component-renderer-styles.css", themeFor = "flow-component-renderer")
-@CssImport(value = "./styles/vaadin-grid-tree-toggle-styles.css", themeFor = "vaadin-grid-tree-toggle")
-@JsModule("@vaadin/vaadin-lumo-styles/presets/compact.js")
-//@Theme(value = Lumo.class)
-@JsModule("@vaadin/vaadin-lumo-styles/badge.js")
-//@HtmlImport(value="frontend://bower_components/vaadin-lumo-styles/badge.html")
+
+
+//@StyleSheet("./styles/shared-styles.css")
+//@StyleSheet("./styles/vaadin-text-field-styles.css")
+//@StyleSheet("./styles/vaadin-grid-styles.css")
+//@StyleSheet("./styles/vaadin-select-text-field-styles.css")
+//@StyleSheet("./styles/vaadin-text-area-styles.css")
+//@StyleSheet("./styles/flow-component-renderer-styles.css")
+//@StyleSheet("./styles/vaadin-grid-tree-toggle-styles.css")
+
+
+//@JsModule("@vaadin/vaadin-lumo-styles/presets/compact.js")
+//@JsModule("@vaadin/vaadin-lumo-styles/badge.js")
+//@CssImport(value = "./styles/shared-styles.css", include = "lumo-badge")
+//@CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
+//@CssImport(value = "./styles/vaadin-grid-styles.css", themeFor = "vaadin-grid")
+//@CssImport(value = "./styles/vaadin-select-text-field-styles.css", themeFor = "vaadin-select-text-field")
+//@CssImport(value = "./styles/vaadin-text-area-styles.css", themeFor = "vaadin-text-area")
+//@CssImport(value = "./styles/flow-component-renderer-styles.css", themeFor = "flow-component-renderer")
+//@CssImport(value = "./styles/vaadin-grid-tree-toggle-styles.css", themeFor = "vaadin-grid-tree-toggle")
+//@JsModule("@vaadin/vaadin-lumo-styles/presets/compact.js")
+@Layout
 public class MainLayout
     extends AppLayout
 {

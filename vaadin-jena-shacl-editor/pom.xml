@@ -11,15 +11,20 @@
 	<parent>
 		<groupId>org.aksw.scaseco.vaadin</groupId>
 		<artifactId>vaadin-jena-parent</artifactId>
-		<version>5.5.0-1-SNAPSHOT</version>
+		<version>6.1.0-1-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<!-- Replace artifactId with vaadin-core to use only free components -->
+			<artifactId>vaadin-core</artifactId>
+			<scope>provided</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>org.claspina</groupId>
 			<artifactId>confirm-dialog</artifactId>
-			<version>2.0.0</version>
 		</dependency>
 
 
@@ -27,12 +32,12 @@
 			<groupId>org.aksw.scaseco.vaadin</groupId>
 			<artifactId>vaadin-jena-rdf-term-editor</artifactId>
 		</dependency>
-
+<!--
 		<dependency>
 			<groupId>org.vaadin.gatanaso</groupId>
 			<artifactId>multiselect-combo-box-flow</artifactId>
 		</dependency>
-
+-->
 
 		<dependency>
 			<groupId>org.aksw.jenax</groupId>
@@ -52,40 +57,6 @@
 
 		<!-- <dependency> <groupId>org.aksw.commons</groupId> <artifactId>aksw-commons-rx-ex</artifactId> 
 			</dependency> -->
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<!-- Replace artifactId with vaadin-core to use only free components -->
-			<artifactId>vaadin-core</artifactId>
-			<scope>provided</scope>
-			<exclusions>
-				<!-- Webjars are only needed when running in Vaadin 13 compatibility 
-					mode -->
-				<exclusion>
-					<groupId>com.vaadin.webjar</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.webjars.bowergithub.insites</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.webjars.bowergithub.polymer</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.webjars.bowergithub.polymerelements</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.webjars.bowergithub.vaadin</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.webjars.bowergithub.webcomponents</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
 
 		<!-- Unit Testing -->
 

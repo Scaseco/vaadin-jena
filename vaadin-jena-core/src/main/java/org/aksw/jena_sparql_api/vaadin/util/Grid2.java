@@ -1,9 +1,6 @@
 package org.aksw.jena_sparql_api.vaadin.util;
 
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.GridArrayUpdater;
-import com.vaadin.flow.component.grid.GridArrayUpdater.UpdateQueueData;
-import com.vaadin.flow.function.SerializableBiFunction;
 
 /**
  * A subclass of Grid that also implements GridLike.
@@ -24,21 +21,21 @@ public class Grid2<T>
         super(beanType, autoCreateColumns);
     }
 
-    public <U extends GridArrayUpdater, B extends DataCommunicatorBuilder<T, U>> Grid2(Class<T> beanType,
-            SerializableBiFunction<UpdateQueueData, Integer, UpdateQueue> updateQueueBuilder,
-            B dataCommunicatorBuilder) {
-        super(beanType, updateQueueBuilder, dataCommunicatorBuilder);
-    }
-
-    public Grid2(Class<T> beanType) {
-        super(beanType);
-    }
-
-    public <U extends GridArrayUpdater, B extends DataCommunicatorBuilder<T, U>> Grid2(int pageSize,
-            SerializableBiFunction<UpdateQueueData, Integer, UpdateQueue> updateQueueBuilder,
-            B dataCommunicatorBuilder) {
-        super(pageSize, updateQueueBuilder, dataCommunicatorBuilder);
-    }
+//    public <U extends GridArrayUpdater, B extends DataCommunicatorBuilder<T, U>> Grid2(Class<T> beanType,
+//            SerializableBiFunction<UpdateQueueData, Integer, UpdateQueue> updateQueueBuilder,
+//            B dataCommunicatorBuilder) {
+//        super(beanType, updateQueueBuilder, dataCommunicatorBuilder);
+//    }
+//
+//    public Grid2(Class<T> beanType) {
+//        super(beanType);
+//    }
+//
+//    public <U extends GridArrayUpdater, B extends DataCommunicatorBuilder<T, U>> Grid2(int pageSize,
+//            SerializableBiFunction<UpdateQueueData, Integer, UpdateQueue> updateQueueBuilder,
+//            B dataCommunicatorBuilder) {
+//        super(pageSize, updateQueueBuilder, dataCommunicatorBuilder);
+//    }
 
     public Grid2(int pageSize) {
         super(pageSize);

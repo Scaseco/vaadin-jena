@@ -13,33 +13,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.aksw.commons.collection.observable.CollectionChangedEvent;
-import org.aksw.commons.collection.observable.ObservableCollection;
-import org.aksw.commons.collection.observable.ObservableValue;
-import org.aksw.commons.path.core.Path;
-import org.aksw.commons.rx.lookup.ListService;
-import org.aksw.commons.rx.lookup.ListServiceFromList;
-import org.aksw.commons.rx.lookup.LookupService;
-import org.aksw.commons.rx.lookup.MapServiceFromListService;
-import org.aksw.jena_sparql_api.collection.observable.GraphChange;
-import org.aksw.jena_sparql_api.collection.observable.RdfField;
-import org.aksw.jena_sparql_api.rdf.collections.NodeMappers;
-import org.aksw.jena_sparql_api.schema.ShapedNode;
-import org.aksw.jenax.arq.util.triple.TripleUtils;
-import org.aksw.jenax.path.datatype.RDFDatatypePPath;
-import org.aksw.jenax.sparql.fragment.api.Fragment1;
-import org.aksw.vaadin.common.bind.VaadinBindUtils;
-import org.aksw.vaadin.component.rdf_term_editor.RdfTermEditor;
-import org.aksw.vaadin.datashape.provider.DataProviderForPrefixBasedTypeAhead;
-import org.aksw.vaadin.datashape.provider.HierarchicalDataProviderForShacl;
-import org.aksw.vaadin.datashape.provider.NodeState;
-import org.apache.jena.graph.Node;
-import org.apache.jena.graph.Triple;
-import org.apache.jena.shared.PrefixMapping;
-import org.apache.jena.sparql.path.P_Path0;
-import org.apache.jena.sparql.path.PathWriter;
-import org.vaadin.gatanaso.MultiselectComboBox;
-
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.Text;
@@ -61,6 +34,30 @@ import com.vaadin.flow.data.provider.hierarchy.HierarchicalDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.shared.Registration;
+
+import org.aksw.commons.collection.observable.CollectionChangedEvent;
+import org.aksw.commons.collection.observable.ObservableCollection;
+import org.aksw.commons.collection.observable.ObservableValue;
+import org.aksw.commons.path.core.Path;
+import org.aksw.commons.rx.lookup.ListService;
+import org.aksw.commons.rx.lookup.ListServiceFromList;
+import org.aksw.commons.rx.lookup.LookupService;
+import org.aksw.commons.rx.lookup.MapServiceFromListService;
+import org.aksw.jena_sparql_api.collection.observable.GraphChange;
+import org.aksw.jena_sparql_api.collection.observable.RdfField;
+import org.aksw.jena_sparql_api.rdf.collections.NodeMappers;
+import org.aksw.jena_sparql_api.schema.ShapedNode;
+import org.aksw.jenax.arq.util.triple.TripleUtils;
+import org.aksw.jenax.path.datatype.RDFDatatypePPath;
+import org.aksw.jenax.sparql.fragment.api.Fragment1;
+import org.aksw.vaadin.common.bind.VaadinBindUtils;
+import org.aksw.vaadin.component.rdf_term_editor.RdfTermEditor;
+import org.aksw.vaadin.datashape.provider.HierarchicalDataProviderForShacl;
+import org.aksw.vaadin.datashape.provider.NodeState;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.sparql.path.P_Path0;
+import org.apache.jena.sparql.path.PathWriter;
 
 public class ShaclTreeGrid {
     public static TreeGrid<Path<Node>> createShaclEditor(
@@ -393,6 +390,7 @@ public class ShaclTreeGrid {
                 // controlRow.setWidthFull();
                 addSearchControls(treeGrid, nodeState, path, controlRow);
 
+/*
                 MultiselectComboBox<String> schemaComboBox = new MultiselectComboBox<>();
 //                schemaComboBox.setLabel("Schemas");
                  schemaComboBox.setItems("Item 1", "Item 2", "Item 3", "Item 4");
@@ -407,7 +405,7 @@ public class ShaclTreeGrid {
                 //nodeState.get;
                 pinnedPropertiesComboBox.setDataProvider(new DataProviderForPrefixBasedTypeAhead(PrefixMapping.Extended).forString());
                 VaadinBindUtils.bindSet(pinnedPropertiesComboBox, nodeState.getAdhocProperties(path));
-
+*/
 
                 r.add(controlRow);
 

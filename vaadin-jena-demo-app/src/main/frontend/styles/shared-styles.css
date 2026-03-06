@@ -4,6 +4,8 @@
    https://vaadin.com/themes/lumo for more information.
 */
 
+@import '@vaadin/vaadin-lumo-styles/badge.css';  /* or the full lumo if needed: '@vaadin/vaadin-lumo-styles/lumo.css' */
+
 /* Example: CSS class name to center align the content . */
 .centered-content {
   margin: 0 auto;

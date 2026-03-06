@@ -15,48 +15,15 @@
 	<parent>
 		<groupId>org.aksw.scaseco.vaadin</groupId>
 		<artifactId>vaadin-jena-parent</artifactId>
-		<version>5.5.0-1-SNAPSHOT</version>
+		<version>6.1.0-1-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.vaadin</groupId>
-			<!-- Replace artifactId with vaadin-core to use only free components -->
 			<artifactId>vaadin-core</artifactId>
-			<exclusions>
-				<!-- Webjars are only needed when running in Vaadin 13
-				compatibility 
-					mode -->
-				<exclusion>
-					<groupId>com.vaadin.webjar</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.webjars.bowergithub.insites</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.webjars.bowergithub.polymer</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.webjars.bowergithub.polymerelements</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.webjars.bowergithub.vaadin</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.webjars.bowergithub.webcomponents</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
+
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-spring-boot-starter</artifactId>
@@ -66,11 +33,18 @@
 					<groupId>com.vaadin</groupId>
 					<artifactId>vaadin-core</artifactId>
 				</exclusion>
+
 				<exclusion>
 					<groupId>ch.qos.logback</groupId>
 					<artifactId>logback-classic</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-dev</artifactId>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
@@ -84,29 +58,15 @@
 			</exclusions>
 		</dependency>
 
-		<!-- <dependency> <groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-devtools</artifactId> 
-			<version>${spring-boot.version}</version> <optional>true</optional>
-		<scope>runtime</scope> 
-			</dependency> -->
-
-		<!--
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-			<version>${spring-boot.version}</version>
-			<optional>true</optional>
-		</dependency>
--->
-
-		<dependency>
-			<groupId>jakarta.xml.bind</groupId>
-			<artifactId>jakarta.xml.bind-api</artifactId>
+			<groupId>org.aksw.vaadin.yasqe</groupId>
+			<artifactId>vaadin-yasqe-flow</artifactId>
+			<version>0.5.2-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<groupId>org.aksw.scaseco.vaadin</groupId>
+			<artifactId>vaadin-jena-leafletflow</artifactId>
 		</dependency>
 
 		<dependency>
@@ -124,23 +84,15 @@
 			<artifactId>jackson-databind</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>jakarta.xml.bind</groupId>
+			<artifactId>jakarta.xml.bind-api</artifactId>
+		</dependency>
 
-		<!-- <dependency> -->
-		<!-- <groupId>org.slf4j</groupId> -->
-		<!-- <artifactId>slf4j-log4j12</artifactId> -->
-		<!-- </dependency> -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-slf4j2-impl</artifactId>
 		</dependency>
-
-
-		<!-- <dependency> <groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-devtools</artifactId> 
-			<version>${spring-boot.version}</version> <optional>true</optional>
-		<scope>runtime</scope> 
-			</dependency> -->
-
 
 		<dependency>
 			<groupId>org.aksw.jenax</groupId>
@@ -152,7 +104,6 @@
 			<artifactId>jenax-arq-rx</artifactId>
 		</dependency>
 
-
 		<!-- Unit Testing -->
 
 		<dependency>
@@ -160,11 +111,6 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
-
-		<!-- <dependency> <groupId>org.aksw.jena-sparql-api</groupId>
-		<artifactId>jena-sparql-api-resources-test-config</artifactId> 
-			<scope>test</scope> </dependency> -->
-
 	</dependencies>
 
 	<build>
@@ -248,15 +194,15 @@
 							<failOnMissingWebXml>false</failOnMissingWebXml>
 						</configuration>
 					</plugin>
-					<plugin>
-						<groupId>org.apache.tomcat.maven</groupId>
-						<artifactId>tomcat7-maven-plugin</artifactId>
-						<version>2.2</version>
-						<configuration>
-							<server>TomcatServer</server>
-							<path>/facete3</path>
-						</configuration>
-					</plugin>
+<!--					<plugin>-->
+<!--						<groupId>org.apache.tomcat.maven</groupId>-->
+<!--						<artifactId>tomcat7-maven-plugin</artifactId>-->
+<!--						<version>2.2</version>-->
+<!--						<configuration>-->
+<!--							<server>TomcatServer</server>-->
+<!--							<path>/facete3</path>-->
+<!--						</configuration>-->
+<!--					</plugin>-->
 				</plugins>
 			</build>
 		</profile>
@@ -341,9 +287,6 @@
 				</plugins>
 			</build>
 		</profile>
-
 	</profiles>
-
-
 </project>
 

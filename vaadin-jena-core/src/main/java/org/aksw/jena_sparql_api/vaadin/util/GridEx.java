@@ -15,7 +15,13 @@ import com.vaadin.flow.shared.Registration;
  * Grid wrapper that shows a message when it is empty.
  *
  * Based on https://cookbook.vaadin.com/grid-message-when-empty
+ *
+ * @deprecated
+ *   At least Vaadin 25 now has
+ *   {@link Grid#setEmptyStateText(String)} and
+ *   {@link Grid#setEmptyStateComponent(com.vaadin.flow.component.Component)}.
  */
+@Deprecated
 @CssImport("./styles/gridex.css")
 public class GridEx<T>
     // extends Composite<Div>

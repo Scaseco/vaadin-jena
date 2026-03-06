@@ -4,7 +4,7 @@ import org.aksw.jenax.arq.util.syntax.ElementUtils;
 import org.aksw.jenax.arq.util.var.Vars;
 import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
 import org.aksw.jenax.dataaccess.sparql.factory.datasource.RDFDataSources;
-import org.aksw.jenax.dataaccess.sparql.polyfill.datasource.RdfDataSourceWithBnodeRewrite;
+import org.aksw.jenax.dataaccess.sparql.polyfill.datasource.RDFDataSourceWithBnodeRewrite;
 import org.aksw.jenax.sparql.fragment.api.Fragment1;
 import org.aksw.jenax.sparql.fragment.impl.Concept;
 import org.aksw.jenax.vaadin.component.grid.sparql.TableMapperComponent;
@@ -29,13 +29,8 @@ public class TableMapperView
 
         // QueryExecutionFactoryQuery qef = query -> RDFConnection.connect("http://localhost:8642/sparql").query(query);
         Fragment1 baseConcept = new Concept(ElementUtils.createElementTriple(Vars.x, Vars.y, Vars.z), Vars.x);
-
         RDFDataSource base = () -> RDFConnection.connect("http://localhost:8642/sparql");
-
-        RDFDataSource dataSource = RDFDataSources.decorate(base, RdfDataSourceWithBnodeRewrite::wrapWithAutoBnodeProfileDetection)
-                // .decorate(RdfDataSourceWithLocalCache::new)
-                ;
-
+        RDFDataSource dataSource = RDFDataSources.decorate(base, RDFDataSourceWithBnodeRewrite.asTransform());
 
         TableMapperComponent tableMapper = new TableMapperComponent(dataSource, baseConcept, labelService);
         add(tableMapper);

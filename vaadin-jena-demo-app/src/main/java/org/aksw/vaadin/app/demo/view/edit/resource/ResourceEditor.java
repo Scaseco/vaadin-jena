@@ -13,6 +13,25 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.collect.ForwardingSet;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.Grid.Column;
+import com.vaadin.flow.component.grid.Grid.SelectionMode;
+import com.vaadin.flow.component.grid.GridMultiSelectionModel;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.grid.dnd.GridDropLocation;
+import com.vaadin.flow.component.grid.dnd.GridDropMode;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout.Orientation;
+import com.vaadin.flow.data.provider.DataProvider;
+
 import org.aksw.commons.collection.observable.CollectionChangedEventImpl;
 import org.aksw.commons.collection.observable.ObservableSet;
 import org.aksw.commons.collection.observable.ObservableValue;
@@ -24,6 +43,8 @@ import org.aksw.jena_sparql_api.common.DefaultPrefixes;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBase;
 import org.aksw.jena_sparql_api.vaadin.data.provider.DataProviderSparqlBinding;
 import org.aksw.jena_sparql_api.vaadin.util.Grid2;
+import org.aksw.jena_sparql_api.vaadin.util.GridLike;
+import org.aksw.jena_sparql_api.vaadin.util.GridWrapperBase;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinComponentUtils;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
 import org.aksw.jenax.arq.util.expr.ExprUtils;
@@ -65,25 +86,6 @@ import org.apache.jena.vocabulary.DCAT;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import org.claspina.confirmdialog.ConfirmDialog;
-
-import com.google.common.collect.ForwardingSet;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.Grid.Column;
-import com.vaadin.flow.component.grid.Grid.SelectionMode;
-import com.vaadin.flow.component.grid.GridMultiSelectionModel;
-import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.grid.HeaderRow;
-import com.vaadin.flow.component.grid.dnd.GridDropLocation;
-import com.vaadin.flow.component.grid.dnd.GridDropMode;
-import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.splitlayout.SplitLayout;
-import com.vaadin.flow.component.splitlayout.SplitLayout.Orientation;
-import com.vaadin.flow.data.provider.DataProvider;
 
 
 class ObservableSelectionModel<T>
@@ -341,7 +343,7 @@ public class ResourceEditor
 //        QueryExecutionFactoryQuery propertyQef = q -> QueryExecutionFactory.create(q, emptyDataset);
 
         setQueryForGridBinding(propertyGrid, propertyGridHeaderRow, propertyDataProvider, labelService);
-        VaadinSparqlUtils.configureGridFilter(propertyGrid, propertyGridFilterRow, propertyTableVars,
+        VaadinSparqlUtils.configureGridFilter(GridWrapperBase.wrap(propertyGrid), propertyGridFilterRow, propertyTableVars,
                 var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
 
         // propertyGrid.setDataProvider(propertyDataProvider);
@@ -505,7 +507,7 @@ public class ResourceEditor
     /** Configure a grid to be backed by the given data provider for sparql bindings -
      * thereby rendering the binding values using the given labelService */
     public void setQueryForGridBinding(
-            Grid<Binding> grid,
+            GridLike<Binding> grid,
             HeaderRow headerRow,
             DataProviderSparqlBinding dataProviderCore,
             VaadinLabelMgr<Node, String> labelService) {

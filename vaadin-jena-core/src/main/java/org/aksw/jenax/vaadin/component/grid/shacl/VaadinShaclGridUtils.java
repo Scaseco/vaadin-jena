@@ -12,6 +12,18 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Streams;
+import com.google.common.graph.Traverser;
+import com.google.common.html.HtmlEscapers;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Html;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.Grid.Column;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Pre;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+
 import org.aksw.commons.util.io.out.OutputStreamUtils;
 import org.aksw.commons.util.obj.Enriched;
 import org.aksw.jena_sparql_api.algebra.expr.transform.ExprTransformVirtualBnodeUris;
@@ -47,18 +59,6 @@ import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.graph.GraphFactory;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-
-import com.google.common.collect.Streams;
-import com.google.common.graph.Traverser;
-import com.google.common.html.HtmlEscapers;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Html;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.Grid.Column;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Pre;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 public class VaadinShaclGridUtils {
     /** Returns a mapping from classification to view to template */
@@ -192,9 +192,9 @@ public class VaadinShaclGridUtils {
         Graph h = GraphFactory.createDefaultGraph();
         GraphUtils.stream(graph).forEach(t -> {
             Triple x = Triple.create(
-                labelNode(t.getSubject(), nodeToLabel, NodeFactory::createLiteral),
+                labelNode(t.getSubject(), nodeToLabel, NodeFactory::createLiteralString),
                 labelNode(t.getPredicate(), nodeToLabel, NodeFactory::createURI),
-                labelNode(t.getObject(), nodeToLabel, NodeFactory::createLiteral));
+                labelNode(t.getObject(), nodeToLabel, NodeFactory::createLiteralString));
             h.add(x);
         });
         String str = OutputStreamUtils.toString(out -> RDFDataMgr.write(out, ModelFactory.createModelForGraph(h), RDFFormat.TRIG_PRETTY), StandardCharsets.UTF_8);
@@ -330,9 +330,9 @@ public class VaadinShaclGridUtils {
                 Graph h = GraphFactory.createDefaultGraph();
                 GraphUtils.stream(g).forEach(t -> {
                     Triple x = Triple.create(
-                        labelNode(t.getSubject(), map, NodeFactory::createLiteral),
+                        labelNode(t.getSubject(), map, NodeFactory::createLiteralString),
                         labelNode(t.getPredicate(), map, NodeFactory::createURI),
-                        labelNode(t.getObject(), map, NodeFactory::createLiteral));
+                        labelNode(t.getObject(), map, NodeFactory::createLiteralString));
                     h.add(x);
                 });
                 String str = OutputStreamUtils.toString(out -> RDFDataMgr.write(out, ModelFactory.createModelForGraph(h), RDFFormat.TRIG_PRETTY), StandardCharsets.UTF_8);

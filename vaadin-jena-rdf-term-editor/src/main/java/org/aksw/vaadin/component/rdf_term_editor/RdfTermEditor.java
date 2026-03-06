@@ -382,7 +382,7 @@ public class RdfTermEditor
                 String langStr = r == null ? null : ResourceUtils.getLiteralPropertyValue(r, RDFS.label, String.class);
                 langStr = langStr == null ? "" : langStr;
 
-                result = NodeFactory.createLiteral(lex, langStr);
+                result = NodeFactory.createLiteralLang(lex, langStr);
                 break;
             case DTYPE:
                 Resource tmp = literalTypeComboBox.getValue();
@@ -390,9 +390,9 @@ public class RdfTermEditor
                 if (tmp != null) {
                     String dtypeIri = tmp.getURI();
                     RDFDatatype dtype = TypeMapper.getInstance().getSafeTypeByName(dtypeIri);
-                    result = NodeFactory.createLiteral(lex, dtype);
+                    result = NodeFactory.createLiteralDT(lex, dtype);
                 } else {
-                    result = NodeFactory.createLiteral(lex);
+                    result = NodeFactory.createLiteralString(lex);
                 }
                 break;
             default:

@@ -11,6 +11,22 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.Grid.Column;
+import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.grid.HeaderRow.HeaderCell;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.ConfigurableFilterDataProvider;
+import com.vaadin.flow.data.provider.ConfigurableFilterDataProviderWrapper;
+import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.FilterUtils;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.function.SerializableBiFunction;
+import com.vaadin.flow.function.SerializableFunction;
+
 import org.aksw.commons.util.delegate.Delegated;
 import org.aksw.commons.util.delegate.Unwrappable;
 import org.aksw.commons.util.obj.ObjectUtils;
@@ -35,21 +51,6 @@ import org.apache.jena.sparql.expr.E_StrLowerCase;
 import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.expr.ExprVar;
 import org.apache.jena.sparql.expr.NodeValue;
-
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.HasValue;
-import com.vaadin.flow.component.grid.Grid.Column;
-import com.vaadin.flow.component.grid.HeaderRow;
-import com.vaadin.flow.component.grid.HeaderRow.HeaderCell;
-import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.provider.ConfigurableFilterDataProvider;
-import com.vaadin.flow.data.provider.ConfigurableFilterDataProviderWrapper;
-import com.vaadin.flow.data.provider.DataProvider;
-import com.vaadin.flow.data.provider.FilterUtils;
-import com.vaadin.flow.data.renderer.ComponentRenderer;
-import com.vaadin.flow.data.value.ValueChangeMode;
-import com.vaadin.flow.function.SerializableBiFunction;
-import com.vaadin.flow.function.SerializableFunction;
 
 public class VaadinSparqlUtils {
 
@@ -168,6 +169,22 @@ public class VaadinSparqlUtils {
             column.setResizable(true);
             column.setSortable(true);
         }
+    }
+
+//    public static void setQueryForGridBinding(
+//            Grid<Binding> grid,
+//            HeaderRow headerRow,
+//            QueryExecutionFactoryQuery qef,
+//            Query query) {
+//        setQueryForGridBinding(new GridWrapperBase<>(grid), headerRow, qef, query, null);
+//    }
+
+    public static void setQueryForGridBinding(
+            Grid<Binding> grid,
+            HeaderRow headerRow,
+            QueryExecutionFactoryQuery qef,
+            Query query) {
+        setQueryForGridBinding(new GridWrapperBase<>(grid), headerRow, qef, query, null);
     }
 
     public static void setQueryForGridBinding(
@@ -374,6 +391,16 @@ public class VaadinSparqlUtils {
             GridLike<?> grid, HeaderRow filterRow, Collection<Var> vars) {
         return configureGridFilter(grid, filterRow, vars, var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
     }
+
+    public static Map<Var, TextField> configureGridFilter(
+            Grid grid, HeaderRow filterRow, Collection<Var> vars, Function<Var, Function<String, Expr>> varToStrToExpr) {
+        return configureGridFilter(new GridWrapperBase<>(grid), filterRow, vars, varToStrToExpr);
+    }
+
+//    public static Map<Var, TextField> configureGridFilter(
+//            Grid grid, HeaderRow filterRow, Collection<Var> vars, Function<Var, Function<String, Expr>> varToStrToExpr) {
+//        return configureGridFilter(new GridWrapperBase<>(grid), filterRow, vars, varToStrToExpr);
+//    }
 
     /** Must be called AFTER columns have been added. */
     public static Map<Var, TextField> configureGridFilter(

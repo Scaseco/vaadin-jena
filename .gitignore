@@ -39,6 +39,7 @@ webpack.config.js
 webpack.generated.js
 package-lock.json
 package.json
+generated
 
 tsconfig.json
 types.d.ts

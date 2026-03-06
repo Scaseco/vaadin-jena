@@ -11,13 +11,14 @@ import org.aksw.jenax.dataaccess.sparql.datasource.RDFDataSource;
 import org.aksw.jenax.dataaccess.sparql.factory.datasource.RDFDataSources;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactories;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
-import org.aksw.jenax.dataaccess.sparql.polyfill.datasource.RdfDataSourceWithBnodeRewrite;
+import org.aksw.jenax.dataaccess.sparql.polyfill.datasource.RDFDataSourceWithBnodeRewrite;
 import org.aksw.jenax.vaadin.label.LabelServiceSwitchable;
 import org.aksw.jenax.vaadin.label.LabelServiceSwitchableImpl;
 import org.aksw.jenax.vaadin.label.VaadinLabelMgr;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdfconnection.RDFConnection;
+import org.apache.jena.sparql.exec.http.QueryExecutionHTTP;
 import org.apache.jena.vocabulary.RDFS;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,18 +30,13 @@ public class ConfigComponentDemoVaadin {
     @Bean
     public LabelServiceSwitchable<Node, String> labelService() {
         RDFDataSource base = () -> RDFConnection.connect("http://localhost:8642/sparql");
-
-        RDFDataSource dataSource = RDFDataSources.decorate(base,
-                RdfDataSourceWithBnodeRewrite::wrapWithAutoBnodeProfileDetection)
-                // .decorate(RdfDataSourceWithLocalCache::new)
-                ;
+        RDFDataSource dataSource = RDFDataSources.decorate(base, RDFDataSourceWithBnodeRewrite.asTransform());
 
         QueryExecutionFactoryQuery qef = QueryExecutionFactories.of(dataSource); // QueryExecutionFactories.of(dataSource);
         Property labelProperty = RDFS.label;// DCTerms.description;
 
         LookupService<Node, String> ls1 = LabelUtils.getLabelLookupService(qef, labelProperty, DefaultPrefixes.get(), 30);
         LookupService<Node, String> ls2 = keys -> Flowable.fromIterable(keys).map(k -> Map.entry(k, Objects.toString(k)));
-
 
         VaadinLabelMgr<Node, String> labelMgr = new VaadinLabelMgr<>(ls1);
 
@@ -50,4 +46,13 @@ public class ConfigComponentDemoVaadin {
         return result;
     }
 
+    @Bean
+    public QueryExecutionFactoryQuery sparqlQueryFactory() {
+        return query -> {
+            return QueryExecutionHTTP.service("https://data.aksw.org/mobydex")
+                .addDefaultGraphURI("https://data.mobydex.org/osm/20250903/15mincity/")
+                .query(query)
+                .build();
+        };
+    }
 }
