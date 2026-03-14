@@ -6,6 +6,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.data.selection.SelectionListener;
+
 import org.aksw.commons.util.obj.ObjectUtils;
 import org.aksw.jenax.arq.util.node.NodeUtils;
 import org.apache.jena.geosparql.implementation.GeometryWrapper;
@@ -16,9 +19,6 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.MultiLineString;
 
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.data.selection.SelectionListener;
-
 import software.xdev.vaadin.maps.leaflet.basictypes.LLatLngBounds;
 import software.xdev.vaadin.maps.leaflet.layer.LLayer;
 import software.xdev.vaadin.maps.leaflet.layer.LLayerGroup;
@@ -26,21 +26,55 @@ import software.xdev.vaadin.maps.leaflet.layer.vector.LPath;
 import software.xdev.vaadin.maps.leaflet.layer.vector.LPolylineOptions;
 import software.xdev.vaadin.maps.leaflet.map.LMap;
 import software.xdev.vaadin.maps.leaflet.map.LMapZoomPanOptions;
+import software.xdev.vaadin.maps.leaflet.registry.LComponentManagementRegistry;
 
 public class ResultSetMapRendererL {
-    public static Set<Geometry> addBindingsToLayer(JtsToLMapConverter converter, LLayerGroup group, Binding binding) {
-        return addBindingsToLayer(converter, group, List.of(binding));
+    public interface AddGeomCallback {
+        void accept(LLayer<?> layer, Binding binding, Var var);
     }
 
-    public static Set<Geometry> addBindingsToLayer(JtsToLMapConverter converter, LLayerGroup group, Collection<Binding> bindings) {
+    public static Set<Geometry> addBindingsToLayer(LLayerGroup group, Binding binding) {
+        return addBindingsToLayer(group, List.of(binding), null);
+    }
+
+    public static Set<Geometry> addBindingsToLayer(LLayerGroup group, Binding binding, AddGeomCallback onAddHandler) {
+        return addBindingsToLayer(group, List.of(binding), onAddHandler);
+    }
+
+    public static Set<Geometry> addBindingsToLayer(LLayerGroup group, Collection<Binding> bindings, AddGeomCallback onAddHandler) {
+        LComponentManagementRegistry reg = group.componentRegistry();
+        JtsToLMapConverter converter = new JtsToLMapConverter(reg);
+        return addBindingsToLayer(converter, group, bindings, onAddHandler);
+    }
+
+    public static Set<Geometry> addBindingsToLayer(JtsToLMapConverter converter, LLayerGroup group, Iterable<Binding> bindings) {
+        return addBindingsToLayer(converter, group, bindings.iterator(), null);
+    }
+
+    public static Set<Geometry> addBindingsToLayer(JtsToLMapConverter converter, LLayerGroup group, Iterable<Binding> bindings, AddGeomCallback onAddHandler) {
+        return addBindingsToLayer(converter, group, bindings.iterator(), onAddHandler);
+    }
+
+    public static Set<Geometry> addBindingsToLayer(JtsToLMapConverter converter, LLayerGroup group, Iterator<Binding> bindings,
+            AddGeomCallback onAddHandler) {
         Set<Geometry> detectedGeometries = new LinkedHashSet<>();
-        for (Binding b : bindings) {
-            addBindingToLayer(converter, group, b, detectedGeometries);
+        while (bindings.hasNext()) {
+            Binding b = bindings.next();
+            addBindingToLayer(converter, group, b, detectedGeometries, onAddHandler);
         }
         return detectedGeometries;
     }
 
-    public static void addBindingToLayer(JtsToLMapConverter converter, LLayerGroup group, Binding b, Set<Geometry> detectedGeometries) {
+
+    public static void addBindingToLayer(LLayerGroup group, Binding b, Set<Geometry> detectedGeometries,
+            AddGeomCallback onAddHandler) {
+        LComponentManagementRegistry reg = group.componentRegistry();
+        JtsToLMapConverter converter = new JtsToLMapConverter(reg);
+        addBindingToLayer(converter, group, b, detectedGeometries, onAddHandler);
+    }
+
+    public static void addBindingToLayer(JtsToLMapConverter converter, LLayerGroup group, Binding b, Set<Geometry> detectedGeometries,
+            AddGeomCallback onAddHandler) {
         Iterator<Var> it = b.vars();
         while (it.hasNext()) {
             Var v = it.next();
@@ -60,6 +94,11 @@ public class ResultSetMapRendererL {
                 }
 
                 LLayer<?> layer = converter.convert(geom);
+
+                if (onAddHandler != null) {
+                    onAddHandler.accept(layer, b, v);
+                }
+
                 if (layer != null) {
                     // GeoJsonObject gjo = JtsUtils.convert(geom);
                     LPolylineOptions options = new LPolylineOptions();
@@ -108,7 +147,9 @@ public class ResultSetMapRendererL {
         }
     }
 
-    public static void addAndFly(JtsToLMapConverter converter, LMap map, LLayerGroup group, Collection<Binding> bindings) {
+    public static void addAndFly(LMap map, LLayerGroup group, Collection<Binding> bindings) {
+        LComponentManagementRegistry reg = group.componentRegistry();
+        JtsToLMapConverter converter = new JtsToLMapConverter(reg);
         Set<Geometry> detectedGeometries = addBindingsToLayer(converter, group, bindings);
         if (!detectedGeometries.isEmpty()) {
             LLatLngBounds bounds = converter.convert(JtsUtils.envelope(detectedGeometries));
@@ -130,11 +171,10 @@ public class ResultSetMapRendererL {
      * @param group
      * @return
      */
-    public static <C extends Component> SelectionListener<C, Binding> createGridListener(
-            JtsToLMapConverter converter, LMap map, LLayerGroup group) {
+    public static <C extends Component> SelectionListener<C, Binding> createGridListener(LMap map, LLayerGroup group) {
         return ev -> {
             group.clearLayers();
-            addAndFly(converter, map, group, ev.getAllSelectedItems());
+            addAndFly(map, group, ev.getAllSelectedItems());
         };
     }
 }

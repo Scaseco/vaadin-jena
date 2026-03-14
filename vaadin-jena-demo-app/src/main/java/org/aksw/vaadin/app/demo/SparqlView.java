@@ -27,7 +27,6 @@ import org.aksw.jena_sparql_api.vaadin.util.GridWrapperBase;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.stmt.util.QueryParseExceptionUtils;
-import org.aksw.vaadin.jena.geo.leafletflow.JtsToLMapConverter;
 import org.aksw.vaadin.jena.geo.leafletflow.ResultSetMapRendererL;
 import org.aksw.vaadin.yasqe.Yasqe;
 import org.aksw.vaadin.yasqe.YasqeConfig;
@@ -229,7 +228,6 @@ public class SparqlView extends VerticalLayout implements BeforeEnterObserver {
 //        LayerGroup group = new FeatureGroup();
 //        group.addTo(map);
         map = createLMap();
-        JtsToLMapConverter converter = new JtsToLMapConverter(reg);;
 
         connectionGroup = new LLayerGroup(reg);
         map.getlMap().addLayer(connectionGroup);
@@ -238,7 +236,7 @@ public class SparqlView extends VerticalLayout implements BeforeEnterObserver {
         resultSetGrid = new Grid<>();
         resultSetGrid.setMultiSort(true);
         resultSetGrid.setSelectionMode(SelectionMode.MULTI);
-        resultSetGrid.getSelectionModel().addSelectionListener(ResultSetMapRendererL.createGridListener(converter, map.getlMap(), connectionGroup));
+        resultSetGrid.getSelectionModel().addSelectionListener(ResultSetMapRendererL.createGridListener(map.getlMap(), connectionGroup));
         resultSetGrid.setPageSize(100);
         resultSetGridHeaderRow = resultSetGrid.appendHeaderRow();
         resultSetGridFilterRow = resultSetGrid.appendHeaderRow();
