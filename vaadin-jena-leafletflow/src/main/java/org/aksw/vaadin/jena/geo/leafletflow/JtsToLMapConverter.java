@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.aksw.commons.util.obj.ObjectUtils;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryCollection;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
@@ -16,6 +16,7 @@ import org.locationtech.jts.geom.Polygon;
 import software.xdev.vaadin.maps.leaflet.basictypes.LLatLng;
 import software.xdev.vaadin.maps.leaflet.basictypes.LLatLngBounds;
 import software.xdev.vaadin.maps.leaflet.layer.LLayer;
+import software.xdev.vaadin.maps.leaflet.layer.LLayerGroup;
 import software.xdev.vaadin.maps.leaflet.layer.ui.LMarker;
 import software.xdev.vaadin.maps.leaflet.layer.vector.LPolygon;
 import software.xdev.vaadin.maps.leaflet.layer.vector.LPolyline;
@@ -62,21 +63,26 @@ public class JtsToLMapConverter {
         return new LMarker(reg, latLng);
     }
 
+    public LLayerGroup convertGeometryCollection(GeometryCollection gc) {
+        LLayerGroup group = new LLayerGroup(reg);
+        for (int i = 0; i < gc.getNumGeometries(); ++i) {
+            Geometry g = gc.getGeometryN(i);
+            LLayer<?> converted = convert(g);
+            group.addLayer(converted);
+        }
+        return group;
+    }
+
     public LLayer<?> convert(Geometry geom) {
         LLayer<?> result = null;
-        Polygon polygon = ObjectUtils.castAsOrNull(Polygon.class, geom);
-        if (polygon != null) {
+        if (geom instanceof Point point) {
+            result = convertPoint(point);
+        } else if (geom instanceof Polygon polygon) {
             result = convertPolygon(polygon);
-        } else {
-            LineString lineString = ObjectUtils.castAsOrNull(LineString.class, geom);
-            if (lineString != null) {
-                result = convertLineString(lineString);
-            } else {
-                Point point = ObjectUtils.castAsOrNull(Point.class, geom);
-                if (point != null) {
-                    result = convertPoint(point);
-                }
-            }
+        } else if (geom instanceof LineString lineString) {
+            result = convertLineString(lineString);
+        } else if (geom instanceof GeometryCollection gc) {
+            result = convertGeometryCollection(gc);
         }
         return result;
     }
