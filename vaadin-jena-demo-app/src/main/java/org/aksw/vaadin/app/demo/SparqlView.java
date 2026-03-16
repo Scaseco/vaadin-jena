@@ -10,9 +10,7 @@ import java.util.function.Consumer;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.vaadin.flow.component.dnd.DragSource;
 import com.vaadin.flow.component.dnd.DropTarget;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.SelectionMode;
-import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -27,6 +25,7 @@ import org.aksw.jena_sparql_api.vaadin.util.GridWrapperBase;
 import org.aksw.jena_sparql_api.vaadin.util.VaadinSparqlUtils;
 import org.aksw.jenax.dataaccess.sparql.factory.execution.query.QueryExecutionFactoryQuery;
 import org.aksw.jenax.stmt.util.QueryParseExceptionUtils;
+import org.aksw.jenax.vaadin.component.grid.sparql.GridSparqlBinding;
 import org.aksw.vaadin.jena.geo.leafletflow.ResultSetMapRendererL;
 import org.aksw.vaadin.yasqe.Yasqe;
 import org.aksw.vaadin.yasqe.YasqeConfig;
@@ -82,9 +81,7 @@ public class SparqlView extends VerticalLayout implements BeforeEnterObserver {
     protected Yasqe yasqe;
 
 //    protected Button runBtn;
-    protected Grid<Binding> resultSetGrid;
-    protected HeaderRow resultSetGridHeaderRow;
-    protected HeaderRow resultSetGridFilterRow;
+    protected GridSparqlBinding resultSetGrid;
     protected MapContainer map;
 
 //    protected TileLayer lightLayer = new TileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
@@ -201,8 +198,8 @@ public class SparqlView extends VerticalLayout implements BeforeEnterObserver {
             }
 
             GridWrapper<Binding> wrappedGrid = GridWrapperBase.wrap(resultSetGrid);
-            VaadinSparqlUtils.setQueryForGridBinding(wrappedGrid, resultSetGridHeaderRow, qef, query);
-            VaadinSparqlUtils.configureGridFilter(wrappedGrid, resultSetGridFilterRow, query.getProjectVars(),
+            VaadinSparqlUtils.setQueryForGridBinding(wrappedGrid, resultSetGrid.getHeaderRow(), qef, query);
+            VaadinSparqlUtils.configureGridFilter(wrappedGrid, resultSetGrid.getFilterRow(), query.getProjectVars(),
                     var -> str -> VaadinSparqlUtils.createFilterExpr(var, str).orElse(null));
 
             resultSetGrid.getDataCommunicator().enablePushUpdates(executor);
@@ -233,13 +230,11 @@ public class SparqlView extends VerticalLayout implements BeforeEnterObserver {
         map.getlMap().addLayer(connectionGroup);
 
         // Grid<Binding> resultSetGrid = new Grid<>();
-        resultSetGrid = new Grid<>();
+        resultSetGrid = new GridSparqlBinding();
         resultSetGrid.setMultiSort(true);
         resultSetGrid.setSelectionMode(SelectionMode.MULTI);
         resultSetGrid.getSelectionModel().addSelectionListener(ResultSetMapRendererL.createGridListener(map.getlMap(), connectionGroup));
         resultSetGrid.setPageSize(100);
-        resultSetGridHeaderRow = resultSetGrid.appendHeaderRow();
-        resultSetGridFilterRow = resultSetGrid.appendHeaderRow();
 
         resultSetGrid.setEmptyStateText("No data to display");
         resultSetGrid.setSizeFull();

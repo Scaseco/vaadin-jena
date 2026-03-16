@@ -14,11 +14,10 @@
 	</parent>
 
 	<dependencies>
-
-        <dependency>
-                <groupId>org.claspina</groupId>
-                <artifactId>confirm-dialog</artifactId>
-        </dependency>
+		<dependency>
+			<groupId>org.claspina</groupId>
+			<artifactId>confirm-dialog</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.aksw.jenax</groupId>
@@ -31,7 +30,8 @@
 		</dependency>
 
 
-		<!-- <dependency> <groupId>org.aksw.commons</groupId> <artifactId>aksw-commons-rx-ex</artifactId> 
+		<!-- <dependency> <groupId>org.aksw.commons</groupId>
+		<artifactId>aksw-commons-rx-ex</artifactId> 
 			</dependency> -->
 		<dependency>
 			<groupId>com.vaadin</groupId>
@@ -43,17 +43,15 @@
 		<!-- Unit Testing -->
 
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
 			<scope>test</scope>
 		</dependency>
 
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.aksw.jena-sparql-api</groupId> -->
-<!-- 			<artifactId>jena-sparql-api-resources-test-config</artifactId> -->
-<!-- 			<scope>test</scope> -->
-<!-- 		</dependency> -->
-
-
+		<!-- 		<dependency> -->
+		<!-- 			<groupId>org.aksw.jena-sparql-api</groupId> -->
+		<!-- 			<artifactId>jena-sparql-api-resources-test-config</artifactId> -->
+		<!-- 			<scope>test</scope> -->
+		<!-- 		</dependency> -->
 	</dependencies>
 </project>
