@@ -184,7 +184,7 @@ public class VaadinSparqlUtils {
             HeaderRow headerRow,
             QueryExecutionFactoryQuery qef,
             Query query) {
-        setQueryForGridBinding(new GridWrapperBase<>(grid), headerRow, qef, query, null);
+        setQueryForGridBinding(GridWrapperBase.wrap(grid), headerRow, qef, query, null);
     }
 
     public static void setQueryForGridBinding(
@@ -220,29 +220,7 @@ public class VaadinSparqlUtils {
         List<Var> vars = dataProviderCore.getRelation().getVars();
         grid.removeAllColumns();
 
-        for (Var var : vars) {
-            Column<Binding> column = grid.addColumn(binding -> {
-                Node node = binding.get(var);
-                Object r;
-                if (node == null) {
-                    r = null;
-                } else {
-                    r = node.toString();
-                }
-//                } else if (node.isLiteral()) {
-//                    r = node.getLiteralValue();
-//                } else {
-//                    r = node.toString();
-//                }
-                return r;
-            }); //.setHeader(var.getName());
-
-            headerRow.getCell(column).setText(var.getName());
-
-            column.setKey(var.getName());
-            column.setResizable(true);
-            column.setSortable(true);
-        }
+        ColumnFactorySparql.getDefaultFactory().refreshColumns(grid, headerRow, vars);
     }
 
     public static class UnwrappableConfigurableFilterDataProvider<T, Q, C, F>
@@ -311,6 +289,16 @@ public class VaadinSparqlUtils {
             QueryExecutionFactoryQuery qef,
             Query query,
             List<Var> visibleColumns) {
+        setQueryForGridBinding(grid, headerRow, qef, query, visibleColumns, ColumnFactorySparql.getDefaultFactory());
+    }
+
+    public static void setQueryForGridBinding(
+            GridLike<Binding> grid,
+            HeaderRow headerRow,
+            QueryExecutionFactoryQuery qef,
+            Query query,
+            List<Var> visibleColumns,
+            ColumnFactorySparql columnFactory) {
 
 //        Relation relation = RelationUtils.fromQuery(query);
 //        DataProviderSparqlBinding coreDataProvider = new DataProviderSparqlBinding(relation, qef);
@@ -325,32 +313,8 @@ public class VaadinSparqlUtils {
         grid.setDataProvider(dataProvider);
         List<Var> vars = visibleColumns == null ? query.getProjectVars() : visibleColumns;
         grid.removeAllColumns();
-
-        for (Var var : vars) {
-            Column<Binding> column = grid.addColumn(binding -> {
-                Node node = binding.get(var);
-                Object r;
-                if (node == null) {
-                    r = null;
-                } else {
-                    r = node.toString();
-                }
-//                } else if (node.isLiteral()) {
-//                    r = node.getLiteralValue();
-//                } else {
-//                    r = node.toString();
-//                }
-                return r;
-            }); //.setHeader(var.getName());
-
-            headerRow.getCell(column).setText(var.getName());
-
-            column.setKey(var.getName());
-            column.setResizable(true);
-            column.setSortable(true);
-        }
+        columnFactory.refreshColumns(grid, headerRow, vars);
     }
-
 
     public static void setQueryForGridBindingComponent(
             GridLike<Binding> grid,
